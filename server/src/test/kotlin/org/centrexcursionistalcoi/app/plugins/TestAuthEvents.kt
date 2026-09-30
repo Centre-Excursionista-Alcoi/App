@@ -12,6 +12,7 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.href
 import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.security.RegistrationCodes
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import kotlin.test.Test
@@ -51,8 +52,12 @@ class TestAuthEvents : ApplicationTestBase() {
             FakeUser.provideMemberEntity()
         }
     ) {
+        val code = RegistrationCodes.create(FakeUser.EMAIL.uppercase())
         client.submitForm(href(Api.Register()),
-            parameters { parameters.forEach { (key, value) -> append(key, value) } },
+            parameters {
+                parameters.forEach { (key, value) -> append(key, value) }
+                append("code", code)
+            },
         ).apply {
             assertSuccess()
         }

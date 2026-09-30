@@ -2,9 +2,11 @@ package org.centrexcursionistalcoi.app.database.entity
 
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.table.CredentialKind
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
 import kotlin.test.AfterTest
+import kotlin.time.Clock
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -18,11 +20,17 @@ class TestUserCredentialRecordEntity {
         Database.clear()
     }
 
-    private fun newRecord(credentialId: String, owner: UserReferenceEntity) = Database {
+    private fun newRecord(
+        credentialId: String,
+        owner: UserReferenceEntity,
+        kind: CredentialKind = CredentialKind.RESTORE_KEY,
+    ) = Database {
         UserCredentialRecordEntity.new(credentialId) {
             user = owner
             attestedCredentialData = byteArrayOf(1, 2, 3)
             signCount = 0
+            this.kind = kind
+            createdAt = Clock.System.now()
         }
     }
 
@@ -32,7 +40,7 @@ class TestUserCredentialRecordEntity {
         val user = Database { FakeUser.provideEntity() }
         newRecord("owned-credential", user)
 
-        assertTrue(Database { UserCredentialRecordEntity.deleteIfOwnedBy("owned-credential", FakeUser.SUB) })
+        assertTrue(Database { UserCredentialRecordEntity.deleteIfOwnedBy("owned-credential", FakeUser.SUB, CredentialKind.RESTORE_KEY) })
         assertNull(Database { UserCredentialRecordEntity.findById("owned-credential") })
     }
 
@@ -43,7 +51,7 @@ class TestUserCredentialRecordEntity {
         val otherUser = Database { FakeUser2.provideEntity() }
         newRecord("other-users-credential", otherUser)
 
-        assertFalse(Database { UserCredentialRecordEntity.deleteIfOwnedBy("other-users-credential", FakeUser.SUB) })
+        assertFalse(Database { UserCredentialRecordEntity.deleteIfOwnedBy("other-users-credential", FakeUser.SUB, CredentialKind.RESTORE_KEY) })
         assertNotNull(Database { UserCredentialRecordEntity.findById("other-users-credential") })
     }
 
@@ -52,6 +60,16 @@ class TestUserCredentialRecordEntity {
         Database.initForTests()
         Database { FakeUser.provideEntity() }
 
-        assertFalse(Database { UserCredentialRecordEntity.deleteIfOwnedBy("unknown-credential", FakeUser.SUB) })
+        assertFalse(Database { UserCredentialRecordEntity.deleteIfOwnedBy("unknown-credential", FakeUser.SUB, CredentialKind.RESTORE_KEY) })
+    }
+
+    @Test
+    fun `deleteIfOwnedBy leaves a credential of another kind untouched`() = runTest {
+        Database.initForTests()
+        val user = Database { FakeUser.provideEntity() }
+        newRecord("passkey", user, CredentialKind.PASSKEY)
+
+        assertFalse(Database { UserCredentialRecordEntity.deleteIfOwnedBy("passkey", FakeUser.SUB, CredentialKind.RESTORE_KEY) })
+        assertNotNull(Database { UserCredentialRecordEntity.findById("passkey") })
     }
 }

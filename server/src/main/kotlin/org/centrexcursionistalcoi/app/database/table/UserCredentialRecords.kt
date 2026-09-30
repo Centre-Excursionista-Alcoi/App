@@ -4,11 +4,23 @@ import org.centrexcursionistalcoi.app.database.table.UserCredentialRecords.id
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.datetime.timestamp
+
+/** What a [UserCredentialRecords] row is for. */
+enum class CredentialKind {
+    /**
+     * An Android Restore Credential: created silently after every login, and redeemed to log in again on a new
+     * device. Never shown to the user, and used without verifying them.
+     */
+    RESTORE_KEY,
+
+    /** A passkey the user created to sign in: listed in their security settings, and always verifies them. */
+    PASSKEY,
+}
 
 /**
- * A WebAuthn credential registered for a user -- currently only ever created as a Restore Credential (see
- * `security/Authentication.kt`'s `webAuthnRoutes`), but the table itself is credential-purpose-agnostic: a
- * user-facing passkey (not yet implemented) would be a row here too, indistinguishable at this layer.
+ * A WebAuthn credential registered for a user: a restore key or a passkey (see [CredentialKind]). Both go through
+ * the same ceremonies (see `security/Authentication.kt`), and differ only in [kind].
  */
 object UserCredentialRecords : IdTable<String>("user_credential_records") {
     /** The Base64Url-encoded (no padding) WebAuthn credential ID. */
@@ -34,4 +46,14 @@ object UserCredentialRecords : IdTable<String>("user_credential_records") {
      * rather than treating every use as a clone.
      */
     val signCount = long("sign_count")
+
+    val kind = enumerationByName<CredentialKind>("kind", 32)
+
+    /** A name for the user to tell their passkeys apart (e.g. the device it was created on). */
+    val name = text("name").nullable()
+
+    val createdAt = timestamp("created_at")
+
+    /** When it was last used to log in, if ever. */
+    val lastUsedAt = timestamp("last_used_at").nullable()
 }

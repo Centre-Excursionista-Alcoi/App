@@ -15,7 +15,7 @@ internal object WellKnownConfigProvider : ConfigProvider() {
     val packageNames: List<String> get() = getList(PACKAGE_NAMES_VARIABLE)
 
     /**
-     * Also the Android origins accepted for WebAuthn (see `webAuthnAndroidOrigins`), where a single malformed
+     * Also the Android origins accepted for WebAuthn (see `webAuthnOrigins`), where a single malformed
      * entry makes every registration and redemption fail -- hence the trimming.
      */
     const val SHA256_CERT_FINGERPRINTS_VARIABLE = "WELL_KNOWN_ASSETLINKS_SHA256_CERT_FINGERPRINTS"

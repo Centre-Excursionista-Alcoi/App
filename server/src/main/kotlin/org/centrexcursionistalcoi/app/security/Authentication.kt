@@ -1,10 +1,5 @@
 package org.centrexcursionistalcoi.app.security
 
-import com.webauthn4j.credential.CredentialRecordImpl
-import com.webauthn4j.data.AuthenticationParameters
-import com.webauthn4j.data.RegistrationParameters
-import com.webauthn4j.data.client.challenge.DefaultChallenge
-import com.webauthn4j.server.ServerProperty
 import com.webauthn4j.verifier.exception.VerificationException
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -25,7 +20,6 @@ import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.ConfigProvider
 import org.centrexcursionistalcoi.app.data.RegisterRestoreKeyRequest
-import org.centrexcursionistalcoi.app.data.RestoreKeyVerificationRequest
 import org.centrexcursionistalcoi.app.data.webauthn.AuthenticationOptionsResponse
 import org.centrexcursionistalcoi.app.data.webauthn.CreationOptionsResponse
 import org.centrexcursionistalcoi.app.data.webauthn.RelyingParty
@@ -33,6 +27,7 @@ import org.centrexcursionistalcoi.app.data.webauthn.WebAuthnUser
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserCredentialRecordEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.database.table.CredentialKind
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.routes.Api
@@ -41,6 +36,7 @@ import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSess
 import org.centrexcursionistalcoi.app.storage.RedisStoreMap
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import java.util.Base64
+import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 private val secretEncryptKey by lazy { (SessionsKeys.secretEncryptKey ?: SessionsKeys.DEFAULT_ENCRYPT_KEY).hexToByteArray() }
@@ -277,40 +273,27 @@ fun Route.webAuthnRoutes() {
 
         val challengeBase64Url = RedisStoreMap.default.get("webauthn_challenge:${user.sub}")
             ?: return@post respondError(Error.InvalidArgument("challenge", "Challenge expired or was never requested."))
-        val challengeBytes = Base64.getUrlDecoder().decode(challengeBase64Url)
-
-        val serverProperty = ServerProperty.builder()
-            .rpId(webAuthnRpId)
-            .origins(webAuthnAndroidOrigins)
-            .challenge(DefaultChallenge(challengeBytes))
-            .build()
 
         try {
-            val parsed = webAuthnManager.parseRegistrationResponseJSON(request.registrationResponseJson)
-            // pubKeyCredParams = null: accept any algorithm, matching the non-strict manager's own leniency.
             // Restore Credentials are created silently, without verifying the user, so some authenticators don't
-            // set the UV flag -- userVerificationRequired = false, like when redeeming one (see verifyRestoreKey).
-            val registrationParameters = RegistrationParameters(serverProperty, null, false)
-            val registrationData = webAuthnManager.verify(parsed, registrationParameters)
-
-            val authenticatorData = registrationData.attestationObject!!.authenticatorData
-            val attestedCredentialData = authenticatorData.attestedCredentialData!!
-            val credentialIdBase64Url = Base64.getUrlEncoder().withoutPadding()
-                .encodeToString(attestedCredentialData.credentialId)
-            val attestedCredentialDataBytes = attestedCredentialDataConverter.convert(attestedCredentialData)
+            // set the UV flag -- userVerificationRequired = false, like when redeeming one (see verifyAssertion).
+            val credential = verifyRegistration(request.registrationResponseJson, challengeBase64Url, false)
+            val credentialIdBase64Url = credential.credentialId
 
             val stored = Database {
                 val reference = UserReferenceEntity.findById(user.sub)
                     ?: return@Database null
                 UserCredentialRecordEntity.new(credentialIdBase64Url) {
                     this.user = reference
-                    this.attestedCredentialData = attestedCredentialDataBytes
-                    this.signCount = authenticatorData.signCount
+                    this.attestedCredentialData = credential.attestedCredentialData
+                    this.signCount = credential.signCount
+                    this.kind = CredentialKind.RESTORE_KEY
+                    this.createdAt = Clock.System.now()
                 }.also {
                     // Only the key this device replaced: the user's other devices keep their own restore keys.
                     request.replacesCredentialId
                         ?.takeIf { it != credentialIdBase64Url }
-                        ?.let { UserCredentialRecordEntity.deleteIfOwnedBy(it, user.sub) }
+                        ?.let { UserCredentialRecordEntity.deleteIfOwnedBy(it, user.sub, CredentialKind.RESTORE_KEY) }
                 }
             }
             if (stored == null) return@post respondError(Error.EntityNotFound(UserReferenceEntity::class, user.sub))
@@ -325,77 +308,5 @@ fun Route.webAuthnRoutes() {
         } catch (e: Exception) {
             respondError(Error.Exception(e))
         }
-    }
-}
-
-sealed interface RestoreKeyVerification {
-    data class Success(val user: UserReferenceEntity) : RestoreKeyVerification
-    data class Failure(val error: Error) : RestoreKeyVerification
-}
-
-/**
- * Verifies a WebAuthn authentication response against the challenge issued by `/generate-auth-challenge` and the
- * credential stored at registration, resolving the user it authenticates.
- */
-suspend fun verifyRestoreKey(request: RestoreKeyVerificationRequest): RestoreKeyVerification {
-    try {
-        val authenticationData = webAuthnManager.parseAuthenticationResponseJSON(request.authenticationResponseJson)
-
-        // The challenge the client used is echoed back inside its own response -- no separate tracking ID
-        // needed, the same way /generate-auth-challenge stored it keyed by its own value.
-        val challengeBytes = authenticationData.collectedClientData?.challenge?.value
-            ?: return RestoreKeyVerification.Failure(Error.InvalidArgument("authenticationResponseJson"))
-        val challengeBase64Url = Base64.getUrlEncoder().withoutPadding().encodeToString(challengeBytes)
-        // Consumed before verifying, so that a challenge can never be used twice, even by concurrent requests or
-        // after a failed attempt.
-        RedisStoreMap.default.remove("auth_challenge:$challengeBase64Url")
-            ?: return RestoreKeyVerification.Failure(
-                Error.InvalidArgument("challenge", "Challenge expired or was never requested.")
-            )
-
-        val credentialIdBase64Url = Base64.getUrlEncoder().withoutPadding()
-            .encodeToString(authenticationData.credentialId)
-        val stored = Database { UserCredentialRecordEntity.findById(credentialIdBase64Url) }
-            ?: return RestoreKeyVerification.Failure(
-                Error.EntityNotFound(UserCredentialRecordEntity::class, credentialIdBase64Url)
-            )
-        val (attestedCredentialDataBytes, storedSignCount) = Database { stored.attestedCredentialData to stored.signCount }
-
-        val serverProperty = ServerProperty.builder()
-            .rpId(webAuthnRpId)
-            .origins(webAuthnAndroidOrigins)
-            .challenge(DefaultChallenge(challengeBytes))
-            .build()
-
-        val attestedCredentialData = attestedCredentialDataConverter.convert(attestedCredentialDataBytes)
-        // CredentialRecordImpl (WebAuthn Level 3), not the deprecated AuthenticatorImpl -- uvInitialized/
-        // backupEligible/backupState/clientData/clientExtensions/transports aren't persisted (not needed to
-        // verify a signature), so null throughout; only the pieces saved at registration matter here.
-        val credentialRecord = CredentialRecordImpl(
-            null, null, null, null,
-            storedSignCount, attestedCredentialData, null, null, null, null,
-        )
-        // Restore Credentials are redeemed silently, with no user interaction to satisfy a verification
-        // requirement -- userVerificationRequired = false.
-        val authenticationParameters = AuthenticationParameters(serverProperty, credentialRecord, null, false)
-
-        val verifiedData = webAuthnManager.verify(authenticationData, authenticationParameters)
-
-        val user = Database {
-            // Many platform authenticators (including the one behind Restore Credentials) always report a
-            // signCount of 0 -- still worth persisting whatever comes back, so a future authenticator that
-            // does increment it is tracked correctly from here on.
-            stored.signCount = verifiedData.authenticatorData!!.signCount
-            stored.user
-        }
-        // Same rule as a password login.
-        if (user.isDisabled) return RestoreKeyVerification.Failure(Error.UserIsDisabled())
-        return RestoreKeyVerification.Success(user)
-    } catch (_: VerificationException) {
-        // Mirrors a rejected password login: a real credential that just didn't check out, not a malformed
-        // request -- same status code and error shape as /login's own failure path.
-        return RestoreKeyVerification.Failure(Error.IncorrectPasswordOrEmail())
-    } catch (e: Exception) {
-        return RestoreKeyVerification.Failure(Error.Exception(e))
     }
 }

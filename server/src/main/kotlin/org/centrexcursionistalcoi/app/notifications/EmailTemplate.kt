@@ -36,6 +36,29 @@ abstract class EmailTemplate(name: String) : Template("email", name) {
         }
     }
 
+    /**
+     * The code that proves the email is the user's, to register.
+     *
+     * Required arguments:
+     * - `userName`: The name of the user.
+     * - `code`: The code.
+     */
+    object RegistrationCode : EmailTemplate("registration_code") {
+        override fun DocumentRedactor.render(args: Map<String, String?>): String {
+            return """
+            <html>
+                <body>
+                    <p>${t("line_1", args["userName"])}</p>
+                    <p>${t("line_2")}</p>
+                    <p style="font-size: 28px; font-weight: bold; letter-spacing: 6px;">${args["code"]}</p>
+                    <p>${t("line_3")}</p>
+                    <p>${t("line_4")}</p>
+                </body>
+            </html>
+            """.trimIndent()
+        }
+    }
+
     object PasswordChangedNotification : EmailTemplate("password_changed") {
         override fun DocumentRedactor.render(args: Map<String, String?>): String {
             return """

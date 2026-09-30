@@ -50,6 +50,7 @@ import org.centrexcursionistalcoi.app.routes.assertContentType
 import org.centrexcursionistalcoi.app.security.AuthTokens
 import org.centrexcursionistalcoi.app.security.EmailValidation
 import org.centrexcursionistalcoi.app.security.Passwords
+import org.centrexcursionistalcoi.app.security.RegistrationCodes
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.webAuthnRoutes
 import org.centrexcursionistalcoi.app.translation.locale
@@ -91,6 +92,11 @@ fun login(email: String, password: CharArray): Error? {
         return Error.UserIsDisabled()
     }
 
+    // An account that signs in with passkeys only has no password to check
+    if (!existingReference.hasPassword) {
+        return Error.PasswordNotSet()
+    }
+
     // verify password
     if (!Passwords.verify(password, existingReference.password)) {
         return Error.IncorrectPasswordOrEmail()
@@ -130,6 +136,7 @@ internal suspend fun RoutingContext.respondAuthError(type: AuthEventType, email:
 @OptIn(ExperimentalXmlUtilApi::class)
 fun Route.configureAuthRoutes() {
     webAuthnRoutes()
+    registrationRoutes()
 
     post<Api.Register> {
         assertContentType(ContentType.Application.FormUrlEncoded) ?: return@post
@@ -137,35 +144,28 @@ fun Route.configureAuthRoutes() {
         val parameters = call.receiveParameters()
         val email = parameters["email"]?.trim()?.uppercase()
         val password = parameters["password"]?.trim()?.toCharArray()
+        val code = parameters["code"]?.trim()
 
         if (email == null) return@post respondAuthError(AuthEventType.REGISTER, null, Error.MissingArgument("email"))
         if (password == null) return@post respondAuthError(AuthEventType.REGISTER, email, Error.MissingArgument("password"))
-
-        if (!EmailValidation.validate(email)) return@post respondAuthError(AuthEventType.REGISTER, email, Error.InvalidArgument("email"))
+        if (code == null) return@post respondAuthError(AuthEventType.REGISTER, email, Error.MissingArgument("code"))
 
         // validate password
         if (!Passwords.isSafe(password)) return@post respondAuthError(AuthEventType.REGISTER, email, Error.PasswordNotSafeEnough())
 
-        // check that the user doesn't exist
-        val existingReference = Database { UserReferenceEntity.findByEmail(email) }
-        if (existingReference != null) {
-            return@post respondAuthError(AuthEventType.REGISTER, email, Error.UserAlreadyRegistered())
+        val member = when (val eligibility = registrationEligibility(email)) {
+            is RegistrationEligibility.Rejected -> return@post respondAuthError(AuthEventType.REGISTER, email, eligibility.error)
+            is RegistrationEligibility.Eligible -> eligibility.member
         }
 
-        // check that the user is a valid an active member
-        val memberReference = Database {
-            MemberEntity.find { Members.email.upperCase() eq email }.limit(1).firstOrNull()
-        }
-        if (memberReference == null) {
-            return@post respondAuthError(AuthEventType.REGISTER, email, Error.EmailNotFound())
-        }
-        if (memberReference.status != Member.Status.ACTIVE) {
-            return@post respondAuthError(AuthEventType.REGISTER, email, Error.MemberIsNotActive())
+        // The code proves the email is theirs
+        if (!RegistrationCodes.check(email, code, consume = true)) {
+            return@post respondAuthError(AuthEventType.REGISTER, email, Error.InvalidVerificationCode())
         }
 
         // Update the user's password
         val hashedPassword = Passwords.hash(password)
-        memberReference.insertUser(hashedPassword)
+        member.insertUser(hashedPassword)
 
         // Success, respond accordingly
         recordAuthEvent(AuthEventType.REGISTER, email, null)

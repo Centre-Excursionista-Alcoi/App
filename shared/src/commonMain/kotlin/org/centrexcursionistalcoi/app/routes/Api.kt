@@ -23,7 +23,18 @@ object Api {
     }
 
     @Resource("/register")
-    class Register
+    class Register {
+        /** Emails the code that proves the email is the user's, needed to register. */
+        @Resource("verification")
+        class Verification(val parent: Register = Register())
+
+        /** Registers an account that signs in with a passkey. */
+        @Resource("passkey")
+        class Passkey(val parent: Register = Register()) {
+            @Resource("options")
+            class Options(val parent: Passkey = Passkey())
+        }
+    }
 
     @Resource("/lost_password")
     class LostPassword(@SerialName("redirect_to") val redirectTo: String? = null)
@@ -59,6 +70,22 @@ object Api {
 
     @Resource("/profile")
     class Profile {
+        /** How the user signs in: their password and passkeys. */
+        @Resource("security")
+        class Security(val parent: Profile = Profile())
+
+        @Resource("passkeys")
+        class Passkeys(val parent: Profile = Profile()) {
+            @Resource("options")
+            class Options(val parent: Passkeys = Passkeys())
+
+            @Resource("{id}")
+            class Id(val id: String, val parent: Passkeys = Passkeys())
+        }
+
+        @Resource("password")
+        class Password(val parent: Profile = Profile())
+
         @Resource("lendingSignUp")
         class LendingSignUp(val parent: Profile = Profile())
 

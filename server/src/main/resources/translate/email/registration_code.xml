@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<translations>
+  <item name="subject">Your registration code</item>
+  <item name="line_1">Hi, %1$s</item>
+  <item name="line_2">Use this code to finish registering in the CEA app:</item>
+  <item name="line_3">It works for 10 minutes. If you didn't try to register, you can ignore this email.</item>
+  <item name="line_4">Best regards, the Centre Excursionista d'Alcoi.</item>
+</translations>
