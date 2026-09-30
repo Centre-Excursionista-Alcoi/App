@@ -4,8 +4,6 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 
-val settings: String = "abc"
-
 /**
  * Key for storing the last profile synchronization timestamp.
  */

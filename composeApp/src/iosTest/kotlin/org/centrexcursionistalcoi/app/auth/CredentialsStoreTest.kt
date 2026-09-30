@@ -23,7 +23,6 @@ class CredentialsStoreTest {
     fun `nothing is returned when nothing is saved`() {
         store.clear()
         assertNull(store.getSession())
-        assertNull(store.getLegacyCredentials())
         assertNull(store.current.value)
     }
 
@@ -48,23 +47,25 @@ class CredentialsStoreTest {
     }
 
     @Test
-    fun `legacy credentials are readable until a session is saved`() {
+    fun `saving a session deletes the legacy credentials`() {
         store.saveLegacyCredentialsForTests("legacy@example.com", "s3cr3t-P@ss")
-        assertEquals("legacy@example.com", store.getLegacyCredentials()?.email)
-        assertEquals("s3cr3t-P@ss", store.getLegacyCredentials()?.password?.concatToString())
-        assertEquals("legacy@example.com", store.current.value?.email)
         assertNull(store.getSession())
 
         store.saveSession("legacy@example.com", "refresh-token")
-        assertNull(store.getLegacyCredentials())
         assertEquals("refresh-token", store.getSession()?.refreshToken)
+
+        // current falls back to the legacy item, so it would still show the account if that wasn't deleted.
+        CredentialsStore(service).let { reopened ->
+            reopened.clear()
+            assertNull(reopened.current.value)
+        }
     }
 
     @Test
     fun `clear removes both the session and legacy credentials`() {
         store.saveLegacyCredentialsForTests("legacy@example.com", "s3cr3t-P@ss")
         store.clear()
-        assertNull(store.getLegacyCredentials())
+        assertNull(store.current.value)
 
         store.saveSession("credentials-test@example.com", "refresh-token")
         store.clear()

@@ -48,12 +48,6 @@ actual class CredentialsStore(context: Context) {
         return SavedSession(account.name, refreshToken)
     }
 
-    actual fun getLegacyCredentials(): SavedCredentials? {
-        val account = findAccount() ?: return null
-        val password = accountManager.getPassword(account) ?: return null
-        return SavedCredentials(account.name, password.toCharArray())
-    }
-
     actual suspend fun clear() {
         accountManager.getAccountsByType(ACCOUNT_TYPE).forEach { accountManager.removeAccountExplicitly(it) }
         current.value = readAccount()

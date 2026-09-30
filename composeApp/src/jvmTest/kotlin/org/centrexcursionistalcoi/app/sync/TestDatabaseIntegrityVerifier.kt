@@ -59,6 +59,7 @@ class TestDatabaseIntegrityVerifier {
     private val repository = mockk<InventoryItemTypesRepository>()
     private val usersRemoteRepository = mockk<UsersRemoteRepository>()
     private val usersRepository = mockk<UsersRepository>()
+    private val profileRepository = mockk<ProfileRepository>()
     private val backgroundJobCoordinator = mockk<BackgroundJobCoordinator>()
     private val authBackend = mockk<AuthBackend>()
 
@@ -77,17 +78,22 @@ class TestDatabaseIntegrityVerifier {
         // Default to "can't silently recover the session" so the existing "...throws when the resync job
         // fails" tests keep throwing as before; tests of the new retry-after-relogin path override this.
         coEvery { authBackend.tryAutoRelogin() } returns false
-        verifier = DatabaseIntegrityVerifier(db, remoteRepository, repository, usersRemoteRepository, usersRepository, backgroundJobCoordinator, authBackend)
+        coEvery { profileRepository.getProfile() } returns null
+        verifier = DatabaseIntegrityVerifier(
+            db = db,
+            inventoryItemTypesRemoteRepository = remoteRepository,
+            inventoryItemTypesRepository = repository,
+            usersRemoteRepository = usersRemoteRepository,
+            profileRepository = profileRepository,
+            usersRepository = usersRepository,
+            backgroundJobCoordinator = backgroundJobCoordinator,
+            authBackend = authBackend,
+        )
     }
 
     @AfterTest
     fun tearDown() {
         unmockkAll()
-        // Tests of the non-admin placeholder path write real profile state via ProfileRepository.update()
-        // (mockkObject(ProfileRepository) doesn't reliably intercept this object's calls -- unclear why, but
-        // exercising the real, already-tested read/write path is arguably more honest anyway) -- reset it so
-        // it doesn't leak into unrelated tests.
-        ProfileRepository.clear()
     }
 
     private fun typeEntity(id: Uuid = Uuid.random()) = InventoryItemTypeEntity(
@@ -468,7 +474,7 @@ class TestDatabaseIntegrityVerifier {
         // -- for a non-admin, that means sub is genuinely outside their /users visibility (a Memory submitted by
         // someone in a department they don't manage), which a wipe-and-resync can never fix: it would just
         // resync the exact same memory referencing the exact same invisible user and hit this again.
-        ProfileRepository.update(profile(isAdmin = false))
+        coEvery { profileRepository.getProfile() } returns profile(isAdmin = false)
         val sub = Uuid.random().toString()
         coEvery { memoryDao.selectAll() } returns listOf(memoryWithRelations(memoryEntity(submittedBy = sub), submittedBy = null))
         coEvery { usersRemoteRepository.get(sub) } returns null
@@ -486,7 +492,7 @@ class TestDatabaseIntegrityVerifier {
     fun `memory with missing submitter still wipes database for an admin`() {
         // Admins can see every user, so a confirmed 404 for an admin really is a data inconsistency, not a
         // permission gap -- the original wipe-and-resync recovery is still correct here.
-        ProfileRepository.update(profile(isAdmin = true))
+        coEvery { profileRepository.getProfile() } returns profile(isAdmin = true)
         val sub = Uuid.random().toString()
         val brokenMemory = memoryWithRelations(memoryEntity(submittedBy = sub), submittedBy = null)
         coEvery { memoryDao.selectAll() } returnsMany listOf(listOf(brokenMemory), emptyList())
@@ -566,7 +572,7 @@ class TestDatabaseIntegrityVerifier {
 
     @Test
     fun `lending with missing borrower inserts a placeholder for a non-admin instead of wiping the database`() {
-        ProfileRepository.update(profile(isAdmin = false))
+        coEvery { profileRepository.getProfile() } returns profile(isAdmin = false)
         val sub = Uuid.random().toString()
         coEvery { lendingDao.selectAll() } returns listOf(lendingWithRelations(lendingEntity(userSub = sub), user = null))
         coEvery { usersRemoteRepository.get(sub) } returns null

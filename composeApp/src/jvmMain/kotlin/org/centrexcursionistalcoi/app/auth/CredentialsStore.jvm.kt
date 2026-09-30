@@ -35,8 +35,6 @@ actual class CredentialsStore(
         return SavedSession(email, refreshToken)
     }
 
-    actual fun getLegacyCredentials(): SavedCredentials? = null
-
     actual suspend fun clear() {
         settings.remove(KEY_EMAIL)
         settings.remove(KEY_REFRESH_TOKEN)

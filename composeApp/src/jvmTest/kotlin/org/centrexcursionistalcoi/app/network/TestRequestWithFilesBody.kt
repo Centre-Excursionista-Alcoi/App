@@ -10,14 +10,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
-import kotlin.test.AfterTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
-import kotlin.time.Instant
-import kotlin.uuid.Uuid
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.TimeZone
@@ -33,6 +26,19 @@ import org.centrexcursionistalcoi.app.database.getRoomDatabase
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.RequestWithFiles
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
+import org.centrexcursionistalcoi.app.settings.SettingsStore
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 /**
  * Requests carrying files are sent as multipart, with each file's contents in a part of their own instead of encoded
@@ -42,8 +48,15 @@ class TestRequestWithFilesBody {
     private val original = _httpClient
     private var db: AppDatabase? = null
 
+    @BeforeTest
+    fun setUp() {
+        // RemoteRepository stores the last synchronization time in the settings.
+        startKoin { modules(module { single { mockk<SettingsStore>(relaxed = true) } }) }
+    }
+
     @AfterTest
     fun tearDown() {
+        stopKoin()
         _httpClient = original
         db?.close()
     }

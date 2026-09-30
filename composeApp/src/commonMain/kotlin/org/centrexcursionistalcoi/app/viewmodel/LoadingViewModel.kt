@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.auth.AuthBackend
-import org.centrexcursionistalcoi.app.auth.LegacyAuthMigration
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.error.Error
@@ -35,7 +34,6 @@ class LoadingViewModel(
     private val backgroundJobCoordinator: BackgroundJobCoordinator,
     private val databaseIntegrityVerifier: DatabaseIntegrityVerifier,
     private val authBackend: AuthBackend,
-    private val legacyAuthMigration: LegacyAuthMigration,
     private val server: ServerInfoRepository,
     private val tokenManager: FCMTokenManager,
     private val profileRepository: ProfileRepository,
@@ -62,10 +60,6 @@ class LoadingViewModel(
         server.loadInfo()
 
         try {
-            // Before anything else: an account logged in before token authentication either gets a session now,
-            // or is logged out.
-            legacyAuthMigration.run()
-
             // Try to fetch the profile to see if the session is still valid
             if (isUserProfileValid()) {
                 if (settings.databaseVersionUpgrade()) {

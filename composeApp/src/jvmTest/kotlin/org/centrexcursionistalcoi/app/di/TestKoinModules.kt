@@ -43,6 +43,7 @@ import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.centrexcursionistalcoi.app.viewmodel.management.DepartmentsManagementViewModel
 import org.centrexcursionistalcoi.app.viewmodel.management.EventsManagementViewModel
+import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.core.parameter.parametersOf
@@ -81,6 +82,7 @@ class TestKoinModules {
                 ViewModelScanModule().module(),
                 SyncScanModule().module(),
                 PushScanModule().module(),
+                SettingsScanModule().module(),
             )
         }.koin
 
@@ -106,6 +108,7 @@ class TestKoinModules {
         assertNotNull(koin.get<QualificationsRemoteRepository>())
 
         assertNotNull(koin.get<AuthBackend>())
+        assertNotNull(koin.get<SettingsStore>())
 
         assertNotNull(koin.get<PathsProvider>())
         // Optional: JVM has no implementation, so this must resolve to null instead of throwing

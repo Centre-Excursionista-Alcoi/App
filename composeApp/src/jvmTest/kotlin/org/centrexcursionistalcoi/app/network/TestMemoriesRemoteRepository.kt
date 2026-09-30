@@ -7,6 +7,7 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.headersOf
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.TimeZone
@@ -17,7 +18,12 @@ import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.getRoomDatabase
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.settings.SettingsStore
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -34,8 +40,15 @@ class TestMemoriesRemoteRepository {
     private val original = _httpClient
     private var db: AppDatabase? = null
 
+    @BeforeTest
+    fun setUp() {
+        // RemoteRepository stores the last synchronization time in the settings.
+        startKoin { modules(module { single { mockk<SettingsStore>(relaxed = true) } }) }
+    }
+
     @AfterTest
     fun tearDown() {
+        stopKoin()
         _httpClient = original
         db?.close()
     }

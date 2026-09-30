@@ -122,9 +122,6 @@ actual class CredentialsStore internal constructor() {
     actual suspend fun getSession(): SavedSession? =
         readItem(sessionService)?.let { (email, refreshToken) -> SavedSession(email, refreshToken) }
 
-    actual fun getLegacyCredentials(): SavedCredentials? =
-        readItem(service)?.let { (email, password) -> SavedCredentials(email, password.toCharArray()) }
-
     actual suspend fun clear() {
         deleteItem(sessionService)
         deleteItem(service)
