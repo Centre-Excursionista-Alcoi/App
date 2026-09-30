@@ -28,7 +28,7 @@ actual class CredentialsStore(context: Context) {
         )
     }
 
-    actual fun saveSession(email: String, refreshToken: String) {
+    actual suspend fun saveSession(email: String, refreshToken: String) {
         val account = Account(email, ACCOUNT_TYPE)
         // Only one saved account at a time: this app only ever has a single logged-in user locally.
         accountManager.getAccountsByType(ACCOUNT_TYPE)
@@ -42,7 +42,7 @@ actual class CredentialsStore(context: Context) {
         current.value = readAccount()
     }
 
-    actual fun getSession(): SavedSession? {
+    actual suspend fun getSession(): SavedSession? {
         val account = findAccount() ?: return null
         val refreshToken = accountManager.getUserData(account, KEY_REFRESH_TOKEN) ?: return null
         return SavedSession(account.name, refreshToken)
@@ -54,7 +54,7 @@ actual class CredentialsStore(context: Context) {
         return SavedCredentials(account.name, password.toCharArray())
     }
 
-    actual fun clear() {
+    actual suspend fun clear() {
         accountManager.getAccountsByType(ACCOUNT_TYPE).forEach { accountManager.removeAccountExplicitly(it) }
         current.value = readAccount()
     }

@@ -113,19 +113,19 @@ actual class CredentialsStore internal constructor() {
     private val mutableCurrent: MutableStateFlow<SavedAccount?> by lazy { MutableStateFlow(readAccount()) }
     actual val current: StateFlow<SavedAccount?> get() = mutableCurrent
 
-    actual fun saveSession(email: String, refreshToken: String) {
+    actual suspend fun saveSession(email: String, refreshToken: String) {
         writeItem(sessionService, email, refreshToken)
         deleteItem(service)
         mutableCurrent.value = readAccount()
     }
 
-    actual fun getSession(): SavedSession? =
+    actual suspend fun getSession(): SavedSession? =
         readItem(sessionService)?.let { (email, refreshToken) -> SavedSession(email, refreshToken) }
 
     actual fun getLegacyCredentials(): SavedCredentials? =
         readItem(service)?.let { (email, password) -> SavedCredentials(email, password.toCharArray()) }
 
-    actual fun clear() {
+    actual suspend fun clear() {
         deleteItem(sessionService)
         deleteItem(service)
         mutableCurrent.value = readAccount()
