@@ -10,6 +10,7 @@ import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.auth.CredentialsStore
 import org.centrexcursionistalcoi.app.auth.PasskeyException
+import org.centrexcursionistalcoi.app.auth.PasskeyUpgrade
 import org.centrexcursionistalcoi.app.auth.Passkeys
 import org.centrexcursionistalcoi.app.auth.SavedCredential
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
@@ -24,6 +25,7 @@ class LoginViewModel(
     credentialsStore: CredentialsStore,
     private val profileRemoteRepository: ProfileRemoteRepository,
     private val passkeys: Passkeys,
+    private val passkeyUpgrade: PasskeyUpgrade,
 ) : ErrorViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading get() = _isLoading.asStateFlow()
@@ -62,6 +64,8 @@ class LoginViewModel(
             authBackend.login(email, password)
             if (!isSaved) passkeys.savePassword(email, password)
             profileRemoteRepository.synchronize(ignoreIfModifiedSince = true)
+            // The platform may upgrade the account to a passkey now, right after signing in with a password.
+            passkeyUpgrade.afterPasswordLogin()
 
             withContext(dispatcherProvider.main) { afterLogin() }
         } catch (e: ServerException) {

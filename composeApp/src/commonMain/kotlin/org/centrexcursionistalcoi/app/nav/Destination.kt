@@ -34,6 +34,7 @@ sealed interface Destination : NavKey {
         val showingAdminLendingsScreen: Boolean = false,
     ) : Destination
     @Serializable @SerialName("settings") data object Settings : Destination
+    @Serializable @SerialName("security") data object Security : Destination
 
     @Serializable @SerialName("lendingDetails") data class LendingDetails(val lendingId: Uuid) : Destination {
         constructor(lending: ReferencedLending): this(lending.id)
