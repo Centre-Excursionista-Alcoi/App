@@ -63,7 +63,7 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Delete
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Security
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Passkey
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.PasskeyExplanationCard
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.BackButton
@@ -218,7 +218,7 @@ private fun SecurityScreen(
 @Composable
 private fun PasskeyRow(passkey: PasskeyInfo, isLoading: Boolean, onRemove: () -> Unit) {
     SettingsRow(
-        icon = MaterialSymbols.Security,
+        icon = MaterialSymbols.Passkey,
         title = passkey.name ?: stringResource(Res.string.security_passkey_default_name),
         summary = listOf(
             stringResource(Res.string.security_passkey_created, passkey.createdAt.date()),
