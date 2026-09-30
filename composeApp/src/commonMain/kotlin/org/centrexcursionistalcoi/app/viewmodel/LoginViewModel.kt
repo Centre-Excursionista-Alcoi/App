@@ -101,16 +101,78 @@ class LoginViewModel(
         }
     }
 
-    fun register(email: String, password: String, afterLogin: () -> Unit) = viewModelScope.async {
+    /** Where the user is in registering, see [RegistrationStep]. */
+    val registrationStep: StateFlow<RegistrationStep>
+        field = MutableStateFlow<RegistrationStep>(RegistrationStep.Email)
+
+    /** Whether registering can create a passkey on this device, instead of a password. */
+    val canRegisterWithPasskey: Boolean get() = passkeys.isSupported
+
+    /** Emails [email] the code that proves it's theirs, and asks for it. */
+    fun requestRegistrationCode(email: String) = viewModelScope.launch {
+        try {
+            _isLoading.emit(true)
+            clearError()
+
+            authBackend.requestRegistrationCode(email.trim())
+            registrationStep.value = RegistrationStep.Code(email.trim())
+        } catch (e: ServerException) {
+            setError(e)
+        } finally {
+            _isLoading.emit(false)
+        }
+    }
+
+    /** The user entered the emailed [code]: it's checked when the account is created. */
+    fun enterRegistrationCode(code: String) {
+        val step = registrationStep.value as? RegistrationStep.Code ?: return
+        clearError()
+        registrationStep.value = RegistrationStep.Method(step.email, code.trim())
+    }
+
+    /** Goes back a step, e.g. to fix the email, or a wrong code. */
+    fun registrationBack() {
+        clearError()
+        registrationStep.value = when (val step = registrationStep.value) {
+            RegistrationStep.Email, is RegistrationStep.Code -> RegistrationStep.Email
+            is RegistrationStep.Method -> RegistrationStep.Code(step.email)
+        }
+    }
+
+    /** Registers the account with a new passkey, and logs it in. */
+    fun registerWithPasskey(afterLogin: () -> Unit) = viewModelScope.launch {
+        val step = registrationStep.value as? RegistrationStep.Method ?: return@launch
+        try {
+            _isLoading.emit(true)
+            clearError()
+
+            val options = authBackend.passkeyRegistrationOptions(step.email, step.code)
+            val response = passkeys.create(options) ?: return@launch
+            authBackend.registerWithPasskey(step.email, step.code, response, passkeys.deviceName)
+            profileRemoteRepository.synchronize(ignoreIfModifiedSince = true)
+
+            withContext(dispatcherProvider.main) { afterLogin() }
+        } catch (e: ServerException) {
+            setError(e)
+        } catch (e: PasskeyException) {
+            setError(e)
+        } finally {
+            _isLoading.emit(false)
+        }
+    }
+
+    /** Registers the account with [password], and logs it in. */
+    fun register(password: String, afterLogin: () -> Unit) = viewModelScope.async {
+        val step = registrationStep.value as? RegistrationStep.Method ?: return@async
         try {
             _isLoading.emit(true)
             clearError()
 
             // Try to register
-            authBackend.register(email, password)
+            authBackend.register(step.email, password, step.code)
 
             // If successful, log in
-            login(email, password, afterLogin = afterLogin).join()
+            login(step.email, password, afterLogin = afterLogin).join()
         } catch (e: ServerException) {
             setError(e)
         } finally {
@@ -132,4 +194,11 @@ class LoginViewModel(
             _isLoading.emit(false)
         }
     }
+}
+
+/** The steps of registering: the email, the code emailed to it, and how the account will sign in. */
+sealed interface RegistrationStep {
+    data object Email : RegistrationStep
+    data class Code(val email: String) : RegistrationStep
+    data class Method(val email: String, val code: String) : RegistrationStep
 }

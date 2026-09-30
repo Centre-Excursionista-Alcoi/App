@@ -50,6 +50,23 @@
 
     <string name="register_title">Register an Account</string>
     <string name="register_action">Register</string>
+    <string name="register_continue">Continue</string>
+    <string name="register_back">Back</string>
+    <string name="register_email_message">Use the email you gave the club. We'll send you a code to check it's yours.</string>
+    <string name="register_code">Code</string>
+    <string name="register_code_message">We've sent a 6-digit code to %1$s. Enter it below. If you can't find it, check your spam folder.</string>
+    <string name="register_code_resend">Send a new code</string>
+    <string name="register_password_instead">Use a password instead</string>
+    <string name="register_passkey_instead">Use a passkey instead</string>
+    <string name="register_password_message">Choose a password for your account. It needs at least 8 characters, with lowercase and uppercase letters, and a number.</string>
+    <string name="register_error_invalid_code">The code is wrong, or has expired. Go back to get a new one.</string>
+    <string name="register_error_email_not_found">There's no club member with this email. Use the email you gave the club, or ask the club to update it.</string>
+    <string name="register_error_member_not_active">Your club membership isn't active. Ask the club to renew it.</string>
+    <string name="register_error_already_registered">There's already an account with this email. Sign in instead, or tap "Can't sign in?".</string>
+    <string name="register_error_password_not_safe">The password needs at least 8 characters, with lowercase and uppercase letters, and a number.</string>
+    <string name="passkey_explanation_title">Sign in with your phone's screen lock</string>
+    <string name="passkey_explanation_message">A passkey lets you sign in with your fingerprint, your face or your phone's PIN, the same way you unlock your phone. There's no password to remember or type, and nobody can guess it or steal it. Your phone keeps it safe, and it's also saved in your Google or Apple account, so you won't lose it if you change phones.</string>
+    <string name="passkey_explanation_action">Create a passkey</string>
     <string name="password_show">Show Password</string>
     <string name="password_hide">Hide Password</string>
 
