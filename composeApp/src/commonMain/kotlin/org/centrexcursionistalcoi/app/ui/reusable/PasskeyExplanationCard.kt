@@ -20,7 +20,7 @@ import cea_app.composeapp.generated.resources.passkey_explanation_action
 import cea_app.composeapp.generated.resources.passkey_explanation_message
 import cea_app.composeapp.generated.resources.passkey_explanation_title
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Security
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Passkey
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -42,7 +42,7 @@ fun PasskeyExplanationCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(MaterialSymbols.Security, contentDescription = null, modifier = Modifier.size(32.dp))
+                Icon(MaterialSymbols.Passkey, contentDescription = null, modifier = Modifier.size(32.dp))
                 Text(
                     text = stringResource(Res.string.passkey_explanation_title),
                     style = MaterialTheme.typography.titleMedium,
