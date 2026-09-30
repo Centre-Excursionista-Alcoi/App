@@ -22,8 +22,6 @@ import androidx.navigation3.ui.NavDisplay
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import com.diamondedge.logging.logging
-import com.russhwolf.settings.ExperimentalSettingsApi
-import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
 import io.github.sudarshanmhasrup.localina.api.LocalinaApp
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import io.ktor.http.Url
@@ -34,10 +32,7 @@ import org.centrexcursionistalcoi.app.nav.LocalTransitionContext
 import org.centrexcursionistalcoi.app.nav.canOpenLinks
 import org.centrexcursionistalcoi.app.nav.rememberNavigator
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
-import org.centrexcursionistalcoi.app.push.LocalNotifications.checkIsSelf
 import org.centrexcursionistalcoi.app.push.PushNotification
-import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
-import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
 import org.centrexcursionistalcoi.app.ui.dialog.UpdateAvailableDialog
 import org.centrexcursionistalcoi.app.ui.dialog.UpdateProgressDialog
@@ -66,7 +61,7 @@ private val log = logging()
 fun MainApp(
     url: Url? = null,
     pushNotification: PushNotification? = null,
-    model: PlatformInitializerViewModel = koinViewModel { parametersOf(url) },
+    model: PlatformInitializerViewModel = koinViewModel { parametersOf(url, pushNotification) },
 ) {
     setSingletonImageLoaderFactory { context ->
         ImageLoader.Builder(context)
@@ -79,59 +74,10 @@ fun MainApp(
     AppTheme {
         LocalinaApp {
             val isReady by model.isReady.collectAsState()
-            val startDestination by model.startDestination.collectAsState()
-
-            LaunchedEffect(Unit) {
-                settings.getStringOrNull(SETTINGS_LANGUAGE)?.let { lang ->
-                    log.i { "Setting locale to: $lang" }
-                    LocaleUpdater.updateLocale(lang)
-                }
-            }
+            val targetDestination by model.targetDestination.collectAsState()
 
             if (isReady) {
-                LaunchedEffect(Unit) {
-                    log.d { "Platform is ready..." }
-                }
-
-                fun <N: PushNotification.LendingUpdated> destination(
-                    notification: N,
-                    forAdmin: (N) -> Destination? = { null },
-                    forUser: (N) -> Destination? = { null }
-                ): Destination? {
-                    return if (notification.checkIsSelf()) forUser(notification)
-                    else forAdmin(notification)
-                }
-
-                val afterLoad: Destination? = remember(pushNotification) {
-                    when (pushNotification) {
-                        // always admin notifications
-                        is PushNotification.NewLendingRequest -> Destination.Admin.LendingManagement(pushNotification.lendingId)
-                        is PushNotification.NewMemoryUpload -> Destination.Admin.LendingManagement(pushNotification.lendingId)
-                        // always user notifications
-                        is PushNotification.LendingCancelled -> null // the lending is cancelled, cannot show any info
-                        is PushNotification.LendingConfirmed -> Destination.LendingDetails(
-                            lendingId = pushNotification.lendingId
-                        )
-                        // could be either
-                        is PushNotification.LendingTaken -> destination(
-                            pushNotification,
-                            forAdmin = { Destination.Admin.LendingManagement(pushNotification.lendingId) },
-                            forUser = { Destination.LendingDetails(it.lendingId) },
-                        )
-                        is PushNotification.LendingPartiallyReturned -> destination(
-                            pushNotification,
-                            forAdmin = { Destination.Admin.LendingManagement(pushNotification.lendingId) },
-                            forUser = { Destination.LendingDetails(it.lendingId) },
-                        )
-                        is PushNotification.LendingReturned -> destination(
-                            pushNotification,
-                            forAdmin = { Destination.Admin.LendingManagement(pushNotification.lendingId) },
-                            forUser = { Destination.LendingDetails(it.lendingId) },
-                        )
-                        else -> null
-                    }
-                }
-                App(afterLoad ?: startDestination)
+                App(targetDestination)
             } else {
                 LaunchedEffect(Unit) {
                     log.d { "Platform not ready..." }
@@ -144,7 +90,7 @@ fun MainApp(
 }
 
 @Composable
-@OptIn(ExperimentalSettingsApi::class, ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 private fun App(
     afterLoad: Destination? = null,
 ) {

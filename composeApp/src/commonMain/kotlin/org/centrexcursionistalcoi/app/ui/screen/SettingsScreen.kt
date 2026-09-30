@@ -59,8 +59,6 @@ import cea_app.composeapp.generated.resources.settings_report_errors_title
 import cea_app.composeapp.generated.resources.settings_report_session_summary
 import cea_app.composeapp.generated.resources.settings_report_session_title
 import cea_app.composeapp.generated.resources.settings_title
-import com.russhwolf.settings.ExperimentalSettingsApi
-import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
 import io.ktor.client.plugins.sse.SSEClientException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,8 +67,6 @@ import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.di.GenderInflection
 import org.centrexcursionistalcoi.app.push.PlatformSSEConfiguration
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
-import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
-import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.ui.dialog.RemoveAccountDialog
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Agender
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CloudSync
@@ -100,13 +96,17 @@ private val availableLanguages = listOf(
     Language("ca", "Català", Res.drawable.flag_ca),
     Language("es", "Castellano", Res.drawable.flag_es),
 )
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSettingsApi::class)
+
+fun languageFromCode(code: String): Language? = availableLanguages.firstOrNull { it.code == code }
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
     onDeleteAccount: () -> Unit,
     viewModel: SettingsViewModel = koinViewModel { parametersOf(onDeleteAccount) },
 ) {
+    val language by viewModel.language.collectAsState()
     val gender by viewModel.gender?.collectAsState() ?: mutableStateOf(null)
 
     val fcmToken by viewModel.fcmToken.collectAsState()
@@ -119,6 +119,8 @@ fun SettingsScreen(
     val privacySessionReplay by viewModel.privacySessionReplay.collectAsState()
 
     SettingsScreen(
+        language = language,
+        onLanguageChange = viewModel::onLanguageChange,
         gender = gender,
         onGenderChange = viewModel::onGenderChange,
         fcmToken = fcmToken,
@@ -135,9 +137,11 @@ fun SettingsScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSettingsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsScreen(
+    language: Language? = null,
+    onLanguageChange: (Language) -> Unit,
     gender: GenderInflection?,
     onGenderChange: (GenderInflection) -> Unit,
 
@@ -179,11 +183,9 @@ private fun SettingsScreen(
                 SettingsOptionsRow(
                     title = stringResource(Res.string.settings_language),
                     options = availableLanguages,
+                    selection = language,
                     icon = MaterialSymbols.Language,
-                    onOptionSelected = { (lang) ->
-                        settings.putString(SETTINGS_LANGUAGE, lang)
-                        LocaleUpdater.updateLocale(lang)
-                    },
+                    onOptionSelected = { onLanguageChange(it) },
                     optionLeadingContent = {
                         Image(
                             painter = painterResource(it.flag),
@@ -340,6 +342,8 @@ private fun SettingsScreen(
 @Composable
 fun SettingsScreen_NoFcmToken_Preview() {
     SettingsScreen(
+        language = null,
+        onLanguageChange = {},
         gender = null,
         onGenderChange = {},
         fcmToken = null,
@@ -361,6 +365,8 @@ fun SettingsScreen_NoFcmToken_Preview() {
 @Composable
 fun SettingsScreen_WithFcmToken_Preview() {
     SettingsScreen(
+        language = null,
+        onLanguageChange = {},
         gender = null,
         onGenderChange = {},
         fcmToken = "123456789",

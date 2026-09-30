@@ -28,12 +28,12 @@ class AppBase : Application(), KoinComponent {
         super.onCreate()
         KmLogging.addLogger(PlatformLogger(FixedLogLevel(true)))
 
-        initializeSentry()
-
         initKoin {
             androidContext(this@AppBase)
             workManagerFactory()
         }
+
+        initializeSentry()
 
         KMPNotifier.initialize(
             NotificationPlatformConfiguration.Android(

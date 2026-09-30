@@ -14,10 +14,12 @@ import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class ProfilePageModel(
+    profileRepository: ProfileRepository,
     departmentsRepository: DepartmentsRepository,
     private val departmentsRemoteRepository: DepartmentsRemoteRepository,
+    private val profileRemoteRepository: ProfileRemoteRepository,
 ) : ViewModel() {
-    val profile = ProfileRepository.profile.stateInViewModel()
+    val profile = profileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
 
     /**
@@ -34,14 +36,14 @@ class ProfilePageModel(
         validTo: LocalDate,
         documents: List<PlatformFile>,
     ): Deferred<Boolean?> = async {
-        ProfileRemoteRepository.createInsurance(company, policyNumber, validFrom, validTo, documents)
-        this@ProfilePageModel.launch { ProfileRemoteRepository.synchronize() }
+        profileRemoteRepository.createInsurance(company, policyNumber, validFrom, validTo, documents)
+        this@ProfilePageModel.launch { profileRemoteRepository.synchronize() }
         true
     }
 
     fun connectFEMECV(username: String, password: CharArray): Deferred<Throwable?> = async {
         try {
-            ProfileRemoteRepository.connectFEMECV(username, password)
+            profileRemoteRepository.connectFEMECV(username, password)
             null
         } catch (e: ServerException) {
             e
@@ -49,7 +51,7 @@ class ProfilePageModel(
     }
 
     fun disconnectFEMECV() = launch {
-        ProfileRemoteRepository.disconnectFEMECV()
+        profileRemoteRepository.disconnectFEMECV()
     }
 
     fun requestJoinDepartment(department: Department) = launch {

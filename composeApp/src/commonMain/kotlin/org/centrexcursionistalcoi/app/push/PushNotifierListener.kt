@@ -5,31 +5,39 @@ import com.mmk.kmpnotifier.notification.PayloadData
 import com.mmk.kmpnotifier.push.PushListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
-import org.centrexcursionistalcoi.app.sync.*
+import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
+import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncEntityBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncEventBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob.Companion.EXTRA_IS_REMOVAL
 import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob.Companion.EXTRA_LENDING_ID
 import org.koin.core.annotation.Singleton
-import org.koin.core.component.KoinComponent
 
 @Singleton
 class PushNotifierListener(
     private val dispatcherProvider: DispatcherProvider,
     private val coordinator: BackgroundJobCoordinator,
-) : PushListener, KoinComponent {
+    private val fcmTokenManager: FCMTokenManager,
+    private val profileRepository: ProfileRepository,
+    private val localNotifications: LocalNotifications,
+) : PushListener {
     private val log = logging()
 
     override fun onNewToken(token: String) {
         log.i { "onNewToken: $token" }
 
-        if (!ProfileRepository.isLoggedIn()) {
+        val isLoggedIn = runBlocking { profileRepository.isLoggedIn() }
+        if (!isLoggedIn) {
             log.i { "User is not logged in, skipping token registration." }
             return
         }
 
         CoroutineScope(dispatcherProvider.io).launch {
-            FCMTokenManager.renovate(token)
+            fcmTokenManager.renovate(token)
         }
     }
 
@@ -103,7 +111,9 @@ class PushNotifierListener(
                 }
             }
 
-            LocalNotifications.showPushNotification(notification, data)
+            runBlocking {
+                localNotifications.showPushNotification(notification, data)
+            }
         } catch (e: IllegalArgumentException) {
             log.e(e) { "Failed to parse push notification content" }
         }

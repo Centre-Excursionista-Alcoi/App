@@ -27,6 +27,7 @@ import kotlin.uuid.Uuid
 @KoinViewModel
 class DepartmentsManagementViewModel(
     private val dispatcherProvider: DispatcherProvider,
+    profileRepository: ProfileRepository,
     departmentsRepository: DepartmentsRepository,
     usersRepository: UsersRepository,
     private val departmentsRemoteRepository: DepartmentsRemoteRepository,
@@ -36,7 +37,7 @@ class DepartmentsManagementViewModel(
         private val log = logging()
     }
 
-    val profile = ProfileRepository.profile.stateInViewModel()
+    val profile = profileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
     val users = usersRepository.selectAllAsFlow().stateInViewModel()
 

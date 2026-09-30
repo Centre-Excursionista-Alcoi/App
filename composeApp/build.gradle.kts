@@ -145,11 +145,7 @@ kotlin {
             implementation(libs.ktor.client.logging)
 
             // Settings
-            implementation(libs.kmm.settings.core)
-            implementation(libs.kmm.settings.coroutines)
-            implementation(libs.kmm.settings.makeObservable)
-            implementation(libs.kmm.settings.noArg)
-            implementation(libs.kmm.settings.serialization)
+            implementation(libs.androidx.datastore)
 
             // Logging
             api(libs.logging)

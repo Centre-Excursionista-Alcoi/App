@@ -15,7 +15,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
-import io.mockk.every
+import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -39,9 +39,9 @@ class TestSessionTokens {
     /** An in-memory [CredentialsStore]. */
     private var savedSession: SavedSession? = null
     private val credentialsStore = mockk<CredentialsStore> {
-        every { getSession() } answers { savedSession }
-        every { saveSession(any(), any()) } answers { savedSession = SavedSession(firstArg(), secondArg()) }
-        every { clear() } answers { savedSession = null }
+        coEvery { getSession() } answers { savedSession }
+        coEvery { saveSession(any(), any()) } answers { savedSession = SavedSession(firstArg(), secondArg()) }
+        coEvery { clear() } answers { savedSession = null }
     }
     private val sessionTokens = SessionTokens(credentialsStore)
 

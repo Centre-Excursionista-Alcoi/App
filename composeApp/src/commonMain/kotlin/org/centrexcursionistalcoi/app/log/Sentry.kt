@@ -3,10 +3,10 @@ package org.centrexcursionistalcoi.app.log
 import com.diamondedge.logging.KmLogging
 import io.sentry.kotlin.multiplatform.Sentry
 import org.centrexcursionistalcoi.app.BuildKonfig
+import org.centrexcursionistalcoi.app.settings.globalSettingsStore
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ANALYTICS
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ERRORS
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_SESSION_REPLAY
-import org.centrexcursionistalcoi.app.storage.settings
 
 private const val SESSION_REPLAY_ON_ERROR_SAMPLE_RATE = 1.0
 private const val SESSION_REPLAY_SESSION_SAMPLE_RATE = 0.1
@@ -16,9 +16,9 @@ fun initializeSentry() {
     // same project as real user data, and DSN/session-replay is meant for production usage.
     if (BuildKonfig.DEBUG) return
 
-    val reportErrors = settings.getBoolean(SETTINGS_PRIVACY_ERRORS, true)
-    val reportAnalytics = settings.getBoolean(SETTINGS_PRIVACY_ANALYTICS, true)
-    val reportSessionReplay = settings.getBoolean(SETTINGS_PRIVACY_SESSION_REPLAY, true)
+    val reportErrors = globalSettingsStore.getBlocking(SETTINGS_PRIVACY_ERRORS, true)
+    val reportAnalytics = globalSettingsStore.getBlocking(SETTINGS_PRIVACY_ANALYTICS, true)
+    val reportSessionReplay = globalSettingsStore.getBlocking(SETTINGS_PRIVACY_SESSION_REPLAY, true)
 
     Sentry.init { options ->
         options.dsn = BuildKonfig.SENTRY_DSN

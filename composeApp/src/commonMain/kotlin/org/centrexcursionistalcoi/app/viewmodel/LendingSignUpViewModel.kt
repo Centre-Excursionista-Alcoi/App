@@ -8,14 +8,17 @@ import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
-class LendingSignUpViewModel(private val dispatcherProvider: DispatcherProvider) : ViewModel() {
+class LendingSignUpViewModel(
+    private val dispatcherProvider: DispatcherProvider,
+    private val profileRemoteRepository: ProfileRemoteRepository,
+) : ViewModel() {
     fun signUpForLending(
         phoneNumber: String,
         sports: List<Sports>,
         onComplete: () -> Unit
     ) = launch {
-        ProfileRemoteRepository.signUpForLending(phoneNumber, sports)
-        ProfileRemoteRepository.synchronize()
+        profileRemoteRepository.signUpForLending(phoneNumber, sports)
+        profileRemoteRepository.synchronize()
         withContext(dispatcherProvider.main) { onComplete() }
     }
 }

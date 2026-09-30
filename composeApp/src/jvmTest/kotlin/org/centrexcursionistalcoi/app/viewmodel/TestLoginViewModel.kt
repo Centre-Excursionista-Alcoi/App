@@ -3,7 +3,6 @@ package org.centrexcursionistalcoi.app.viewmodel
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -37,11 +36,13 @@ class TestLoginViewModel {
         override val default = Dispatchers.Unconfined
     }
 
+    private val profileRemoteRepository = mockk<ProfileRemoteRepository> {
+        coEvery { synchronize(any(), any(), any()) } returns true
+    }
+
     @BeforeTest
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        mockkObject(ProfileRemoteRepository)
-        coEvery { ProfileRemoteRepository.synchronize(any(), any(), any()) } returns true
     }
 
     @AfterTest
@@ -63,7 +64,7 @@ class TestLoginViewModel {
             current.value = SavedAccount("user@example.com")
         }
 
-        val viewModel = LoginViewModel(authBackend, dispatcherProvider, credentialsStore)
+        val viewModel = LoginViewModel(authBackend, dispatcherProvider, credentialsStore, profileRemoteRepository)
         assertNull(viewModel.existingAccountEmail.value, "No account was saved before the screen loaded")
 
         var loggedIn = false

@@ -8,9 +8,10 @@ import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class MemoriesViewModel(
+    profileRepository: ProfileRepository,
     memoriesRepository: MemoriesRepository,
 ) : ViewModel() {
-    private val profile = ProfileRepository.profile.stateInViewModel()
+    private val profile = profileRepository.profile.stateInViewModel()
 
     /**
      * The memories submitted **by the current user**. Always editable by them.

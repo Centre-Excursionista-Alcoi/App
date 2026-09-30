@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,17 +15,19 @@ import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.Permission
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
-import org.centrexcursionistalcoi.app.storage.settings
+import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class HomePageModel(
+    profileRepository: ProfileRepository,
     postsRepository: PostsRepository,
     eventsRepository: EventsRepository,
     departmentsRepository: DepartmentsRepository,
     private val eventsRemoteRepository: EventsRemoteRepository,
+    private val settings: SettingsStore,
 ) : ViewModel() {
-    val profile = ProfileRepository.profile.stateInViewModel()
+    val profile = profileRepository.profile.stateInViewModel()
 
     val posts = postsRepository.selectAllAsFlow().stateInViewModel()
     val events = eventsRepository.selectAllAsFlow().stateInViewModel()
@@ -45,7 +48,7 @@ class HomePageModel(
     val notificationPermissionResult = _notificationPermissionResult.asStateFlow()
 
     fun refreshPermissions() = launch {
-        val denied = settings.getBooleanOrNull("permission.notifications.denied") == true
+        val denied = settings.get(NOTIFICATION_PERMISSION_DENIED_KEY, false) == true
         if (denied) _notificationPermissionResult.value = null
         else _notificationPermissionResult.value = permissionHelper.checkIsPermissionGranted(Permission.Notification)
     }
@@ -55,7 +58,7 @@ class HomePageModel(
     }
 
     fun denyNotificationsPermission() = launch {
-        settings.putBoolean("permission.notifications.denied", true)
+        settings.set(NOTIFICATION_PERMISSION_DENIED_KEY, true)
         _notificationPermissionResult.value = null
     }
 
@@ -65,5 +68,9 @@ class HomePageModel(
 
     fun rejectEventAssistance(event: ReferencedEvent) = launch {
         eventsRemoteRepository.rejectAssistance(event.id)
+    }
+
+    companion object {
+        private val NOTIFICATION_PERMISSION_DENIED_KEY = booleanPreferencesKey("permission_notifications_denied")
     }
 }

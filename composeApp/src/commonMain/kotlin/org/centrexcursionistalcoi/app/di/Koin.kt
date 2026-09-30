@@ -28,6 +28,7 @@ fun initKoin(extraModules: List<Module> = emptyList(), config: KoinApplication.(
                 ViewModelScanModule().module() +
                 SyncScanModule().module() +
                 PushScanModule().module() +
+                SettingsScanModule().module() +
                 extraModules,
         )
     }

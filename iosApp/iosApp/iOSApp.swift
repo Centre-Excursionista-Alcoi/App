@@ -13,6 +13,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
       // Koin must be started before anything below resolves a Koin-managed dependency (e.g. PushNotifierListener).
       KoinIosKt.doInitKoinIos()
 
+      // Reads the privacy settings through Koin, so it must run after Koin is started.
+      SentryKt.initializeSentry()
+
       //By default showPushNotification value is true.
       //When set showPushNotification to false foreground push  notification will not be shown.
       //You can still get notification content using #onPushNotification listener method.
@@ -46,10 +49,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct iOSApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-
-    init() {
-        SentryKt.initializeSentry()
-    }
 
     var body: some Scene {
         WindowGroup {

@@ -18,13 +18,14 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 class UsersManagementViewModel(
     private val dispatcherProvider: DispatcherProvider,
+    profileRepository: ProfileRepository,
     departmentsRepository: DepartmentsRepository,
     membersRepository: MembersRepository,
     usersRepository: UsersRepository,
     private val departmentsRemoteRepository: DepartmentsRemoteRepository,
     private val usersRemoteRepository: UsersRemoteRepository,
 ) : ViewModel() {
-    val profile = ProfileRepository.profile.stateInViewModel()
+    val profile = profileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
     val members = membersRepository.selectAllAsFlow().stateInViewModel()
     val users = usersRepository.selectAllAsFlow().stateInViewModel()

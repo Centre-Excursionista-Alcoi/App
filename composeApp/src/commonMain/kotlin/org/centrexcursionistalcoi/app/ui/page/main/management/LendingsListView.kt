@@ -89,8 +89,6 @@ import com.kizitonwose.calendar.core.minusMonths
 import com.kizitonwose.calendar.core.now
 import com.kizitonwose.calendar.core.plusDays
 import com.kizitonwose.calendar.core.plusMonths
-import com.russhwolf.settings.ExperimentalSettingsApi
-import com.russhwolf.settings.coroutines.getBooleanFlow
 import kotlinx.coroutines.Job
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -99,8 +97,6 @@ import kotlinx.datetime.YearMonth
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
-import org.centrexcursionistalcoi.app.storage.MANAGEMENT_TOGGLE_COMPLETED_LENDINGS
-import org.centrexcursionistalcoi.app.storage.settings
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ChevronRight
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Close
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
@@ -122,6 +118,7 @@ fun LendingsListView(
     onReceiveRequested: (ReferencedLending) -> Unit,
     model: LendingsManagementViewModel = koinViewModel()
 ) {
+    val toggleCompletedLendings by model.toggleCompletedLendings.collectAsState()
     val lendings by model.lendings.collectAsState()
     val users by model.users.collectAsState()
 
@@ -129,6 +126,8 @@ fun LendingsListView(
         snackbarHostState = snackbarHostState,
         lendings = lendings,
         users = users.orEmpty(),
+        toggleCompletedLendings = toggleCompletedLendings,
+        onToggleCompletedLendings = model::toggleCompletedLendings,
         onConfirmLendingRequest = { model.confirmLending(it) },
         onSkipMemoryRequest = { model.skipLendingMemory(it) },
         onGiveRequested = onGiveRequested,
@@ -143,6 +142,8 @@ private fun LendingsListView(
     snackbarHostState: SnackbarHostState,
     lendings: List<ReferencedLending>?,
     users: List<UserData>,
+    toggleCompletedLendings: Boolean,
+    onToggleCompletedLendings: (Boolean) -> Unit,
     onConfirmLendingRequest: (ReferencedLending) -> Job,
     onSkipMemoryRequest: (ReferencedLending) -> Job,
     onGiveRequested: (ReferencedLending) -> Unit,
@@ -173,6 +174,8 @@ private fun LendingsListView(
                 )
                 LendingsLazyColumn(
                     lendings = lendings,
+                    toggleCompletedLendings = toggleCompletedLendings,
+                    onToggleCompletedLendings = onToggleCompletedLendings,
                     modifier = Modifier.fillMaxWidth().weight(1f).padding(8.dp),
                     selectedLending = selectedLending,
                     onClick = { selectedLending = it }
@@ -235,6 +238,8 @@ private fun LendingsListView(
             // no lending is selected
             LendingsLazyColumn(
                 lendings = lendings,
+                toggleCompletedLendings = toggleCompletedLendings,
+                onToggleCompletedLendings = onToggleCompletedLendings,
                 modifier = Modifier.fillMaxSize().padding(8.dp),
                 selectedLending = selectedLending,
                 onClick = { selectedLending = it }
@@ -283,14 +288,14 @@ private fun LendingManagementScreenContent_ExtraContent(
 }
 
 @Composable
-@OptIn(ExperimentalSettingsApi::class)
 private fun LendingsLazyColumn(
     lendings: List<ReferencedLending>?,
     selectedLending: ReferencedLending?,
+    toggleCompletedLendings: Boolean,
+    onToggleCompletedLendings: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     onClick: (ReferencedLending) -> Unit
 ) {
-    val toggleCompletedLendings by settings.getBooleanFlow(MANAGEMENT_TOGGLE_COMPLETED_LENDINGS, false).collectAsState(initial = false)
     val completedLendingsIndicatorRotation by animateFloatAsState(
         targetValue = if (toggleCompletedLendings) 0f else 90f
     )
@@ -334,9 +339,7 @@ private fun LendingsLazyColumn(
                 Row(
                     modifier = Modifier
                         .padding(vertical = 8.dp)
-                        .clickable {
-                            settings.putBoolean(MANAGEMENT_TOGGLE_COMPLETED_LENDINGS, !toggleCompletedLendings)
-                        },
+                        .clickable { onToggleCompletedLendings(!toggleCompletedLendings) },
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(

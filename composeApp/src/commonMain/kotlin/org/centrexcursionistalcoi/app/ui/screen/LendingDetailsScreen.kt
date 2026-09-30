@@ -41,7 +41,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.insurance_view_document
@@ -77,7 +76,6 @@ import com.mohamedrejeb.calf.core.ExperimentalCalfApi
 import com.mohamedrejeb.calf.share.rememberShareLauncher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import org.centrexcursionistalcoi.app.data.InventoryItem
@@ -89,7 +87,6 @@ import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
-import org.centrexcursionistalcoi.app.data.referenced
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Article
@@ -120,7 +117,6 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import kotlin.time.Clock
-import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 @Composable
@@ -584,32 +580,3 @@ private val previewUserData = UserData(
     insurances = emptyList(),
     isDisabled = false,
 )
-
-private val previewLending = Lending(
-    id = "290ecb88-5676-4baf-971b-4488e174b942".toUuid(),
-    userSub = previewUserData.sub,
-    timestamp = Instant.fromEpochSeconds(1766509399),
-    confirmed = false,
-    taken = false,
-    givenBy = null,
-    givenAt = null,
-    returned = false,
-    receivedItems = emptyList(),
-    memorySubmitted = false,
-    memorySubmittedAt = null,
-    memory = null,
-    memoryReviewed = false,
-    from = LocalDate(2025, 12, 23),
-    to = LocalDate(2025, 12, 25),
-    notes = null,
-    items = listOf(previewItem.dereference())
-).referenced(listOf(previewUserData), listOf(previewItemType), memory = null)
-
-@Preview(showBackground = true)
-@Composable
-private fun LendingDetailsScreen_Content_Preview() {
-    LendingDetailsScreen_Content(
-        lending = previewLending,
-        onMemoryEditorRequest = {},
-    )
-}

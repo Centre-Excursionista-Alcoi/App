@@ -1,12 +1,38 @@
 package org.centrexcursionistalcoi.app.push
 
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.notification_department_kicked_message
+import cea_app.composeapp.generated.resources.notification_department_kicked_title
+import cea_app.composeapp.generated.resources.notification_event_cancelled_message
+import cea_app.composeapp.generated.resources.notification_event_cancelled_title
+import cea_app.composeapp.generated.resources.notification_join_request_approved_message
+import cea_app.composeapp.generated.resources.notification_join_request_approved_title
+import cea_app.composeapp.generated.resources.notification_join_request_denied_message
+import cea_app.composeapp.generated.resources.notification_join_request_denied_title
+import cea_app.composeapp.generated.resources.notification_lending_cancelled_message
+import cea_app.composeapp.generated.resources.notification_lending_cancelled_title
+import cea_app.composeapp.generated.resources.notification_lending_confirmed_message
+import cea_app.composeapp.generated.resources.notification_lending_confirmed_title
+import cea_app.composeapp.generated.resources.notification_lending_created_message
+import cea_app.composeapp.generated.resources.notification_lending_created_title
+import cea_app.composeapp.generated.resources.notification_lending_deleted_message
+import cea_app.composeapp.generated.resources.notification_lending_deleted_reason_message
+import cea_app.composeapp.generated.resources.notification_lending_deleted_title
+import cea_app.composeapp.generated.resources.notification_lending_given_message
+import cea_app.composeapp.generated.resources.notification_lending_given_title
+import cea_app.composeapp.generated.resources.notification_lending_returned_message
+import cea_app.composeapp.generated.resources.notification_lending_returned_other_message
+import cea_app.composeapp.generated.resources.notification_lending_returned_other_title
+import cea_app.composeapp.generated.resources.notification_lending_returned_partial_message
+import cea_app.composeapp.generated.resources.notification_lending_returned_partial_title
+import cea_app.composeapp.generated.resources.notification_lending_returned_title
+import cea_app.composeapp.generated.resources.notification_lending_taken_message
+import cea_app.composeapp.generated.resources.notification_lending_taken_title
 import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.KMPNotifier
 import com.mmk.kmpnotifier.local.localNotifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.data.Post
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
@@ -19,11 +45,20 @@ import org.centrexcursionistalcoi.app.push.PushNotification.TargetedNotification
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.get
+import org.koin.core.annotation.Singleton
 import kotlin.random.Random
 
-object LocalNotifications : KoinComponent {
+@Singleton
+class LocalNotifications(
+    private val dispatcherProvider: DispatcherProvider,
+
+    private val profileRepository: ProfileRepository,
+    private val eventsRepository: EventsRepository,
+    private val postsRepository: PostsRepository,
+
+    private val postsRemoteRepository: PostsRemoteRepository,
+    private val departmentsRepository: DepartmentsRepository
+) {
     private val log = logging()
 
     /**
@@ -32,8 +67,8 @@ object LocalNotifications : KoinComponent {
      * Compares the [TargetedNotification.userSub] with the current profile's [ProfileResponse.sub].
      * @return true if the notification is for the current user, false otherwise.
      */
-    fun TargetedNotification.checkIsSelf(): Boolean {
-        val profile = ProfileRepository.getProfile() ?: return false
+    suspend fun TargetedNotification.checkIsSelf(): Boolean {
+        val profile = profileRepository.getProfile() ?: return false
         return profile.sub == userSub
     }
 
@@ -54,13 +89,13 @@ object LocalNotifications : KoinComponent {
     }
 
     fun showNotification(notificationTitle: suspend () -> String, notificationBody: suspend () -> String, data: Map<String, *>) {
-        CoroutineScope(get<DispatcherProvider>().io).launch {
+        CoroutineScope(dispatcherProvider.io).launch {
             notify(notificationTitle(), notificationBody(), data)
         }
     }
 
     fun showNotification(notificationTitleRes: StringResource, notificationBodyRes: StringResource, data: Map<String, *>) {
-        CoroutineScope(get<DispatcherProvider>().io).launch {
+        CoroutineScope(dispatcherProvider.io).launch {
             notify(
                 notificationTitle = getString(notificationTitleRes),
                 notificationBody = getString(notificationBodyRes),
@@ -69,7 +104,7 @@ object LocalNotifications : KoinComponent {
         }
     }
 
-    fun showPushNotification(notification: PushNotification, data: Map<String, *>) {
+    suspend fun showPushNotification(notification: PushNotification, data: Map<String, *>) {
         when (notification) {
             is PushNotification.LendingConfirmed -> {
                 // Only show if the notification is for the current user
@@ -193,7 +228,7 @@ object LocalNotifications : KoinComponent {
                     return
                 }
 
-                runBlocking { get<DepartmentsRepository>().get(notification.departmentId) }?.let { event ->
+                departmentsRepository.get(notification.departmentId)?.let { event ->
                     showNotification(
                         { getString(Res.string.notification_department_kicked_title) },
                         {
@@ -212,11 +247,11 @@ object LocalNotifications : KoinComponent {
                     when (notification.entityClass) {
                         Post::class.simpleName -> {
                             val postId = notification.entityUuid ?: return log.w { "Invalid post ID: ${notification.entityId}" }
-                            val localPost = runBlocking { get<PostsRepository>().get(postId) }
+                            val localPost = postsRepository.get(postId)
                             if (localPost != null) {
                                 showNotification({ localPost.title }, { localPost.content }, data)
                             } else {
-                                val remotePost = runBlocking { get<PostsRemoteRepository>().get(postId) }
+                                val remotePost = postsRemoteRepository.get(postId)
                                 if (remotePost != null) {
                                     showNotification({ remotePost.title }, { remotePost.content }, data)
                                 } else {
@@ -231,9 +266,9 @@ object LocalNotifications : KoinComponent {
                 when (notification.entityClass) {
                     Event::class.simpleName -> {
                         val eventId = notification.entityUuid ?: return log.w { "Invalid event ID: ${notification.entityId}" }
-                        runBlocking { get<EventsRepository>().get(eventId) }?.let { event ->
+                        eventsRepository.get(eventId)?.let { event ->
                             if (event.requiresInsurance) {
-                                val profile = ProfileRepository.getProfile() ?: return log.w { "Could not find user sub" }
+                                val profile = profileRepository.getProfile() ?: return log.w { "Could not find user sub" }
                                 val confirmedAssistance = profile.sub in event.userSubList.map { it.sub }
                                 if (!confirmedAssistance) {
                                     log.d { "Received notification for cancelled event, but assistance not confirmed." }

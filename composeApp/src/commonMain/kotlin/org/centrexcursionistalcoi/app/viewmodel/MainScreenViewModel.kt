@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.ReferencedLending
-import org.centrexcursionistalcoi.app.data.isStub
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
@@ -18,6 +17,7 @@ import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class MainScreenViewModel(
+    profileRepository: ProfileRepository,
     departmentsRepository: DepartmentsRepository,
     lendingsRepository: LendingsRepository,
     private val departmentsRemoteRepository: DepartmentsRemoteRepository,
@@ -29,13 +29,13 @@ class MainScreenViewModel(
         .map { it in listOf(BackgroundJobState.RUNNING) }
         .stateInViewModel()
 
-    val profile = ProfileRepository.profile.stateInViewModel()
+    val profile = profileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
     val lendings = lendingsRepository.selectAllAsFlow().stateInViewModel()
     val activeUserLending = combine(profile, lendings) { profile, lendings ->
         val profileValue = profile ?: return@combine null
         lendings
-            ?.filter { it.user.sub == profileValue.sub || it.user.isStub() }
+            ?.filter { it.user.sub == profileValue.sub || it.user.sub == "unknown" }
             ?.find { it.status().isPending() }
     }.stateInViewModel()
 

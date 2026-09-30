@@ -12,7 +12,6 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
@@ -40,7 +39,7 @@ class TestAuthBackendRestoreKeys {
     private val credentialsStore = mockk<CredentialsStore>()
     private val sessionTokens = mockk<SessionTokens>(relaxUnitFun = true)
     private val restoreKeys = mockk<RestoreKeys>(relaxUnitFun = true)
-    private val authBackend = AuthBackend(mockk(), credentialsStore, sessionTokens, restoreKeys)
+    private val authBackend = AuthBackend(mockk(), credentialsStore, sessionTokens, restoreKeys, mockk(relaxed = true), mockk(relaxed = true))
 
     @AfterTest
     fun tearDown() {
@@ -49,7 +48,7 @@ class TestAuthBackendRestoreKeys {
 
     @Test
     fun `a valid saved session is refreshed, without the restore key`() = runTest {
-        every { credentialsStore.getSession() } returns SavedSession("user@example.com", "refresh")
+        coEvery { credentialsStore.getSession() } returns SavedSession("user@example.com", "refresh")
         coEvery { sessionTokens.refresh(any()) } returns true
 
         assertTrue(authBackend.tryAutoRelogin())
@@ -58,7 +57,7 @@ class TestAuthBackendRestoreKeys {
 
     @Test
     fun `without a saved session the restore key is redeemed`() = runTest {
-        every { credentialsStore.getSession() } returns null
+        coEvery { credentialsStore.getSession() } returns null
         coEvery { restoreKeys.redeem() } returns tokens
 
         assertTrue(authBackend.tryAutoRelogin())
@@ -67,7 +66,7 @@ class TestAuthBackendRestoreKeys {
 
     @Test
     fun `a session that's over falls back to the restore key`() = runTest {
-        every { credentialsStore.getSession() } returns SavedSession("user@example.com", "refresh")
+        coEvery { credentialsStore.getSession() } returns SavedSession("user@example.com", "refresh")
         coEvery { sessionTokens.refresh(any()) } returns false
         coEvery { restoreKeys.redeem() } returns tokens
 
@@ -77,7 +76,7 @@ class TestAuthBackendRestoreKeys {
 
     @Test
     fun `a failed refresh keeps the session and doesn't touch the restore key`() = runTest {
-        every { credentialsStore.getSession() } returns SavedSession("user@example.com", "refresh")
+        coEvery { credentialsStore.getSession() } returns SavedSession("user@example.com", "refresh")
         coEvery { sessionTokens.refresh(any()) } throws IOException("offline")
 
         assertFalse(authBackend.tryAutoRelogin())
@@ -86,7 +85,7 @@ class TestAuthBackendRestoreKeys {
 
     @Test
     fun `without a session or restore key there's nothing to recover`() = runTest {
-        every { credentialsStore.getSession() } returns null
+        coEvery { credentialsStore.getSession() } returns null
         coEvery { restoreKeys.redeem() } returns null
 
         assertFalse(authBackend.tryAutoRelogin())

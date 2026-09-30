@@ -108,7 +108,7 @@ class SessionTokens(private val credentialsStore: CredentialsStore) {
         return tokens.accessToken
     }
 
-    private fun store(tokens: TokenResponse) {
+    private suspend fun store(tokens: TokenResponse) {
         // Saved first: the old refresh token is already invalid.
         credentialsStore.saveSession(tokens.accountEmail, tokens.refreshToken)
         accessToken = tokens.accessToken

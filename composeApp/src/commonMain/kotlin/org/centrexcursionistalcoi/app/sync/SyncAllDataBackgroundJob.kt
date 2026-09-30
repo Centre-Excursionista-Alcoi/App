@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.sync
 
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.sync_step_departments
 import cea_app.composeapp.generated.resources.sync_step_events
@@ -35,8 +37,8 @@ import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
+import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
-import org.centrexcursionistalcoi.app.storage.settings
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Singleton
 import kotlin.time.Clock
@@ -46,6 +48,7 @@ import kotlin.time.Instant
 @Singleton
 @Named(SyncAllDataBackgroundJob.UNIQUE_NAME)
 class SyncAllDataBackgroundJob(
+    private val profileRemoteRepository: ProfileRemoteRepository,
     private val departmentsRemoteRepository: DepartmentsRemoteRepository,
     private val usersRemoteRepository: UsersRemoteRepository,
     private val membersRemoteRepository: MembersRemoteRepository,
@@ -65,6 +68,8 @@ class SyncAllDataBackgroundJob(
     private val inventoryItemsRepository: InventoryItemsRepository,
     private val lendingsRepository: LendingsRepository,
     private val memoriesRepository: MemoriesRepository,
+
+    private val settings: SettingsStore,
 ) : BackgroundJob() {
     private val log = logging()
 
@@ -74,9 +79,9 @@ class SyncAllDataBackgroundJob(
         // migration -- see DatabaseMigrations.kt -- with nothing local to show for them yet. The server has no reason
         // to have bumped affected entities' own lastUpdate just because the client's local schema changed, so a plain
         // If-Modified-Since sync could get a 304 and leave those columns null indefinitely. Force a real refetch here.
-        val justUpgraded = databaseVersionUpgrade()
+        val justUpgraded = settings.databaseVersionUpgrade()
 
-        val lastSync = settings.getLongOrNull(SETTINGS_LAST_SYNC)?.let { Instant.fromEpochSeconds(it) }
+        val lastSync = settings.get(SETTINGS_LAST_SYNC)?.let { Instant.fromEpochSeconds(it) }
         val now = Clock.System.now()
         return if (
             forceSync ||
@@ -89,8 +94,8 @@ class SyncAllDataBackgroundJob(
             // Synchronize the local database with the remote data
             synchronizeAllRepositories(forceSync || justUpgraded)
 
-            settings.putLong(SETTINGS_LAST_SYNC, Clock.System.now().epochSeconds)
-            settings.putInt(SETTINGS_LAST_SYNC_VERSION, DATABASE_VERSION)
+            settings.set(SETTINGS_LAST_SYNC, Clock.System.now().epochSeconds)
+            settings.set(SETTINGS_LAST_SYNC_VERSION, DATABASE_VERSION)
 
             SyncResult.Success()
         } else {
@@ -106,7 +111,7 @@ class SyncAllDataBackgroundJob(
     ) {
         try {
             // First, synchronize the user profile
-            ProfileRemoteRepository.synchronize(progressNotifier.withContext(Res.string.sync_step_profile), ignoreIfModifiedSince = force)
+            profileRemoteRepository.synchronize(progressNotifier.withContext(Res.string.sync_step_profile), ignoreIfModifiedSince = force)
 
             // Departments does not depend on any other entity, so we sync it first
             departmentsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_departments), ignoreIfModifiedSince = force)
@@ -175,8 +180,8 @@ class SyncAllDataBackgroundJob(
     }
 
     companion object {
-        private const val SETTINGS_LAST_SYNC = "lastSync"
-        private const val SETTINGS_LAST_SYNC_VERSION = "lastSyncDbVersion"
+        private val SETTINGS_LAST_SYNC = longPreferencesKey("lastSync")
+        private val SETTINGS_LAST_SYNC_VERSION = intPreferencesKey("lastSyncDbVersion")
 
         const val EXTRA_FORCE_SYNC = "force_sync"
 
@@ -194,8 +199,8 @@ class SyncAllDataBackgroundJob(
         /**
          * Checks if the database version has been upgraded since the last sync.
          */
-        fun databaseVersionUpgrade(): Boolean {
-            val lastSyncVersion = settings.getIntOrNull(SETTINGS_LAST_SYNC_VERSION)
+        suspend fun SettingsStore.databaseVersionUpgrade(): Boolean {
+            val lastSyncVersion = get(SETTINGS_LAST_SYNC_VERSION)
             return lastSyncVersion == null || lastSyncVersion < DATABASE_VERSION
         }
     }

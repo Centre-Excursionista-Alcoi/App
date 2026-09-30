@@ -15,8 +15,8 @@ import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.network.getHttpClient
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
+import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
-import org.centrexcursionistalcoi.app.storage.settings
 import org.koin.core.annotation.Singleton
 
 @Singleton
@@ -25,6 +25,8 @@ class AuthBackend(
     private val credentialsStore: CredentialsStore,
     private val sessionTokens: SessionTokens,
     private val restoreKeys: RestoreKeys,
+    private val settings: SettingsStore,
+    private val fcmTokenManager: FCMTokenManager,
 ) {
 
     private val log = logging()
@@ -157,7 +159,7 @@ class AuthBackend(
             log.w(e) { "Failed to fully remove local files; continuing with the rest of the local cleanup." }
         }
         log.d { "Revoking FCM token..." }
-        FCMTokenManager.revoke()
+        fcmTokenManager.revoke()
         log.d { "Removing all settings..." }
         settings.clear()
         credentialsStore.clear()

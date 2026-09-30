@@ -355,10 +355,9 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
 - **Each refresh token works once.** Presenting a used one again revokes its whole session (reuse = theft),
   except within a 30-second grace window while its successor is still unused (a lost response). On the client,
   `SessionTokens` serializes refreshes for exactly this reason -- never refresh from anywhere else.
-- **There are no session cookies for the app anymore.** Versions before tokens are forced to update;
-  `LegacyAuthMigration` (client) runs once on the first launch after it, logging in with the password those
-  versions saved in `CredentialsStore` and deleting it and the old cookies -- or logging the user out if that
-  fails. Delete it once no installed version can predate tokens.
+- **There are no session cookies for the app anymore.** Versions before tokens are forced to update, and
+  their users have to log in again: the password those versions saved in `CredentialsStore` is no longer used,
+  only deleted by the next `saveSession`/`clear`.
 - **WebDAV has its own cookie** (`WEBDAV_SESSION`, path `/webdav`, 1 hour), started with HTTP Basic: it grants
   nothing in the rest of the API.
 - A password reset revokes every session and deletes the user's WebAuthn credentials.

@@ -1,41 +1,45 @@
 package org.centrexcursionistalcoi.app.auth
 
+import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import org.centrexcursionistalcoi.app.storage.settings
+import kotlinx.coroutines.runBlocking
+import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.koin.core.annotation.Singleton
 
-private const val KEY_EMAIL = "auth.email"
-private const val KEY_REFRESH_TOKEN = "auth.refresh_token"
+// TODO: This should be stored on a safe storage
+private val KEY_EMAIL = stringPreferencesKey("auth.email")
+private val KEY_REFRESH_TOKEN = stringPreferencesKey("auth.refresh_token")
 
 /**
  * Keeps the session in the app's settings, the same place (and protection) as the session cookie before tokens.
  * No password was ever saved on desktop, so there's nothing to migrate.
  */
 @Singleton
-actual class CredentialsStore {
+actual class CredentialsStore(
+    private val settings: SettingsStore
+) {
     actual val current: StateFlow<SavedAccount?>
-        field = MutableStateFlow(readAccount())
+        // TODO: Probably we shouldn't use runBlocking
+        field = MutableStateFlow(runBlocking { readAccount() })
 
-    actual fun saveSession(email: String, refreshToken: String) {
-        settings.putString(KEY_EMAIL, email)
-        settings.putString(KEY_REFRESH_TOKEN, refreshToken)
+    actual suspend  fun saveSession(email: String, refreshToken: String) {
+        settings.set(KEY_EMAIL, email)
+        settings.set(KEY_REFRESH_TOKEN, refreshToken)
         current.value = readAccount()
     }
 
-    actual fun getSession(): SavedSession? {
-        val email = settings.getStringOrNull(KEY_EMAIL) ?: return null
-        val refreshToken = settings.getStringOrNull(KEY_REFRESH_TOKEN) ?: return null
+    actual suspend fun getSession(): SavedSession? {
+        val email = settings.get(KEY_EMAIL) ?: return null
+        val refreshToken = settings.get(KEY_REFRESH_TOKEN) ?: return null
         return SavedSession(email, refreshToken)
     }
 
-    actual fun getLegacyCredentials(): SavedCredentials? = null
-
-    actual fun clear() {
+    actual suspend fun clear() {
         settings.remove(KEY_EMAIL)
         settings.remove(KEY_REFRESH_TOKEN)
         current.value = readAccount()
     }
 
-    private fun readAccount(): SavedAccount? = settings.getStringOrNull(KEY_EMAIL)?.let(::SavedAccount)
+    private suspend fun readAccount(): SavedAccount? = settings.get(KEY_EMAIL)?.let(::SavedAccount)
 }
