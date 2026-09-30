@@ -10,7 +10,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.http.parameters
+import org.centrexcursionistalcoi.app.data.PasskeyRegistrationOptionsRequest
+import org.centrexcursionistalcoi.app.data.PasskeyRegistrationRequest
 import org.centrexcursionistalcoi.app.data.RefreshTokenRequest
+import org.centrexcursionistalcoi.app.data.RegistrationCodeRequest
 import org.centrexcursionistalcoi.app.data.RestoreKeyVerificationRequest
 import org.centrexcursionistalcoi.app.data.TokenResponse
 import org.centrexcursionistalcoi.app.database.AppDatabase
@@ -35,12 +38,26 @@ class AuthBackend(
 
     private val log = logging()
     
-    suspend fun register(email: String, password: String) {
+    /** Emails [email] the code that proves it's theirs, needed to register. */
+    suspend fun requestRegistrationCode(email: String) {
+        val response = getHttpClient().post(Api.Register.Verification()) {
+            contentType(ContentType.Application.Json)
+            setBody(RegistrationCodeRequest(email))
+        }
+        if (!response.status.isSuccess()) throw response.bodyAsError().toThrowable()
+    }
+
+    /**
+     * Registers an account that signs in with [password].
+     * @param code The code emailed with [requestRegistrationCode].
+     */
+    suspend fun register(email: String, password: String, code: String) {
         val response = getHttpClient().let { client ->
             client.submitForm(
                 formParameters = parameters {
                     append("email", email)
                     append("password", password)
+                    append("code", code)
                 }
             ) { resource(client, Api.Register()) }
         }
@@ -94,6 +111,37 @@ class AuthBackend(
         val response = getHttpClient().post(Api.GenerateAuthChallenge()) { skipSessionAuth() }
         if (!response.status.isSuccess()) throw response.bodyAsError().toThrowable()
         return response.bodyAsText()
+    }
+
+    /** The WebAuthn creation options for the passkey of a new account, see [registerWithPasskey]. */
+    suspend fun passkeyRegistrationOptions(email: String, code: String): String {
+        val response = getHttpClient().post(Api.Register.Passkey.Options()) {
+            contentType(ContentType.Application.Json)
+            setBody(PasskeyRegistrationOptionsRequest(email, code))
+        }
+        if (!response.status.isSuccess()) throw response.bodyAsError().toThrowable()
+        return response.bodyAsText()
+    }
+
+    /**
+     * Registers an account that signs in with the passkey of [registrationResponseJson] (created for the options of
+     * [passkeyRegistrationOptions]), and logs it in.
+     */
+    suspend fun registerWithPasskey(email: String, code: String, registrationResponseJson: String, name: String) {
+        // Clear storage before logging in, so nothing from a previous account is left behind
+        settings.clear()
+
+        val response = getHttpClient().post(Api.Register.Passkey()) {
+            skipSessionAuth()
+            contentType(ContentType.Application.Json)
+            setBody(PasskeyRegistrationRequest(email, code, registrationResponseJson, name))
+        }
+        if (response.status.isSuccess()) {
+            log.d { "Registered with a passkey." }
+            onLoggedIn(response.body<TokenResponse>())
+        } else {
+            throw response.bodyAsError().toThrowable()
+        }
     }
 
     /** Logs in with a passkey's [authenticationResponseJson], see [Passkeys.signIn]. */
