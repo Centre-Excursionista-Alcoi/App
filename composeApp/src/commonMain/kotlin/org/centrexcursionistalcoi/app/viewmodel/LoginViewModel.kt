@@ -19,6 +19,7 @@ class LoginViewModel(
     private val authBackend: AuthBackend,
     private val dispatcherProvider: DispatcherProvider,
     credentialsStore: CredentialsStore,
+    private val profileRemoteRepository: ProfileRemoteRepository,
 ) : ErrorViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading get() = _isLoading.asStateFlow()
@@ -47,7 +48,7 @@ class LoginViewModel(
             _isLoading.emit(true)
 
             authBackend.login(email, password)
-            ProfileRemoteRepository.synchronize(ignoreIfModifiedSince = true)
+            profileRemoteRepository.synchronize(ignoreIfModifiedSince = true)
 
             withContext(dispatcherProvider.main) { afterLogin() }
         } catch (e: ServerException) {

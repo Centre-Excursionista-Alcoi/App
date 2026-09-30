@@ -1,30 +1,30 @@
 package org.centrexcursionistalcoi.app.database
 
-import com.russhwolf.settings.ExperimentalSettingsApi
-import com.russhwolf.settings.coroutines.getStringOrNullFlow
-import kotlinx.coroutines.flow.map
-import org.centrexcursionistalcoi.app.json
+import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.flow.Flow
 import org.centrexcursionistalcoi.app.response.ProfileResponse
-import org.centrexcursionistalcoi.app.storage.settings
+import org.centrexcursionistalcoi.app.settings.SettingsStore
+import org.koin.core.annotation.Singleton
 
-@OptIn(ExperimentalSettingsApi::class)
-object ProfileRepository {
-    val profile = settings
-        .getStringOrNullFlow("profile")
-        .map { data -> data?.let { json.decodeFromString(ProfileResponse.serializer(), it) } }
+@Singleton
+class ProfileRepository(
+    private val settings: SettingsStore
+) {
+    private val profileKey = stringPreferencesKey("profile")
 
-    fun getProfile(): ProfileResponse? {
-        val data = settings.getStringOrNull("profile")
-        return data?.let { json.decodeFromString(ProfileResponse.serializer(), it) }
+    val profile: Flow<ProfileResponse?> = settings.getFlow(profileKey, ProfileResponse.serializer())
+
+    suspend fun getProfile(): ProfileResponse? {
+        return settings.get(profileKey, ProfileResponse.serializer())
     }
 
-    fun isLoggedIn(): Boolean = getProfile() != null
+    suspend fun isLoggedIn(): Boolean = getProfile() != null
 
-    fun update(profile: ProfileResponse) {
-        settings.putString("profile", json.encodeToString(ProfileResponse.serializer(), profile))
+    suspend fun update(profile: ProfileResponse) {
+        settings.set(profileKey, ProfileResponse.serializer(), profile)
     }
 
-    fun clear() {
-        settings.remove("profile")
+    suspend fun clear() {
+        settings.remove(profileKey)
     }
 }

@@ -8,10 +8,11 @@ import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class ManagementPageScreenModel(
+    profileRepository: ProfileRepository,
     departmentsRepository: DepartmentsRepository,
     lendingsRepository: LendingsRepository,
 ) : ViewModel() {
-    val profile = ProfileRepository.profile.stateInViewModel()
+    val profile = profileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
     val lendings = lendingsRepository.selectAllAsFlow().stateInViewModel()
 }

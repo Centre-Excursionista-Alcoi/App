@@ -1,16 +1,30 @@
 package org.centrexcursionistalcoi.app.network
 
+import androidx.datastore.preferences.core.Preferences
 import com.diamondedge.logging.logging
-import io.ktor.client.*
-import io.ktor.client.plugins.*
-import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.onUpload
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.patch
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
-import org.centrexcursionistalcoi.app.data.*
+import org.centrexcursionistalcoi.app.data.DocumentFileContainer
+import org.centrexcursionistalcoi.app.data.Entity
+import org.centrexcursionistalcoi.app.data.ImageFileContainer
+import org.centrexcursionistalcoi.app.data.fetchDocumentFilePath
+import org.centrexcursionistalcoi.app.data.fetchImageFilePath
 import org.centrexcursionistalcoi.app.database.Repository
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.bodyAsError
@@ -23,9 +37,11 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownload
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
+import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.centrexcursionistalcoi.app.storage.fs.AppFile
 import org.centrexcursionistalcoi.app.storage.fs.write
-import org.centrexcursionistalcoi.app.storage.settings
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
@@ -33,13 +49,13 @@ private val log = logging()
 
 abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdType>, RemoteIdType: Any, RemoteEntity : Entity<RemoteIdType>>(
     val endpoint: String,
-    private val lastSyncSettingsKey: String,
+    private val lastSyncSettingsKey: Preferences.Key<Long>,
     private val serializer: KSerializer<RemoteEntity>,
     private val repository: Repository<LocalEntity, LocalIdType>,
     private val isCreationSupported: Boolean = true,
     private val isPatchSupported: Boolean = true,
     private val remoteToLocalIdConverter: (RemoteIdType) -> LocalIdType,
-) {
+): KoinComponent {
     /**
      * The version code since which this endpoint is available.
      *
@@ -51,18 +67,21 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
 
     protected val httpClient = getHttpClient()
 
+    private val settings by lazy { get<SettingsStore>() }
+    private val serverInfoRepository by lazy { get<ServerInfoRepository>() }
+
     // Remove null fields to avoid issues with missing fields in the local model
     private fun String.cleanNullFields() = replace(",? *\"[a-zA-Z0-9_-]+\": *\"?null\"?".toRegex(), "")
 
     /**
      * Checks if the endpoint is supported by the connected server.
      *
-     * Uses [availableSinceVersionCode] and [Server.info] to determine compatibility.
+     * Uses [availableSinceVersionCode] and [ServerInfoRepository.info] to determine compatibility.
      * @return `true` if the endpoint is supported, `false` otherwise.
      */
     fun endpointSupported(): Boolean {
         availableSinceVersionCode?.let { availableSince ->
-            val info = Server.info
+            val info = serverInfoRepository.info
             if (info == null) {
                 // versionCode was added on version 2.0.14, so older servers may not have it. The server is considered not compatible.
                 log.e { "Could not determine server version. Assuming $name endpoint is not supported." }
@@ -98,7 +117,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             throw ResourceNotModifiedException()
         } else if (status.isSuccess()) {
             val currentTime = Clock.System.now()
-            settings.putLong(lastSyncSettingsKey, currentTime.toEpochMilliseconds())
+            settings.set(lastSyncSettingsKey, currentTime.toEpochMilliseconds())
 
             val raw = response.bodyAsText().cleanNullFields()
             val remoteEntities = json.decodeFromString(ListSerializer(serializer), raw)
@@ -133,7 +152,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             throw ResourceNotModifiedException()
         } else if (status.isSuccess()) {
             val currentTime = Clock.System.now()
-            settings.putLong(lastSyncSettingsKey, currentTime.toEpochMilliseconds())
+            settings.set(lastSyncSettingsKey, currentTime.toEpochMilliseconds())
 
             val raw = response.bodyAsText().cleanNullFields()
             val remoteEntity = json.decodeFromString(serializer, raw)

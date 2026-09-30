@@ -22,11 +22,12 @@ import kotlin.uuid.Uuid
 @KoinViewModel
 class EventsManagementViewModel(
     private val dispatcherProvider: DispatcherProvider,
+    profileRepository: ProfileRepository,
     eventsRepository: EventsRepository,
     departmentsRepository: DepartmentsRepository,
     private val eventsRemoteRepository: EventsRemoteRepository
 ) : ViewModel() {
-    val profile = ProfileRepository.profile.stateInViewModel()
+    val profile = profileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
     val events = eventsRepository.selectAllAsFlow().stateInViewModel()
 

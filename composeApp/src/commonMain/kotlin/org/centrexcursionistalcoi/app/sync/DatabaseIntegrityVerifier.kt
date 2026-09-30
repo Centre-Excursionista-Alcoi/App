@@ -25,6 +25,7 @@ class DatabaseIntegrityVerifier(
 
     private val usersRemoteRepository: UsersRemoteRepository,
 
+    private val profileRepository: ProfileRepository,
     private val usersRepository: UsersRepository,
 
     private val backgroundJobCoordinator: BackgroundJobCoordinator,
@@ -90,7 +91,7 @@ class DatabaseIntegrityVerifier(
             return false
         }
 
-        if (ProfileRepository.getProfile()?.isAdmin == false) {
+        if (profileRepository.getProfile()?.isAdmin == false) {
             log.w { "User $sub is not visible to this non-admin session -- inserting a placeholder instead of resyncing." }
             usersRepository.insert(placeholderUser(sub))
             return false
@@ -102,10 +103,7 @@ class DatabaseIntegrityVerifier(
 
     /**
      * A placeholder [UserData] for [sub], used when the server confirms (a real 404, not an error) that the
-     * current non-admin session isn't allowed to see this user's real record. Mirrors
-     * [org.centrexcursionistalcoi.app.data.StubUser]'s placeholder field values, but keyed by the real [sub] --
-     * unlike that UI-layer stub (fixed at `sub = "unknown"`, meant for a single ad-hoc display fallback), this one
-     * is persisted as a real `Users` table row so [sub] resolves as a normal foreign key from now on.
+     * current non-admin session isn't allowed to see this user's real record.
      */
     private fun placeholderUser(sub: String) = UserData(
         sub = sub,

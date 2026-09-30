@@ -20,11 +20,12 @@ import kotlin.uuid.Uuid
 @KoinViewModel
 class PostsManagementViewModel(
     private val dispatcherProvider: DispatcherProvider,
+    profileRepository: ProfileRepository,
     departmentsRepository: DepartmentsRepository,
     postsRepository: PostsRepository,
     private val postsRemoteRepository: PostsRemoteRepository,
 ) : ViewModel() {
-    val profile = ProfileRepository.profile.stateInViewModel()
+    val profile = profileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
     val posts = postsRepository.selectAllAsFlow().stateInViewModel()
 

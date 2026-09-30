@@ -16,13 +16,15 @@ import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.exception.ServerException
-import org.centrexcursionistalcoi.app.network.Server
+import org.centrexcursionistalcoi.app.network.ServerInfoRepository
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
+import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.DatabaseIntegrityVerifier
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
+import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob.Companion.databaseVersionUpgrade
 import org.centrexcursionistalcoi.app.sync.await
 import org.centrexcursionistalcoi.app.sync.copyToProgress
 import org.koin.core.annotation.KoinViewModel
@@ -34,6 +36,10 @@ class LoadingViewModel(
     private val databaseIntegrityVerifier: DatabaseIntegrityVerifier,
     private val authBackend: AuthBackend,
     private val legacyAuthMigration: LegacyAuthMigration,
+    private val server: ServerInfoRepository,
+    private val tokenManager: FCMTokenManager,
+    private val profileRepository: ProfileRepository,
+    private val settings: SettingsStore,
 ) : ViewModel() {
 
     private val log = logging()
@@ -53,7 +59,7 @@ class LoadingViewModel(
         log.d { "Loading app content..." }
         error.value = null
 
-        Server.loadInfo()
+        server.loadInfo()
 
         try {
             // Before anything else: an account logged in before token authentication either gets a session now,
@@ -62,7 +68,7 @@ class LoadingViewModel(
 
             // Try to fetch the profile to see if the session is still valid
             if (isUserProfileValid()) {
-                if (SyncAllDataBackgroundJob.databaseVersionUpgrade()) {
+                if (settings.databaseVersionUpgrade()) {
                     log.d { "Database migration, running synchronization..." }
                     backgroundJobCoordinator.schedule<SyncAllDataBackgroundJob>(
                         name = SyncAllDataBackgroundJob.UNIQUE_NAME,
@@ -151,7 +157,7 @@ class LoadingViewModel(
      */
     private suspend fun isUserProfileValid(): Boolean {
         log.d { "Fetching locally stored profile data." }
-        ProfileRepository.getProfile()?.let { profile ->
+        profileRepository.getProfile()?.let { profile ->
             log.d { "Updating Sentry user context..." }
             Sentry.setUser(
                 User().apply {
@@ -165,7 +171,7 @@ class LoadingViewModel(
         }
 
         log.d { "Renovating FCM token if required" }
-        FCMTokenManager.renovate()
+        tokenManager.renovate()
 
         log.d { "Load finished!" }
         return true

@@ -1,16 +1,18 @@
 package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
-import io.ktor.client.request.*
-import io.ktor.http.*
+import io.ktor.client.request.get
+import io.ktor.http.isSuccess
 import org.centrexcursionistalcoi.app.data.ServerInfo
-import org.centrexcursionistalcoi.app.json
-import org.centrexcursionistalcoi.app.network.Server.info
 import org.centrexcursionistalcoi.app.response.bodyAsJson
+import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.centrexcursionistalcoi.app.storage.SETTINGS_SERVER_INFO
-import org.centrexcursionistalcoi.app.storage.settings
+import org.koin.core.annotation.Singleton
 
-object Server {
+@Singleton
+class ServerInfoRepository(
+    private val settings: SettingsStore
+) {
     private val log = logging()
 
     private val httpClient = getHttpClient()
@@ -28,16 +30,16 @@ object Server {
             val httpResponse = httpClient.get("/info")
             if (!httpResponse.status.isSuccess()) {
                 log.w { "Error fetching server info: Server responded with error." }
-                info = settings.getStringOrNull(SETTINGS_SERVER_INFO)?.let { json.decodeFromString(ServerInfo.serializer(), it) }
+                info = settings.get(SETTINGS_SERVER_INFO, ServerInfo.serializer())
                 return
             }
             val serverInfo = httpResponse.bodyAsJson(ServerInfo.serializer())
             info = serverInfo
-            settings.putString(SETTINGS_SERVER_INFO, json.encodeToString(ServerInfo.serializer(), serverInfo))
+            settings.set(SETTINGS_SERVER_INFO, ServerInfo.serializer(), serverInfo)
             log.i { "Fetched server info: $serverInfo" }
         } catch (e: Exception) {
             log.e(e) { "Error fetching server info." }
-            info = settings.getStringOrNull(SETTINGS_SERVER_INFO)?.let { json.decodeFromString(ServerInfo.serializer(), it) }
+            info = settings.get(SETTINGS_SERVER_INFO, ServerInfo.serializer())
         }
     }
 }

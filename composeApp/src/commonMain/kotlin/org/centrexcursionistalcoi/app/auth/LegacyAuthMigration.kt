@@ -1,9 +1,8 @@
 package org.centrexcursionistalcoi.app.auth
 
 import com.diamondedge.logging.logging
-import com.russhwolf.settings.Settings
+import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.koin.core.annotation.Singleton
-import org.centrexcursionistalcoi.app.storage.settings as appSettings
 
 /**
  * One-time migration of an account logged in before token authentication, run on the first launch after the
@@ -20,15 +19,13 @@ import org.centrexcursionistalcoi.app.storage.settings as appSettings
 class LegacyAuthMigration(
     private val credentialsStore: CredentialsStore,
     private val authBackend: AuthBackend,
+    private val settings: SettingsStore
 ) {
     private val log = logging()
 
-    /** Where the old cookies are, replaceable by tests. */
-    internal var settings: Settings = appSettings
-
     /** Whether versions before token authentication left anything behind. */
-    private fun hasLegacyData(): Boolean =
-        credentialsStore.getLegacyCredentials() != null || settings.keys.any { it.startsWith(LEGACY_COOKIE_PREFIX) }
+    private suspend fun hasLegacyData(): Boolean =
+        credentialsStore.getLegacyCredentials() != null || settings.keys().any { it.name.startsWith(LEGACY_COOKIE_PREFIX) }
 
     suspend fun run() {
         if (!hasLegacyData()) return
@@ -53,8 +50,8 @@ class LegacyAuthMigration(
         }
     }
 
-    private fun removeLegacyCookies() {
-        settings.keys.filter { it.startsWith(LEGACY_COOKIE_PREFIX) }.forEach(settings::remove)
+    private suspend fun removeLegacyCookies() {
+        settings.keys().filter { it.name.startsWith(LEGACY_COOKIE_PREFIX) }.forEach { settings.remove(it) }
     }
 
     private companion object {

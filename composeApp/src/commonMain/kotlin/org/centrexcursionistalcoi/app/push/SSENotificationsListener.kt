@@ -28,6 +28,7 @@ import org.koin.core.annotation.Singleton
 class SSENotificationsListener(
     private val backgroundJobCoordinator: BackgroundJobCoordinator,
     private val dispatcherProvider: DispatcherProvider,
+    private val localNotifications: LocalNotifications,
 ) {
     private val log = logging()
 
@@ -125,7 +126,7 @@ class SSENotificationsListener(
                                     )
                                 }
 
-                                LocalNotifications.showPushNotification(notification, data)
+                                localNotifications.showPushNotification(notification, data)
                             } catch (e: IllegalArgumentException) {
                                 log.e(e, tag = "SSE") { "Received an invalid SSE notification." }
                             }

@@ -22,7 +22,12 @@ private val log = logging()
 context(vm: ViewModel)
 fun <T> Flow<T>.stateInViewModel(
     started: SharingStarted = SharingStarted.WhileSubscribed(5_000),
-    initialValue: T? = null,
+) = stateIn(vm.viewModelScope, started, null)
+
+context(vm: ViewModel)
+fun <T> Flow<T>.stateInViewModel(
+    initialValue: T,
+    started: SharingStarted = SharingStarted.WhileSubscribed(5_000),
 ) = stateIn(vm.viewModelScope, started, initialValue)
 
 /**

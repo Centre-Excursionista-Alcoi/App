@@ -21,13 +21,14 @@ import kotlin.uuid.Uuid
 @KoinViewModel
 class InventoryManagementViewModel(
     private val dispatcherProvider: DispatcherProvider,
+    profileRepository: ProfileRepository,
     departmentsRepository: DepartmentsRepository,
     inventoryItemsRepository: InventoryItemsRepository,
     inventoryItemTypesRepository: InventoryItemTypesRepository,
     private val inventoryItemsRemoteRepository: InventoryItemsRemoteRepository,
     private val inventoryItemTypesRemoteRepository: InventoryItemTypesRemoteRepository
 ) : ViewModel() {
-    val profile = ProfileRepository.profile.stateInViewModel()
+    val profile = profileRepository.profile.stateInViewModel()
     val departments = departmentsRepository.selectAllAsFlow().stateInViewModel()
     val inventoryItems = inventoryItemsRepository.selectAllAsFlow().stateInViewModel()
     val inventoryItemTypes = inventoryItemTypesRepository.selectAllAsFlow().stateInViewModel()

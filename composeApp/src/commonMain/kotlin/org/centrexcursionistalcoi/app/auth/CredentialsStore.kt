@@ -45,13 +45,13 @@ expect class CredentialsStore {
     val current: StateFlow<SavedAccount?>
 
     /** Saves the session of [email], replacing any other saved account and any legacy password. */
-    fun saveSession(email: String, refreshToken: String)
+    suspend fun saveSession(email: String, refreshToken: String)
 
-    fun getSession(): SavedSession?
+    suspend fun getSession(): SavedSession?
 
     /** The password saved by versions before token authentication, if it hasn't been migrated yet. */
     fun getLegacyCredentials(): SavedCredentials?
 
     /** Forgets the saved account: its session, and its legacy password if any. */
-    fun clear()
+    suspend fun clear()
 }

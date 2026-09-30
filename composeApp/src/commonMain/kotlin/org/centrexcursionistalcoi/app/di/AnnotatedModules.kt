@@ -42,3 +42,8 @@ class SyncScanModule
 @Module
 @ComponentScan("org.centrexcursionistalcoi.app.push")
 class PushScanModule
+
+/** Scans `settings` for `@Singleton`-annotated settings storage tools. */
+@Module
+@ComponentScan("org.centrexcursionistalcoi.app.settings")
+class SettingsScanModule

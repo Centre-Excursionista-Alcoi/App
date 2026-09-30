@@ -14,7 +14,8 @@ import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
 class MainViewModel(
-    private val lendingsRepository: LendingsRepository,
+    profileRepository: ProfileRepository,
+    lendingsRepository: LendingsRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository,
     private val backgroundJobCoordinator: BackgroundJobCoordinator
 ) : ViewModel() {
@@ -27,7 +28,7 @@ class MainViewModel(
         .map { it in listOf(BackgroundJobState.RUNNING) }
         .stateInViewModel()
 
-    val profile = ProfileRepository.profile.stateInViewModel()
+    val profile = profileRepository.profile.stateInViewModel()
 
     val lendings = lendingsRepository.selectAllAsFlow().stateInViewModel()
 

@@ -9,7 +9,8 @@ import org.koin.core.annotation.Singleton
 @Singleton
 @Named(SyncPostBackgroundJob.NAME)
 class SyncPostBackgroundJob(
-    private val postsRemoteRepository: PostsRemoteRepository
+    private val postsRemoteRepository: PostsRemoteRepository,
+    private val localNotifications: LocalNotifications,
 ) : BackgroundJob() {
     override suspend fun BackgroundSyncContext.run(input: Map<String, String>): SyncResult {
         val postId = input[EXTRA_POST_ID]?.toUuidOrNull()
@@ -18,7 +19,7 @@ class SyncPostBackgroundJob(
         val post = postsRemoteRepository.update(postId, progressNotifier)
             ?: return SyncResult.Failure("Post with ID $postId not found on server")
 
-        LocalNotifications.showNotification(
+        localNotifications.showNotification(
             { post.title },
             { post.content },
             mapOf("postId" to postId.toString())

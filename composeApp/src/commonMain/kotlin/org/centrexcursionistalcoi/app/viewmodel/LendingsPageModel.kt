@@ -13,9 +13,10 @@ import kotlin.uuid.Uuid
 @KoinViewModel
 class LendingsPageModel(
     inventoryItemsRepository: InventoryItemsRepository,
+    profileRepository: ProfileRepository,
     lendingsRepository: LendingsRepository,
 ) : ViewModel() {
-    val profile = ProfileRepository.profile.stateInViewModel()
+    val profile = profileRepository.profile.stateInViewModel()
     val inventoryItems = inventoryItemsRepository.selectAllAsFlow().stateInViewModel()
     val lendings = lendingsRepository.selectAllAsFlow().stateInViewModel()
 

@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.network
 
 import androidx.annotation.VisibleForTesting
+import androidx.datastore.preferences.core.Preferences
 import com.diamondedge.logging.logging
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -16,7 +17,9 @@ import io.ktor.serialization.kotlinx.json.json
 import org.centrexcursionistalcoi.app.BuildKonfig
 import org.centrexcursionistalcoi.app.auth.installSessionAuth
 import org.centrexcursionistalcoi.app.json
-import org.centrexcursionistalcoi.app.storage.settings
+import org.centrexcursionistalcoi.app.settings.SettingsStore
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 
 private val log = logging()
 
@@ -60,8 +63,10 @@ fun HttpClientConfig<*>.configureLogging() {
  * Adds an `If-Modified-Since` header to the request if a last sync time is stored in settings.
  * @param lastSyncSettingsKey The settings key where the last sync time is stored.
  */
-fun HttpRequestBuilder.ifModifiedSince(lastSyncSettingsKey: String) {
-    val lastSync = settings.getLongOrNull(lastSyncSettingsKey)
+context(c: KoinComponent)
+suspend fun HttpRequestBuilder.ifModifiedSince(lastSyncSettingsKey: Preferences.Key<Long>) {
+    val settings = c.get<SettingsStore>()
+    val lastSync = settings.get(lastSyncSettingsKey)
 
     if (lastSync != null) {
         headers.append(HttpHeaders.IfModifiedSince, HttpDateFormatter.format(lastSync))

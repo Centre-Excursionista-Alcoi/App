@@ -2,9 +2,13 @@ package org.centrexcursionistalcoi.app.network
 
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.PlatformFile
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.fileWithContext
@@ -20,11 +24,17 @@ import org.centrexcursionistalcoi.app.request.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.request.LendingSignUpRequest
 import org.centrexcursionistalcoi.app.request.LinkFEMECVRequest
 import org.centrexcursionistalcoi.app.response.ProfileResponse
+import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LAST_PROFILE_SYNC
-import org.centrexcursionistalcoi.app.storage.settings
+import org.koin.core.annotation.Singleton
+import org.koin.core.component.KoinComponent
 import kotlin.time.Clock
 
-object ProfileRemoteRepository {
+@Singleton
+class ProfileRemoteRepository(
+    private val profileRepository: ProfileRepository,
+    private val settings: SettingsStore
+) : KoinComponent {
     private val log = logging()
 
     private val httpClient by lazy { getHttpClient() }
@@ -46,7 +56,7 @@ object ProfileRemoteRepository {
             throw ResourceNotModifiedException()
         } else if (status.isSuccess()) {
             val currentTime = Clock.System.now()
-            settings.putLong(SETTINGS_LAST_PROFILE_SYNC, currentTime.toEpochMilliseconds())
+            settings.set(SETTINGS_LAST_PROFILE_SYNC, currentTime.toEpochMilliseconds())
 
             val body = response.bodyAsText()
             return json.decodeFromString(ProfileResponse.serializer(), body)
@@ -115,11 +125,11 @@ object ProfileRemoteRepository {
                 val profile = getProfile(progressNotifier, ignoreIfModifiedSince)
                 if (profile != null) {
                     log.d { "User is logged in, updating cached profile data..." }
-                    ProfileRepository.update(profile)
+                    profileRepository.update(profile)
                     return true
                 } else {
                     log.i { "User is not logged in" }
-                    ProfileRepository.clear()
+                    profileRepository.clear()
                     return false
                 }
             } catch (_: ResourceNotModifiedException) {

@@ -1,12 +1,13 @@
 package org.centrexcursionistalcoi.app.network
 
+import androidx.datastore.preferences.core.Preferences
 import kotlinx.serialization.KSerializer
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.database.Repository
 
 abstract class SymmetricRemoteRepository<IdType : Any, EntityType : Entity<IdType>>(
     endpoint: String,
-    lastSyncSettingsKey: String,
+    lastSyncSettingsKey: Preferences.Key<Long>,
     serializer: KSerializer<EntityType>,
     private val repository: Repository<EntityType, IdType>,
     isCreationSupported: Boolean = true,
