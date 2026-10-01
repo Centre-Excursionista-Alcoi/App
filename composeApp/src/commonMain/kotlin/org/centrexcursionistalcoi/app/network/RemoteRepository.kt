@@ -37,6 +37,7 @@ import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
 import org.centrexcursionistalcoi.app.exception.ResourceNotModifiedException
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.log.traceSpan
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownloadProgress
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadProgress
@@ -115,20 +116,28 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     suspend fun getAll(progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): List<RemoteEntity> {
         if (!endpointSupported()) return emptyList()
 
-        val response = httpClient.get {
-            collection(httpClient, resources)
-            progress?.let { monitorDownloadProgress(it) }
-            if (!ignoreIfModifiedSince) ifModifiedSince(lastSyncSettingsKey)
+        val (response, body) = traceSpan("http.client", "GET /$name") { span ->
+            val response = httpClient.get {
+                collection(httpClient, resources)
+                progress?.let { monitorDownloadProgress(it) }
+                if (!ignoreIfModifiedSince) ifModifiedSince(lastSyncSettingsKey)
+            }
+            span?.setData("http.response.status_code", response.status.value.toLong())
+            // Read inside the span: on success, downloading the body is most of the request's time
+            val body = if (response.status.isSuccess()) response.bodyAsText() else null
+            body?.let { span?.setData("http.response_content_length", it.length.toLong()) }
+            response to body
         }
         val status = response.status
         if (status == HttpStatusCode.NotModified) {
             throw ResourceNotModifiedException()
-        } else if (status.isSuccess()) {
+        } else if (body != null) {
             val currentTime = Clock.System.now()
             settings.set(lastSyncSettingsKey, currentTime.toEpochMilliseconds())
 
-            val raw = response.bodyAsText().cleanNullFields()
-            val remoteEntities = json.decodeFromString(ListSerializer(serializer), raw)
+            val remoteEntities = traceSpan("serialize", "Decode $name") {
+                json.decodeFromString(ListSerializer(serializer), body.cleanNullFields())
+            }
             return remoteEntities
         } else {
             val error = response.bodyAsError()
@@ -222,49 +231,65 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
      * @throws ServerException if the server returns an error response.
      * @throws MissingCrossReferenceException if a reference of any item is not found.
      */
-    suspend fun synchronizeWithDatabase(progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false) {
+    suspend fun synchronizeWithDatabase(
+        progress: ProgressNotifier? = null,
+        ignoreIfModifiedSince: Boolean = false,
+    ) = traceSpan("sync.entity", name) { span ->
         try {
             progress?.invoke(Progress.LocalDBRead)
-            val localList = repository.selectAll() // all entries from the local database
+            val localList = traceSpan("db.read", "Select all $name") {
+                repository.selectAll() // all entries from the local database
+            }
 
             // A stored "last synced" timestamp cannot be trusted when the local table is empty: the server may
             // legitimately report "not modified" even though there's nothing to show locally (e.g. after the local
             // database was reset without also clearing the per-repository sync timestamps). Force a full fetch then.
             val forceFetch = ignoreIfModifiedSince || localList.isEmpty()
+            span?.setData("sync.forced", forceFetch)
             val remoteList = getAll(progress, forceFetch) // all entries from the remote server
 
             progress?.invoke(Progress.DataProcessing)
-            val toUpdate = mutableListOf<RemoteEntity>()
-            val toInsert = mutableListOf<RemoteEntity>()
-            for (item in remoteList) {
-                if (localList.find { it.id == item.id } != null) {
-                    toUpdate += item
-                } else {
-                    toInsert += item
+            val (toInsert, toUpdate, toDelete) = traceSpan("sync.process", "Compare $name") {
+                val toUpdate = mutableListOf<RemoteEntity>()
+                val toInsert = mutableListOf<RemoteEntity>()
+                for (item in remoteList) {
+                    if (localList.find { it.id == item.id } != null) {
+                        toUpdate += item
+                    } else {
+                        toInsert += item
+                    }
                 }
-            }
-            // IDs of items that should remain in the database
-            val existingIds = toUpdate.map { remoteToLocalIdConverter(it.id) } + toInsert.map { remoteToLocalIdConverter(it.id) }
+                // IDs of items that should remain in the database
+                val existingIds = toUpdate.map { remoteToLocalIdConverter(it.id) } + toInsert.map { remoteToLocalIdConverter(it.id) }
 
-            // Delete items that are not in the server response
-            val toDelete = localList.filter { it.id !in existingIds }.map { it.id }
+                // Delete items that are not in the server response
+                val toDelete = localList.filter { it.id !in existingIds }.map { it.id }
+
+                Triple(toInsert, toUpdate, toDelete)
+            }
+            span?.setData("sync.inserted", toInsert.size.toLong())
+            span?.setData("sync.updated", toUpdate.size.toLong())
+            span?.setData("sync.deleted", toDelete.size.toLong())
 
             log.d {
                 "Inserting ${toInsert.size} new $name. Updating ${toUpdate.size} $name. Deleting ${toDelete.size} $name"
             }
 
             progress?.invoke(Progress.LocalDBWrite)
-            // Insert new items
-            toInsert.forEach { insertRemoteEntity(it) }
-            // Update existing items
-            toUpdate.forEach { updateRemoteEntity(it) }
-            // Delete removed items
-            repository.deleteByIdList(toDelete)
+            traceSpan("db.write", "Store $name") {
+                // Insert new items
+                toInsert.forEach { insertRemoteEntity(it) }
+                // Update existing items
+                toUpdate.forEach { updateRemoteEntity(it) }
+                // Delete removed items
+                repository.deleteByIdList(toDelete)
+            }
 
             progress?.invoke(Progress.LocalDBRead)
             val all = repository.selectAll()
             log.i { "There are ${all.size} $name" }
         } catch (_: ResourceNotModifiedException) {
+            span?.setData("sync.not_modified", true)
             log.i { "Resource not modified. No need to refresh." }
         }
     }

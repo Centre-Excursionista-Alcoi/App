@@ -76,6 +76,15 @@
                     android:name="android.accounts.AccountAuthenticator"
                     android:resource="@xml/authenticator" />
         </service>
+
+        <!-- Sentry profiling, which the Kotlin Multiplatform SDK's options don't cover: profiles every sampled
+             trace while it runs, so it follows the analytics setting that decides tracesSampleRate (log/Sentry.kt). -->
+        <meta-data
+                android:name="io.sentry.traces.profiling.session-sample-rate"
+                android:value="1.0" />
+        <meta-data
+                android:name="io.sentry.traces.profiling.lifecycle"
+                android:value="trace" />
     </application>
 
     <queries>

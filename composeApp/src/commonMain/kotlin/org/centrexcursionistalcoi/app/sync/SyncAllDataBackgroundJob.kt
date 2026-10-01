@@ -27,6 +27,8 @@ import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
+import org.centrexcursionistalcoi.app.log.traceSpan
+import org.centrexcursionistalcoi.app.log.traceTransaction
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
 import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
@@ -92,7 +94,18 @@ class SyncAllDataBackgroundJob(
             log.d { "Last sync was more than $SYNC_EVERY_SECONDS seconds ago, synchronizing data..." }
 
             // Synchronize the local database with the remote data
-            synchronizeAllRepositories(forceSync || justUpgraded)
+            traceTransaction("Sync all data", "sync") { transaction ->
+                transaction.setTag(
+                    "sync.reason",
+                    when {
+                        lastSync == null -> "initial"
+                        justUpgraded -> "database_upgrade"
+                        forceSync -> "forced"
+                        else -> "periodic"
+                    }
+                )
+                synchronizeAllRepositories(forceSync || justUpgraded)
+            }
 
             settings.set(SETTINGS_LAST_SYNC, Clock.System.now().epochSeconds)
             settings.set(SETTINGS_LAST_SYNC_VERSION, DATABASE_VERSION)
@@ -111,7 +124,9 @@ class SyncAllDataBackgroundJob(
     ) {
         try {
             // First, synchronize the user profile
-            profileRemoteRepository.synchronize(progressNotifier.withContext(Res.string.sync_step_profile), ignoreIfModifiedSince = force)
+            traceSpan("sync.entity", "profile") {
+                profileRemoteRepository.synchronize(progressNotifier.withContext(Res.string.sync_step_profile), ignoreIfModifiedSince = force)
+            }
 
             // Departments does not depend on any other entity, so we sync it first
             departmentsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_departments), ignoreIfModifiedSince = force)
@@ -166,7 +181,9 @@ class SyncAllDataBackgroundJob(
                 FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
 
                 log.d { "Running sync again..." }
-                synchronizeAllRepositories(true, isRetry = true)
+                traceSpan("sync.retry", "Missing cross reference") {
+                    synchronizeAllRepositories(true, isRetry = true)
+                }
             }
         }
         // ServerException (including a "not logged in" session expiry) is deliberately left to propagate: it's
