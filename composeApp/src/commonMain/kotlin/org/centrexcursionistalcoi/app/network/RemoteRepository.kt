@@ -37,6 +37,7 @@ import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
 import org.centrexcursionistalcoi.app.exception.ResourceNotModifiedException
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.log.TraceOperation
 import org.centrexcursionistalcoi.app.log.traceSpan
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownloadProgress
@@ -116,7 +117,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     suspend fun getAll(progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): List<RemoteEntity> {
         if (!endpointSupported()) return emptyList()
 
-        val (response, body) = traceSpan("http.client", "GET /$name") { span ->
+        val (response, body) = traceSpan(TraceOperation.HTTP_CLIENT, "GET /$name") { span ->
             val response = httpClient.get {
                 collection(httpClient, resources)
                 progress?.let { monitorDownloadProgress(it) }
@@ -135,7 +136,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             val currentTime = Clock.System.now()
             settings.set(lastSyncSettingsKey, currentTime.toEpochMilliseconds())
 
-            val remoteEntities = traceSpan("serialize", "Decode $name") {
+            val remoteEntities = traceSpan(TraceOperation.SERIALIZE, "Decode $name") {
                 json.decodeFromString(ListSerializer(serializer), body.cleanNullFields())
             }
             return remoteEntities
@@ -234,10 +235,10 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     suspend fun synchronizeWithDatabase(
         progress: ProgressNotifier? = null,
         ignoreIfModifiedSince: Boolean = false,
-    ) = traceSpan("sync.entity", name) { span ->
+    ) = traceSpan(TraceOperation.SYNC_ENTITY, name) { span ->
         try {
             progress?.invoke(Progress.LocalDBRead)
-            val localList = traceSpan("db.read", "Select all $name") {
+            val localList = traceSpan(TraceOperation.DB_READ, "Select all $name") {
                 repository.selectAll() // all entries from the local database
             }
 
@@ -249,7 +250,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             val remoteList = getAll(progress, forceFetch) // all entries from the remote server
 
             progress?.invoke(Progress.DataProcessing)
-            val (toInsert, toUpdate, toDelete) = traceSpan("sync.process", "Compare $name") {
+            val (toInsert, toUpdate, toDelete) = traceSpan(TraceOperation.SYNC_PROCESS, "Compare $name") {
                 val toUpdate = mutableListOf<RemoteEntity>()
                 val toInsert = mutableListOf<RemoteEntity>()
                 for (item in remoteList) {
@@ -276,7 +277,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             }
 
             progress?.invoke(Progress.LocalDBWrite)
-            traceSpan("db.write", "Store $name") {
+            traceSpan(TraceOperation.DB_WRITE, "Store $name") {
                 // Insert new items
                 toInsert.forEach { insertRemoteEntity(it) }
                 // Update existing items

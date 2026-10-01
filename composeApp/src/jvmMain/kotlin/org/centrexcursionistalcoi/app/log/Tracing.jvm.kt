@@ -5,8 +5,8 @@ import io.sentry.Sentry
 import io.sentry.SpanStatus
 
 actual class TraceSpan(private val span: ISpan) {
-    actual fun startChild(operation: String, description: String?): TraceSpan =
-        TraceSpan(span.startChild(operation, description))
+    actual fun startChild(operation: TraceOperation, description: String?): TraceSpan =
+        TraceSpan(span.startChild(operation.value, description))
 
     actual fun setTag(key: String, value: String) = span.setTag(key, value)
 
@@ -23,5 +23,5 @@ actual class TraceSpan(private val span: ISpan) {
     )
 }
 
-actual fun startTraceTransaction(name: String, operation: String): TraceSpan =
-    TraceSpan(Sentry.startTransaction(name, operation))
+actual fun startTraceTransaction(name: String, operation: TraceOperation): TraceSpan =
+    TraceSpan(Sentry.startTransaction(name, operation.value))

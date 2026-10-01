@@ -36,12 +36,12 @@ class TestTracing {
 
     @Test
     fun test_traceSpan_nestsUnderTransaction_acrossDispatchers() = runTest {
-        traceTransaction("Sync all data", "sync") { transaction ->
+        traceTransaction("Sync all data", TraceOperation.SYNC) { transaction ->
             transaction.setTag("sync.reason", "initial")
-            traceSpan("sync.entity", "departments") { entity ->
+            traceSpan(TraceOperation.SYNC_ENTITY, "departments") { entity ->
                 entity?.setData("sync.inserted", 3L)
                 withContext(Dispatchers.Default) {
-                    traceSpan("db.write", "Store departments") { }
+                    traceSpan(TraceOperation.DB_WRITE, "Store departments") { }
                 }
             }
         }
@@ -60,8 +60,8 @@ class TestTracing {
     @Test
     fun test_traceSpan_failure_finishesWithError() = runTest {
         assertFailsWith<IllegalStateException> {
-            traceTransaction("Sync all data", "sync") {
-                traceSpan("sync.entity", "users") { error("boom") }
+            traceTransaction("Sync all data", TraceOperation.SYNC) {
+                traceSpan(TraceOperation.SYNC_ENTITY, "users") { error("boom") }
             }
         }
 
@@ -73,8 +73,8 @@ class TestTracing {
     @Test
     fun test_traceSpan_cancelled_finishesAsCancelled() = runTest {
         assertFailsWith<CancellationException> {
-            traceTransaction("Sync all data", "sync") {
-                traceSpan("sync.entity", "users") { throw CancellationException("stopped") }
+            traceTransaction("Sync all data", TraceOperation.SYNC) {
+                traceSpan(TraceOperation.SYNC_ENTITY, "users") { throw CancellationException("stopped") }
             }
         }
 
@@ -83,7 +83,7 @@ class TestTracing {
 
     @Test
     fun test_traceSpan_outsideTransaction_runsWithoutSpan() = runTest {
-        val result = traceSpan("sync.entity", "users") { span ->
+        val result = traceSpan(TraceOperation.SYNC_ENTITY, "users") { span ->
             assertNull(span)
             42
         }

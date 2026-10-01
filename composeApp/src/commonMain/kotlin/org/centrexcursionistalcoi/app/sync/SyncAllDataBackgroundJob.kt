@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
+import org.centrexcursionistalcoi.app.log.TraceOperation
 import org.centrexcursionistalcoi.app.log.traceSpan
 import org.centrexcursionistalcoi.app.log.traceTransaction
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
@@ -94,7 +95,7 @@ class SyncAllDataBackgroundJob(
             log.d { "Last sync was more than $SYNC_EVERY_SECONDS seconds ago, synchronizing data..." }
 
             // Synchronize the local database with the remote data
-            traceTransaction("Sync all data", "sync") { transaction ->
+            traceTransaction("Sync all data", TraceOperation.SYNC) { transaction ->
                 transaction.setTag(
                     "sync.reason",
                     when {
@@ -124,7 +125,7 @@ class SyncAllDataBackgroundJob(
     ) {
         try {
             // First, synchronize the user profile
-            traceSpan("sync.entity", "profile") {
+            traceSpan(TraceOperation.SYNC_ENTITY, "profile") {
                 profileRemoteRepository.synchronize(progressNotifier.withContext(Res.string.sync_step_profile), ignoreIfModifiedSince = force)
             }
 
@@ -181,7 +182,7 @@ class SyncAllDataBackgroundJob(
                 FileSystem.deleteAll().also { log.v { "$it files were deleted." } }
 
                 log.d { "Running sync again..." }
-                traceSpan("sync.retry", "Missing cross reference") {
+                traceSpan(TraceOperation.SYNC_RETRY, "Missing cross reference") {
                     synchronizeAllRepositories(true, isRetry = true)
                 }
             }

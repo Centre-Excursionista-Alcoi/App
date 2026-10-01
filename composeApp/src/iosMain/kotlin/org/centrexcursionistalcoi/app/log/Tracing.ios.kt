@@ -7,8 +7,8 @@ import kotlinx.cinterop.ExperimentalForeignApi
 
 @OptIn(ExperimentalForeignApi::class)
 actual class TraceSpan(private val span: SentrySpanProtocol) {
-    actual fun startChild(operation: String, description: String?): TraceSpan =
-        TraceSpan(span.startChildWithOperation(operation, description))
+    actual fun startChild(operation: TraceOperation, description: String?): TraceSpan =
+        TraceSpan(span.startChildWithOperation(operation.value, description))
 
     actual fun setTag(key: String, value: String) = span.setTagValue(value, forKey = key)
 
@@ -26,5 +26,5 @@ actual class TraceSpan(private val span: SentrySpanProtocol) {
 }
 
 @OptIn(ExperimentalForeignApi::class)
-actual fun startTraceTransaction(name: String, operation: String): TraceSpan =
-    TraceSpan(SentrySDK.startTransactionWithName(name, operation = operation))
+actual fun startTraceTransaction(name: String, operation: TraceOperation): TraceSpan =
+    TraceSpan(SentrySDK.startTransactionWithName(name, operation = operation.value))
