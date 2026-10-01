@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.diamondedge.logging.logging
 import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -150,8 +151,12 @@ fun ImageFileContainer?.rememberImageFile(
             try {
                 val bytes = this@rememberImageFile?.imageFile()
                 withContext(dispatcherProvider.main) { state.value = bytes }
-            } catch (e: IllegalStateException) {
-                log.w(e) { "Image file not found." }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Not found, or it couldn't be downloaded: shown as an image that couldn't be loaded. It's launched in
+                // [scope], so anything thrown here would crash the app.
+                log.w(e) { "Could not load the image file." }
                 withContext(dispatcherProvider.main) { state.value = ByteArray(0) }
             }
         }
@@ -181,8 +186,11 @@ fun ImageFileListContainer?.rememberImageFiles(
                 try {
                     val bytes = imageFile(uuid = image)
                     withContext(dispatcherProvider.main) { state[image] = bytes }
-                } catch (e: IllegalArgumentException) {
-                    log.w(e) { "Image file not found." }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // As in rememberImageFile
+                    log.w(e) { "Could not load the image file." }
                     withContext(dispatcherProvider.main) { state[image] = ByteArray(0) }
                 }
             }

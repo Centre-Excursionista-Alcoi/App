@@ -12,6 +12,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.ResourcesUtils.bytesFromResource
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.routes.Api
@@ -42,14 +43,15 @@ class ApplicationTest: ApplicationTestBase() {
         assertNotNull(fileId)
 
         // unknown is not a valid UUID
-        client.get(Api.Download.Id("unknown")).assertStatusCode(HttpStatusCode.BadRequest)
+        client.get(Api.Download.Id("unknown")).assertError(Error.MalformedRequest())
 
         // non-existing UUID
-        client.get(Api.Download.Id("00000000-0000-0000-0000-000000000000")).assertStatusCode(HttpStatusCode.NotFound)
+        client.get(Api.Download.Id("00000000-0000-0000-0000-000000000000")).assertError(Error.EntityNotFound("File", "00000000-0000-0000-0000-000000000000"))
 
         // A file with no rules set requires at least a logged-in session (see Routing.kt) -- it's not a
         // deliberate "public" file, just one nothing ever restricted.
-        client.get(Api.Download.Id("$fileId")).assertStatusCode(HttpStatusCode.Unauthorized)
+        // As the API's other errors, so the app knows the session is over
+        client.get(Api.Download.Id("$fileId")).assertError(Error.NotLoggedIn())
 
         loginAsFakeUser()
 

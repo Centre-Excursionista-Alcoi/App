@@ -61,7 +61,17 @@ class LoadingViewModel(
         server.loadInfo()
 
         try {
-            // Try to fetch the profile to see if the session is still valid
+            // The profile stays stored when the session ends (e.g. its refresh token was rejected): without a
+            // session, nothing could be loaded, so recover it or start over
+            if (profileRepository.getProfile() != null && !authBackend.hasSession()) {
+                log.d { "Profile stored, but there's no session: attempting automatic re-login..." }
+                if (!authBackend.tryAutoRelogin()) {
+                    log.d { "Automatic re-login not possible or failed, forgetting the account..." }
+                    authBackend.forgetLocalAccount()
+                    return@launch handleNotLoggedIn(onNotLoggedIn)
+                }
+            }
+
             if (isUserProfileValid()) {
                 if (settings.databaseVersionUpgrade()) {
                     log.d { "Database migration, running synchronization..." }

@@ -170,6 +170,9 @@ class AuthBackend(
      * @return `true` if there's a valid session now; `false` otherwise -- in which case the saved session has
      * already been forgotten if it's no longer valid, and the caller should fall back to a normal [logout].
      */
+    /** Whether there's a saved session: without one, requests are made without logging in. */
+    suspend fun hasSession(): Boolean = credentialsStore.getSession() != null
+
     suspend fun tryAutoRelogin(): Boolean {
         if (credentialsStore.getSession() != null) {
             try {
