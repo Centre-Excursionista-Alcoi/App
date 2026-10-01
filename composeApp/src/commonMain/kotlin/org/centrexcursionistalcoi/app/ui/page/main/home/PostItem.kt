@@ -41,6 +41,8 @@ import cea_app.composeapp.generated.resources.post_by
 import cea_app.composeapp.generated.resources.post_department_generic
 import coil3.compose.rememberAsyncImagePainter
 import com.mikepenz.markdown.m3.Markdown
+import com.mikepenz.markdown.model.markdownAnnotator
+import com.mikepenz.markdown.model.markdownAnnotatorConfig
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import org.centrexcursionistalcoi.app.data.ReferencedPost
@@ -91,7 +93,12 @@ fun PostItem(post: ReferencedPost) {
                 }
             }
 
-            Markdown(post.content, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
+            Markdown(
+                content = post.content,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                // A single line break starts a new line, as users expect, instead of being joined with a space
+                annotator = remember { markdownAnnotator(config = markdownAnnotatorConfig(eolAsNewLine = true)) },
+            )
 
             if (post.files.isNotEmpty()) {
                 val images = post.rememberImageFiles()

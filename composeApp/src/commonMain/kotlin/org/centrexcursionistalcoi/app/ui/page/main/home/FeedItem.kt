@@ -25,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.mikepenz.markdown.m3.Markdown
+import com.mikepenz.markdown.model.markdownAnnotator
+import com.mikepenz.markdown.model.markdownAnnotatorConfig
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -89,6 +91,8 @@ fun FeedItem(
                 Markdown(
                     content,
                     modifier = Modifier.padding(bottom = 8.dp).padding(horizontal = 8.dp),
+                    // A single line break starts a new line, as users expect, instead of being joined with a space
+                    annotator = remember { markdownAnnotator(config = markdownAnnotatorConfig(eolAsNewLine = true)) },
                 )
             }
         }

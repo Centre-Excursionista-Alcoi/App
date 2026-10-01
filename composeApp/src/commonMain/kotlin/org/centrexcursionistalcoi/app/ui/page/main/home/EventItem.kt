@@ -42,6 +42,8 @@ import cea_app.composeapp.generated.resources.event_requires_insurance_none
 import cea_app.composeapp.generated.resources.event_requires_insurance_period
 import cea_app.composeapp.generated.resources.event_requires_insurance_valid
 import com.mikepenz.markdown.m3.Markdown
+import com.mikepenz.markdown.model.markdownAnnotator
+import com.mikepenz.markdown.model.markdownAnnotatorConfig
 import kotlinx.coroutines.Job
 import kotlin.time.Clock
 import org.centrexcursionistalcoi.app.data.EventRequirement
@@ -222,7 +224,12 @@ fun EventItem(
             }
 
             event.description?.let { description ->
-                Markdown(description, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
+                Markdown(
+                    content = description,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    // A single line break starts a new line, as users expect, instead of being joined with a space
+                    annotator = remember { markdownAnnotator(config = markdownAnnotatorConfig(eolAsNewLine = true)) },
+                )
             }
 
             Spacer(Modifier.height(56.dp))
