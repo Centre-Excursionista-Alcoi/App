@@ -4,7 +4,13 @@ import io.ktor.http.ContentType
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDDocumentInformation
+import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
+import org.apache.pdfbox.pdmodel.common.PDRectangle
+import org.apache.pdfbox.pdmodel.font.PDFont
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
@@ -19,6 +25,8 @@ import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService.VERSION
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.centrexcursionistalcoi.app.storage.FileStorageProvider
+import org.centrexcursionistalcoi.app.verification.DocumentType
+import org.centrexcursionistalcoi.app.verification.DocumentVerification
 import org.intellij.markdown.parser.CancellationToken
 import org.slf4j.LoggerFactory
 import java.awt.Color
@@ -29,7 +37,8 @@ import java.util.Date
 import kotlin.uuid.Uuid
 
 object PdfGeneratorService {
-    private const val VERSION = 1
+    /** Increase when the PDFs change, so existing ones are generated again (see [updateMemoriesIfNeeded]). */
+    private const val VERSION = 2
     private const val FONT_SIZE_TITLE = 18f
     private const val FONT_SIZE_HEADER = 12f
     private const val FONT_SIZE_BODY = 10f
@@ -102,6 +111,7 @@ object PdfGeneratorService {
      * If the memory already has a PDF, it will be replaced.
      */
     fun generateMemoryPdf(memory: MemoryEntity, cancellationToken: CancellationToken = CancellationToken.NonCancellable) {
+        val verificationCode = DocumentVerification.newCode()
         val baos = ByteArrayOutputStream()
         baos.use { output ->
             generateMemoryPdf(
@@ -109,10 +119,13 @@ object PdfGeneratorService {
                 photoProvider = { uuid -> Database { FileEntity[uuid] }.readBytes() },
                 outputStream = output,
                 cancellationToken = cancellationToken,
+                verificationCode = verificationCode,
             )
         }
 
         Database {
+            DocumentVerification.record(verificationCode, baos.toByteArray(), DocumentType.MEMORY, memory.id.value)
+
             val oldPdf = memory.pdf
             memory.pdf = FileEntity.create(
                 bytes = baos.toByteArray(),
@@ -132,7 +145,8 @@ object PdfGeneratorService {
         memory: MemoryEntity,
         photoProvider: (Uuid) -> ByteArray, // Callback to fetch actual image data
         outputStream: OutputStream,
-        cancellationToken: CancellationToken = CancellationToken.NonCancellable
+        cancellationToken: CancellationToken = CancellationToken.NonCancellable,
+        verificationCode: String? = null,
     ) {
         val (referencedMemory, itemsUsed, submittedByName) = Database {
             val users = UserReferenceEntity.all().map { it.toData() }
@@ -154,7 +168,8 @@ object PdfGeneratorService {
             submittedBy = submittedByName,
             photoProvider = photoProvider,
             outputStream = outputStream,
-            cancellationToken = cancellationToken
+            cancellationToken = cancellationToken,
+            verificationCode = verificationCode,
         ) {
             creationDate = Calendar.getInstance().apply {
                 time = Date(memory.createdAt.toEpochMilliseconds())
@@ -172,6 +187,8 @@ object PdfGeneratorService {
         photoProvider: (Uuid) -> ByteArray, // Callback to fetch actual image data
         outputStream: OutputStream,
         cancellationToken: CancellationToken = CancellationToken.NonCancellable,
+        /** Printed on every page with a link to verify the document (see [DocumentVerification]), if given. */
+        verificationCode: String? = null,
         extraMeta: PDDocumentInformation.() -> Unit = {}
     ) {
         PDDocument().use { document ->
@@ -332,10 +349,42 @@ object PdfGeneratorService {
                 footerStream.newLineAtOffset(centerX, 20f) // 20 units from bottom
                 footerStream.showText(pageText)
                 footerStream.endText()
+
+                if (verificationCode != null) {
+                    drawVerificationFooter(footerPage, footerStream, verificationCode, fontRegular)
+                }
                 footerStream.close()
             }
 
             PdfSigner.save(document, outputStream)
         }
+    }
+
+    /**
+     * Draws [code] on [page], above the page number, with a link to the page that verifies the document: the whole
+     * line can be clicked.
+     */
+    private fun drawVerificationFooter(page: PDPage, stream: PDPageContentStream, code: String, font: PDFont) {
+        val url = DocumentVerification.url(code)
+        val text = "Codi de verificació: ${DocumentVerification.format(code)} · Comprova'n l'autenticitat a $url"
+        val size = 8f
+        val textWidth = font.getStringWidth(text) / 1000 * size
+        val x = (page.mediaBox.width - textWidth) / 2
+        val y = 32f
+
+        stream.beginText()
+        stream.setFont(font, size)
+        stream.setNonStrokingColor(Color.GRAY)
+        stream.newLineAtOffset(x, y)
+        stream.showText(text)
+        stream.endText()
+
+        page.annotations.add(
+            PDAnnotationLink().apply {
+                rectangle = PDRectangle(x, y - 2, textWidth, size + 4)
+                borderStyle = PDBorderStyleDictionary().apply { width = 0f }
+                action = PDActionURI().apply { uri = url }
+            }
+        )
     }
 }

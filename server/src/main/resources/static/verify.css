@@ -1,0 +1,61 @@
+/* The document verification page (VerifyRoutes.kt), on top of app-links.css. */
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+    text-align: left;
+}
+
+label {
+    font-weight: 600;
+    color: var(--text);
+}
+
+input[type="text"] {
+    padding: 12px;
+    border: 1px solid var(--text-muted);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-family: ui-monospace, monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+input[type="file"] {
+    color: var(--text-muted);
+    font: inherit;
+}
+
+form .cta {
+    margin-top: 8px;
+    border: none;
+    font: inherit;
+    cursor: pointer;
+}
+
+.result {
+    padding: 12px 16px;
+    border-radius: 12px;
+    text-align: left;
+    color: var(--text);
+}
+
+.result.success { background: rgba(46, 125, 50, 0.15); border-left: 4px solid #2E7D32; }
+.result.error { background: rgba(198, 40, 40, 0.12); border-left: 4px solid #C62828; }
+.result.info { background: rgba(109, 94, 15, 0.12); border-left: 4px solid var(--primary); }
+
+.details {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 12px;
+    text-align: left;
+    color: var(--text);
+}
+
+.details dt { color: var(--text-muted); }
+.details dd { margin: 0; }
+.details .hash { word-break: break-all; font-size: 0.85em; }
