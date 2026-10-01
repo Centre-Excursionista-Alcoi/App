@@ -91,9 +91,18 @@ object PdfGeneratorService {
      * @param cancellationToken A [CancellationToken] that can be used to cancel the operation. If not provided, the operation will not be cancellable.
      */
     fun updateMemoriesIfNeeded(cancellationToken: CancellationToken = CancellationToken.NonCancellable) {
-        val memories = Database { MemoryEntity.all() }
-        val memoriesToUpdate = memories.filter { memory ->
-            memory.pdf == null || needsUpdate(memory.pdf!!)
+        // Within the transaction: the query, and each memory's PDF, are only read when iterated
+        val memoriesToUpdate = Database {
+            MemoryEntity.all().filter { memory ->
+                val pdf = memory.pdf ?: return@filter true
+                try {
+                    needsUpdate(pdf)
+                } catch (e: Exception) {
+                    // e.g. its contents are missing: generated again
+                    logger.warn("Could not read the PDF of memory ${memory.id.value}", e)
+                    true
+                }
+            }
         }
         if (memoriesToUpdate.isEmpty()) {
             logger.info("No memories need PDF updates")
@@ -102,7 +111,12 @@ object PdfGeneratorService {
         logger.info("Found ${memoriesToUpdate.size} memories that need PDF updates")
         for (memory in memoriesToUpdate) {
             logger.info("Updating PDF for memory ${memory.id.value}")
-            generateMemoryPdf(memory, cancellationToken)
+            // This runs as the server starts: a memory whose PDF can't be generated mustn't stop it
+            try {
+                generateMemoryPdf(memory, cancellationToken)
+            } catch (e: Exception) {
+                logger.error("Could not update the PDF of memory ${memory.id.value}", e)
+            }
         }
     }
 
