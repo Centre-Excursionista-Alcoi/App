@@ -75,7 +75,7 @@ suspend fun <T> MultiPartData.readRequestWithFiles(requestPart: PartData.FormIte
         discardRemaining()
         throw e
     } finally {
-        requestPart.dispose()
+        requestPart.release()
     }
     val uploads = mutableMapOf<String, FileRequestData>()
     var duplicate: String? = null
@@ -95,7 +95,7 @@ suspend fun <T> MultiPartData.readRequestWithFiles(requestPart: PartData.FormIte
                 else -> uploads[name] = FileRequestData().apply { populate(part) }
             }
         } finally {
-            part.dispose()
+            part.release()
         }
     }
     duplicate?.let { throw IllegalArgumentException("There are two file parts named \"$it\"") }
@@ -115,7 +115,7 @@ suspend fun MultiPartData.discardRemaining() {
         try {
             part.discard()
         } finally {
-            part.dispose()
+            part.release()
         }
     }
 }
@@ -184,7 +184,7 @@ private suspend fun <T> RoutingContext.receiveDecodedRequest(
             val first = multipart.readPart()
             if (first !is PartData.FormItem || first.name != RequestWithFiles.REQUEST_PART) {
                 first?.discard()
-                first?.dispose()
+                first?.release()
                 multipart.discardRemaining()
                 logger.error("Multipart request doesn't start with the \"${RequestWithFiles.REQUEST_PART}\" part")
                 respondError(Error.MalformedRequest())

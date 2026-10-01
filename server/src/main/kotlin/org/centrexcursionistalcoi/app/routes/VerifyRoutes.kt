@@ -11,6 +11,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.utils.io.discard
 import io.ktor.utils.io.readAvailable
 import java.security.MessageDigest
 import java.time.ZoneId
@@ -202,14 +203,10 @@ fun Route.verifyRoutes() {
                             if (size > MAX_UPLOAD_SIZE) tooLarge = true else sha256 = digest.digest().toHex()
                         }
                     }
-                    part is PartData.FileItem -> {
-                        val channel = part.provider()
-                        val buffer = ByteArray(64 * 1024)
-                        while (channel.readAvailable(buffer, 0, buffer.size) != -1) Unit
-                    }
+                    part is PartData.FileItem -> part.provider().discard()
                 }
             } finally {
-                part.dispose()
+                part.release()
             }
         }
 
@@ -223,7 +220,7 @@ fun Route.verifyRoutes() {
             return@post respondVerifyPage(VerifyState.Match, document.code, document)
         }
 
-        val code = DocumentVerification.normalize(input!!)
+        val code = DocumentVerification.normalize(input)
             ?: return@post respondVerifyPage(VerifyState.InvalidCode, input, status = HttpStatusCode.BadRequest)
         val document = Database { DocumentVerification.find(code) }
             ?: return@post respondVerifyPage(VerifyState.NotFound, input, status = HttpStatusCode.NotFound)
