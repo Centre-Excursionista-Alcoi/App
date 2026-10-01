@@ -197,6 +197,7 @@ richeditor = { module = "com.mohamedrejeb.richeditor:richeditor-compose", versio
 sentry-kotlinMultiplatform = { module = "io.sentry:sentry-kotlin-multiplatform", version.ref = "sentry-multiplatform" }
 sentry-jvm = { module = "io.sentry:sentry", version.ref = "sentry-jvmSdk" }
 sentry-kotlinExtensions = { module = "io.sentry:sentry-kotlin-extensions", version.ref = "sentry-jvmSdk" }
+sentry-asyncProfiler = { module = "io.sentry:sentry-async-profiler", version.ref = "sentry-jvmSdk" }
 sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
 telegram-bot = { module = "io.github.kotlin-telegram-bot.kotlin-telegram-bot:telegram", version.ref = "telegram-bot" }
 testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }

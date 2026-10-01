@@ -9,6 +9,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.centrexcursionistalcoi.app.tracing.TraceOperation
+import org.centrexcursionistalcoi.app.tracing.traceTransaction
 import org.slf4j.LoggerFactory
 import java.io.Closeable
 import kotlin.coroutines.CoroutineContext
@@ -39,7 +41,7 @@ abstract class PeriodicWorker(
         if (waitUntilFirstSync) runBlocking {
             mutex.withLock {
                 logger.debug("Starting initial sync: {}", Clock.System.now())
-                run()
+                runTraced()
                 done()
             }
         }
@@ -54,7 +56,7 @@ abstract class PeriodicWorker(
                 if (mutex.tryLock()) {
                     try {
                         logger.debug("Starting sync: {}", Clock.System.now())
-                        run()
+                        runTraced()
                         done()
                     } finally {
                         mutex.unlock()
@@ -67,6 +69,11 @@ abstract class PeriodicWorker(
                 delay(period)
             }
         }
+    }
+
+    /** Runs [run] inside a transaction of its own, so each run shows up in Sentry with what it spent its time on. */
+    private suspend fun runTraced() = traceTransaction(this::class.simpleName ?: "PeriodicWorker", TraceOperation.TASK) {
+        run()
     }
 
     private fun done() {
