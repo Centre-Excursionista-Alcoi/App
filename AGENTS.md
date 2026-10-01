@@ -316,8 +316,10 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   `RemoteRepository.createJson`/`update` send any `RequestWithFiles` with file contents as a `request` part (the
   JSON, each file with `part` naming its part instead of `bytes`) followed by one part per file, which the server
   streams (`request/MultipartRequests.kt`; `FileEntity.newFrom`/`replaceContents` resolve `part` through
-  `UploadedParts`, set by `ReceivedRequest.withUploads`). The server still accepts plain JSON too, for installed
-  app versions. A new request with files must implement `RequestWithFiles.mapFiles`, and its route must receive it
+  `UploadedParts`, set by `ReceivedRequest.withUploads`). Such a request goes as plain JSON only when it carries no
+  contents (its files only refer to existing ones by id): the server rejects contents encoded as Base64 in the JSON.
+  In tests, `requestWithFilesBody` builds the body the way the app does, and `withUploadedFile` stores a file
+  outside a request. A new request with files must implement `RequestWithFiles.mapFiles`, and its route must receive it
   with `receiveRequestWithFiles` (the generic POST/PATCH in `RoutesBase.kt` already do): a multipart body whose
   first part isn't `request` is rejected. Every error path
   must read the rest of a multipart body before responding (`discardRemaining()`), or the connection stalls.

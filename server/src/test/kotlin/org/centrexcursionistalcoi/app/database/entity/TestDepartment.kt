@@ -15,7 +15,9 @@ import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
+import org.centrexcursionistalcoi.app.utils.UPLOADED_PART
 import org.centrexcursionistalcoi.app.utils.toUuid
+import org.centrexcursionistalcoi.app.utils.withUploadedFile
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -127,13 +129,15 @@ class TestDepartment {
             }
         }
 
-        Database {
-            departmentEntity.patch(
-                UpdateDepartmentRequest(
-                    "Updated Department",
-                    FileWithContext(byteArrayOf(4, 5, 6))
+        withUploadedFile(byteArrayOf(4, 5, 6)) {
+            Database {
+                departmentEntity.patch(
+                    UpdateDepartmentRequest(
+                        "Updated Department",
+                        FileWithContext(part = UPLOADED_PART)
+                    )
                 )
-            )
+            }
         }
 
         val updatedEntity = Database { DepartmentEntity[departmentEntity.id] }

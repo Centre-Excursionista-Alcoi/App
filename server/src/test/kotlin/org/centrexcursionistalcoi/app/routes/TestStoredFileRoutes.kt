@@ -63,6 +63,7 @@ import org.centrexcursionistalcoi.app.storage.testStorage
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.utils.requestWithFilesBody
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -146,8 +147,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
     ) { context ->
         val postId = context.dibResult!!
         client.patch(Api.Posts.Id("$postId")) {
-            contentType(ContentType.Application.Json)
-            setBody(json.encodeToString(UpdatePostRequest.serializer(), UpdatePostRequest(files = listOf(FileWithContext(png, name = "new.png")))))
+            setBody(requestWithFilesBody(UpdatePostRequest(files = listOf(FileWithContext(png, name = "new.png"))), UpdatePostRequest.serializer()))
         }.assertStatusCode(HttpStatusCode.OK)
 
         val fileIds = Database { PostFiles.selectAll().where { PostFiles.post eq postId }.map { it[PostFiles.file].value } }
@@ -165,8 +165,7 @@ class TestStoredFileRoutes : ApplicationTestBase() {
         val (postId, otherFile) = context.dibResult!!
         // An empty file means "remove it from the post": only the post's own files can be removed
         client.patch(Api.Posts.Id("$postId")) {
-            contentType(ContentType.Application.Json)
-            setBody(json.encodeToString(UpdatePostRequest.serializer(), UpdatePostRequest(files = listOf(FileWithContext(id = otherFile)))))
+            setBody(requestWithFilesBody(UpdatePostRequest(files = listOf(FileWithContext(id = otherFile))), UpdatePostRequest.serializer()))
         }
 
         assertNotNull(Database { FileEntity.findById(otherFile) })

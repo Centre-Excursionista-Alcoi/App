@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.plugins.resources.patch
+import kotlin.test.assertNull
 import kotlin.time.Clock
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
@@ -372,16 +373,17 @@ class TestMultipartRequests : ApplicationTestBase() {
     }
 
     @Test
-    fun test_patch_json_stillWorks() = runApplicationTest(
+    fun test_patch_json_withContents_rejected() = runApplicationTest(
         shouldLogIn = LoginType.ADMIN,
         databaseInitBlock = { DepartmentEntity.new { displayName = "Department" }.id.value },
     ) { context ->
-        // Sent by app versions from before multipart requests: contents encoded in the JSON
+        // The contents of the file encoded as Base64 in the JSON, instead of in a part of its own
         client.patch(Api.Departments.Id("${context.dibResult}")) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(UpdateDepartmentRequest.serializer(), UpdateDepartmentRequest(image = FileWithContext(png, name = "logo.png"))))
-        }.assertStatusCode(HttpStatusCode.OK)
+        }.assertError(Error.MalformedRequest())
 
-        assertContentEquals(png, Database { DepartmentEntity[context.dibResult!!].image!!.readBytes() })
+        assertNull(Database { DepartmentEntity[context.dibResult!!].image })
+        assertTrue(testStorage.keys().isEmpty())
     }
 }

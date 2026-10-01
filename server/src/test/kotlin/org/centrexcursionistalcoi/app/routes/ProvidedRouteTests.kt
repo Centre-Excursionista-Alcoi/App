@@ -53,6 +53,7 @@ import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.runs
 import org.centrexcursionistalcoi.app.test.TestCase.Companion.withEntities
 import org.centrexcursionistalcoi.app.utils.Zero
+import org.centrexcursionistalcoi.app.utils.requestWithFilesBody
 import org.centrexcursionistalcoi.app.utils.toJsonElement
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.dao.EntityClass
@@ -133,10 +134,9 @@ object ProvidedRouteTests {
         }
     }
 
-    /** Creates an entity from [pairs], sent as a JSON object, the way the app does. */
+    /** Creates an entity from [pairs], sent the way the app does (see [requestWithFilesBody]). */
     private suspend fun HttpClient.postCreate(baseUrl: String, pairs: List<Pair<String, Any?>>) = post(baseUrl) {
-        contentType(ContentType.Application.Json)
-        setBody(json.encodeToString(JsonObject(pairs.filter { it.second != null }.associate { (name, value) -> name to value.toJsonElement() })))
+        setBody(requestWithFilesBody(pairs.toMap()))
     }
 
     context(_: JdbcTransaction)
@@ -701,12 +701,8 @@ object ProvidedRouteTests {
                     val (name, value) = entry
                     "$title - Test patch $name" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
                         runApplicationTest(shouldLogIn = modificationsLoginType, userEntityPatches = userEntityPatches) {
-                            val data = JsonObject(
-                                mapOf(name to value.toJsonElement())
-                            )
                             val location = client.patch(resources.withEntityId()) {
-                                contentType(ContentType.Application.Json)
-                                setBody(json.encodeToString(data))
+                                setBody(requestWithFilesBody(mapOf(name to value)))
                             }.run {
                                 assertStatusCode(HttpStatusCode.OK)
                                 val location = headers[HttpHeaders.Location]
@@ -734,12 +730,8 @@ object ProvidedRouteTests {
                 val creationValues = requiredCreationValues + optionalCreationValues
                 "$title - Test patch all parameters (${creationValues.keys.joinToString()})" withEntities auxiliaryEntitiesProvider withEntity stubEntityProvider runs {
                     runApplicationTest(shouldLogIn = modificationsLoginType, userEntityPatches = userEntityPatches) {
-                        val data = JsonObject(
-                            creationValues.map { (name, value) -> name to value.toJsonElement() }.toMap()
-                        )
                         val location = client.patch(resources.withEntityId()) {
-                            contentType(ContentType.Application.Json)
-                            setBody(json.encodeToString(data))
+                            setBody(requestWithFilesBody(creationValues))
                         }.run {
                             assertStatusCode(HttpStatusCode.OK)
                             val location = headers[HttpHeaders.Location]

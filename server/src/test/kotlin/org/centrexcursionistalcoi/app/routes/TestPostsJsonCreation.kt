@@ -30,6 +30,7 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreatePostRequest
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.utils.requestWithFilesBody
 import org.jetbrains.exposed.v1.jdbc.insert
 
 /**
@@ -38,8 +39,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
  */
 class TestPostsJsonCreation : ApplicationTestBase() {
     private suspend fun HttpClient.postJson(request: CreatePostRequest) = post(Api.Posts()) {
-        contentType(ContentType.Application.Json)
-        setBody(json.encodeToString(CreatePostRequest.serializer(), request))
+        setBody(requestWithFilesBody(request, CreatePostRequest.serializer()))
     }
 
     @Test

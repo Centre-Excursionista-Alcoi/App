@@ -14,6 +14,7 @@ import kotlinx.coroutines.asContextElement
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
+import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
@@ -26,6 +27,13 @@ private val logger = LoggerFactory.getLogger("MultipartRequests")
  * request doesn't have.
  */
 class MissingPartException(part: String) : IllegalArgumentException("The request has no file part named \"$part\"")
+
+/**
+ * The name of the part holding the contents of this file. Requests with the contents of a file in the JSON are
+ * rejected when received ([receiveRequestWithFiles]), so every file to store names one.
+ * @throws IllegalArgumentException if it doesn't.
+ */
+fun FileWithContext.requirePart(): String = requireNotNull(part) { "File has no part holding its contents" }
 
 /**
  * The files uploaded as parts of the multipart request being handled (see [RequestWithFiles]), by part name.
@@ -127,13 +135,33 @@ suspend fun RoutingContext.assertRequestWithFilesContentType(): Unit? {
 
 /**
  * Receives a request that can carry files ([RequestWithFiles]): as JSON, or as multipart with the files in parts
- * of their own.
+ * of their own. The contents of files are only accepted in parts: a request with any in [FileWithContext.bytes]
+ * (encoded as Base64) is rejected.
  * @param decodingError The error to respond with if the request can't be decoded.
  * @return The request, or `null` if it couldn't be received. An error has been responded then.
  */
 suspend fun <T> RoutingContext.receiveRequestWithFiles(
     serializer: KSerializer<T>,
     decodingError: (cause: Exception, body: String?) -> Error = { _, _ -> Error.MalformedRequest() },
+): ReceivedRequest<T>? {
+    val received = receiveDecodedRequest(serializer, decodingError) ?: return null
+    if ((received.request as? RequestWithFiles<*>)?.hasInlineContents() == true) {
+        logger.error("Request has files with their contents in the JSON, instead of in parts of their own")
+        respondError(Error.MalformedRequest())
+        return null
+    }
+    return received
+}
+
+private fun RequestWithFiles<*>.hasInlineContents(): Boolean {
+    var found = false
+    mapFiles { file -> file.also { if (it.bytes.isNotEmpty()) found = true } }
+    return found
+}
+
+private suspend fun <T> RoutingContext.receiveDecodedRequest(
+    serializer: KSerializer<T>,
+    decodingError: (cause: Exception, body: String?) -> Error,
 ): ReceivedRequest<T>? {
     val contentType = call.request.contentType()
     when {

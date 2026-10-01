@@ -19,6 +19,8 @@ import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.storage.createTestFile
 import org.centrexcursionistalcoi.app.storage.testStorage
+import org.centrexcursionistalcoi.app.utils.UPLOADED_PART
+import org.centrexcursionistalcoi.app.utils.withUploadedFile
 
 class TestImageContainerEntity {
     private val imageBytes = ResourcesUtils.bytesFromResource("/square.png")
@@ -65,10 +67,12 @@ class TestImageContainerEntity {
         val oldKey = Database { oldImage.objectKey }
         val department = newDepartment(oldImage)
 
-        Database {
-            department.updateOrSetImage(
-                FileWithContext(imageBytes, name = "square.png", id = oldImage.id.value)
-            )
+        withUploadedFile(imageBytes) {
+            Database {
+                department.updateOrSetImage(
+                    FileWithContext(name = "square.png", id = oldImage.id.value, part = UPLOADED_PART)
+                )
+            }
         }
 
         val image = Database { DepartmentEntity[department.id].image }
@@ -91,9 +95,11 @@ class TestImageContainerEntity {
         val department = newDepartment(oldImage)
 
         runCatching {
-            Database {
-                department.updateOrSetImage(FileWithContext(imageBytes, id = oldImage.id.value))
-                error("Rolled back")
+            withUploadedFile(imageBytes) {
+                Database {
+                    department.updateOrSetImage(FileWithContext(id = oldImage.id.value, part = UPLOADED_PART))
+                    error("Rolled back")
+                }
             }
         }
 
@@ -109,7 +115,9 @@ class TestImageContainerEntity {
         val department = newDepartment(oldImage)
         val newId = Uuid.random()
 
-        Database { department.updateOrSetImage(FileWithContext(imageBytes, name = "square.png", id = newId)) }
+        withUploadedFile(imageBytes) {
+            Database { department.updateOrSetImage(FileWithContext(name = "square.png", id = newId, part = UPLOADED_PART)) }
+        }
 
         val image = Database { DepartmentEntity[department.id].image }
         assertNotNull(image)
@@ -123,7 +131,9 @@ class TestImageContainerEntity {
     fun test_updateOrSetImage_noImage() {
         val department = newDepartment()
 
-        Database { department.updateOrSetImage(FileWithContext(imageBytes)) }
+        withUploadedFile(imageBytes) {
+            Database { department.updateOrSetImage(FileWithContext(part = UPLOADED_PART)) }
+        }
 
         val image = Database { DepartmentEntity[department.id].image }
         assertNotNull(image)
@@ -136,7 +146,9 @@ class TestImageContainerEntity {
         val otherFile = createTestFile(byteArrayOf(9, 9, 9))
         val department = newDepartment()
 
-        Database { department.updateOrSetImage(FileWithContext(imageBytes, id = otherFile.id.value)) }
+        withUploadedFile(imageBytes) {
+            Database { department.updateOrSetImage(FileWithContext(id = otherFile.id.value, part = UPLOADED_PART)) }
+        }
 
         val image = Database { DepartmentEntity[department.id].image }
         assertNotNull(image)

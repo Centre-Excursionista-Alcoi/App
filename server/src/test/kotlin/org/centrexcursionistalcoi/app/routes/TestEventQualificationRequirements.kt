@@ -41,6 +41,7 @@ import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.utils.requestWithFilesBody
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -379,8 +380,7 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
 
     private suspend fun io.ktor.client.HttpClient.patchEvent(request: UpdateEventRequest): HttpResponse =
         patch(Api.Events.Id("$eventId")) {
-            contentType(ContentType.Application.Json)
-            setBody(json.encodeToString(UpdateEventRequest.serializer(), request))
+            setBody(requestWithFilesBody(request, UpdateEventRequest.serializer()))
         }
 
     @Test

@@ -5,15 +5,12 @@ import io.ktor.client.plugins.resources.delete
 import io.ktor.client.plugins.resources.get
 import io.ktor.client.plugins.resources.patch
 import io.ktor.client.plugins.resources.post
-import io.ktor.client.request.forms.MultiPartFormDataContent
-import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.http.ContentType
-import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -44,12 +41,12 @@ import org.centrexcursionistalcoi.app.database.table.Memories
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreateMemoryRequest
-import org.centrexcursionistalcoi.app.request.RequestWithFiles
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
 import org.centrexcursionistalcoi.app.storage.testStorage
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.utils.requestWithFilesBody
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.eq
@@ -73,8 +70,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
     private val exampleItemId = "1a9f6bda-53f0-4f38-9c9e-3f4e4f9c8b1c".toUuid()
 
     private suspend fun HttpClient.postMemory(request: CreateMemoryRequest): HttpResponse = post(Api.Memories()) {
-        contentType(ContentType.Application.Json)
-        setBody(json.encodeToString(CreateMemoryRequest.serializer(), request))
+        setBody(requestWithFilesBody(request, CreateMemoryRequest.serializer()))
     }
 
     @Test
@@ -189,22 +185,13 @@ class TestMemoriesRoutes : ApplicationTestBase() {
             text = "A memory",
             from = ZonedDateTime(zone, LocalDate(2025, 6, 15), LocalTime(10, 0, 0)),
             to = ZonedDateTime(zone, LocalDate(2025, 6, 15), LocalTime(12, 0, 0)),
-            // One in a part of its own, the other one in the JSON
-            attachments = listOf(FileWithContext(part = "file_0"), FileWithContext(png, "photo.png", ContentType.Image.PNG)),
+            attachments = listOf(
+                FileWithContext(pdf, "report.pdf", ContentType.Application.Pdf),
+                FileWithContext(png, "photo.png", ContentType.Image.PNG),
+            ),
         )
         val location = client.post(Api.Memories()) {
-            setBody(
-                MultiPartFormDataContent(
-                    formData {
-                        append(
-                            RequestWithFiles.REQUEST_PART,
-                            json.encodeToString(CreateMemoryRequest.serializer(), request),
-                            Headers.build { append(HttpHeaders.ContentType, ContentType.Application.Json.toString()) },
-                        )
-                        append("file_0", pdf, Headers.build { append(HttpHeaders.ContentDisposition, "filename=report.pdf") })
-                    }
-                )
-            )
+            setBody(requestWithFilesBody(request, CreateMemoryRequest.serializer()))
         }.run {
             assertStatusCode(HttpStatusCode.Created)
             headers[HttpHeaders.Location]!!
@@ -355,8 +342,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
 
         // ...but still cannot modify it, since they are not the submitter nor an admin
         client.patch(Api.Memories.Id("${memory.id.value}")) {
-            contentType(ContentType.Application.Json)
-            setBody(json.encodeToString(UpdateMemoryRequest.serializer(), UpdateMemoryRequest(place = "Nice try")))
+            setBody(requestWithFilesBody(UpdateMemoryRequest(place = "Nice try"), UpdateMemoryRequest.serializer()))
         }.apply {
             assertError(Error.PermissionRejected())
         }
@@ -405,8 +391,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
 
         // ...and can modify it, unlike a mere tagged member.
         client.patch(Api.Memories.Id("${memory.id.value}")) {
-            contentType(ContentType.Application.Json)
-            setBody(json.encodeToString(UpdateMemoryRequest.serializer(), UpdateMemoryRequest(place = "Updated by manager")))
+            setBody(requestWithFilesBody(UpdateMemoryRequest(place = "Updated by manager"), UpdateMemoryRequest.serializer()))
         }.apply {
             assertStatusCode(HttpStatusCode.NoContent)
         }
@@ -443,8 +428,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
 
         // The manager can patch fields while keeping the memory in their own department...
         client.patch(Api.Memories.Id("${memory.id.value}")) {
-            contentType(ContentType.Application.Json)
-            setBody(json.encodeToString(UpdateMemoryRequest.serializer(), UpdateMemoryRequest(place = "Updated by manager")))
+            setBody(requestWithFilesBody(UpdateMemoryRequest(place = "Updated by manager"), UpdateMemoryRequest.serializer()))
         }.apply {
             assertStatusCode(HttpStatusCode.NoContent)
         }
@@ -497,8 +481,7 @@ class TestMemoriesRoutes : ApplicationTestBase() {
         }
 
         client.patch(location) {
-            contentType(ContentType.Application.Json)
-            setBody(json.encodeToString(UpdateMemoryRequest.serializer(), UpdateMemoryRequest(place = "Updated place")))
+            setBody(requestWithFilesBody(UpdateMemoryRequest(place = "Updated place"), UpdateMemoryRequest.serializer()))
         }.apply {
             assertStatusCode(HttpStatusCode.NoContent)
         }
