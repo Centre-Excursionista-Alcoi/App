@@ -64,7 +64,7 @@ class MemoriesRepository(
     override suspend fun update(item: ReferencedMemory) = updateRaw(item.dereference())
 
     /** Inserts or updates the given raw [memory], without needing to resolve its members/department/submitter first. */
-    suspend fun insertOrUpdate(memory: Memory) {
+    suspend fun insertOrUpdate(memory: Memory) = db.writeTransaction {
         if (dao.get(memory.id) != null) updateRaw(memory) else insertRaw(memory)
     }
 

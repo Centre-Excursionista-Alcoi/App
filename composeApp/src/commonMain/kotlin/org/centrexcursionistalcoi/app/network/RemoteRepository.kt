@@ -270,10 +270,10 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
 
             progress?.invoke(Progress.LocalDBWrite)
             traceSpan(TraceOperation.DB_WRITE, "Store $name") {
-                // Insert new items
-                toInsert.forEach { insertRemoteEntity(it) }
-                // Update existing items
-                toUpdate.forEach { updateRemoteEntity(it) }
+                // Insert new items, and update existing ones: both as upserts, since another sync (e.g. of a single
+                // entity, after a push notification) may store the same rows meanwhile
+                toInsert.forEach { upsertRemoteEntity(it) }
+                toUpdate.forEach { upsertRemoteEntity(it) }
                 // Delete removed items
                 repository.deleteByIdList(toDelete)
             }

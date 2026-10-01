@@ -191,6 +191,8 @@ class AuthBackend(
     }
 
     suspend fun logout() {
+        // While still logged in: the server only revokes tokens for a session
+        fcmTokenManager.revoke()
         endSession()
         log.d { "Logged out. Removing all data..." }
         clearLocalData()

@@ -119,7 +119,7 @@ class LendingsRepository(
         }
     }
 
-    private suspend fun insertOrUpdateMemory(memory: ReferencedMemory) {
+    private suspend fun insertOrUpdateMemory(memory: ReferencedMemory) = db.writeTransaction {
         if (memoriesRepository.get(memory.id) == null) memoriesRepository.insert(memory) else memoriesRepository.update(memory)
     }
 
@@ -176,11 +176,17 @@ class LendingsRepository(
     }
 
     /** Inserts or updates the given raw [lending]. @see insertRaw */
-    suspend fun insertOrUpdate(lending: Lending) {
+    suspend fun insertOrUpdate(lending: Lending) = db.writeTransaction {
         if (dao.get(lending.id) != null) updateRaw(lending) else insertRaw(lending)
     }
 
-    override suspend fun delete(id: Uuid) {
+    /**
+     * Deletes the lending with [id]. Its received items go with it, and a memory submitted for it is detached from it
+     * (memories sync after lendings, which corrects it): otherwise their foreign keys stop the deletion.
+     */
+    override suspend fun delete(id: Uuid) = db.writeTransaction {
+        db.memoryDao().detachFromLending(id)
+        db.receivedItemDao().deleteByLendingId(id)
         dao.deleteById(id)
     }
 

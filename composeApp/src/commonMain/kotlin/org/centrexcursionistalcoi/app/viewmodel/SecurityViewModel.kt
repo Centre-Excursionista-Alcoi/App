@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.auth.PasskeyException
 import org.centrexcursionistalcoi.app.auth.Passkeys
@@ -44,7 +45,7 @@ class SecurityViewModel(
         load()
     }
 
-    private fun perform(block: suspend () -> Unit) = viewModelScope.launch {
+    private fun perform(block: suspend () -> Unit) = viewModelScope.launch(GlobalAsyncErrorHandler.coroutineExceptionHandler) {
         try {
             isLoading.value = true
             clearError()

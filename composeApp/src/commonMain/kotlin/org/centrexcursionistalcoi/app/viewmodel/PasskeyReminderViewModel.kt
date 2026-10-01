@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.auth.PasskeyException
 import org.centrexcursionistalcoi.app.auth.PasskeyUpgrade
 import org.centrexcursionistalcoi.app.auth.Passkeys
@@ -25,10 +26,10 @@ class PasskeyReminderViewModel(
         field = MutableStateFlow(false)
 
     init {
-        viewModelScope.launch { isShowing.value = passkeyUpgrade.shouldRemind() }
+        viewModelScope.launch(GlobalAsyncErrorHandler.coroutineExceptionHandler) { isShowing.value = passkeyUpgrade.shouldRemind() }
     }
 
-    fun createPasskey() = viewModelScope.launch {
+    fun createPasskey() = viewModelScope.launch(GlobalAsyncErrorHandler.coroutineExceptionHandler) {
         try {
             isLoading.value = true
             clearError()
@@ -44,7 +45,7 @@ class PasskeyReminderViewModel(
         }
     }
 
-    fun notNow() = viewModelScope.launch {
+    fun notNow() = viewModelScope.launch(GlobalAsyncErrorHandler.coroutineExceptionHandler) {
         isShowing.value = false
         passkeyUpgrade.snooze()
     }

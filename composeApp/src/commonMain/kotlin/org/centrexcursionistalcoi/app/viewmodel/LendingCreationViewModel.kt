@@ -10,6 +10,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
+import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
@@ -120,7 +121,7 @@ class LendingCreationViewModel(
         }
     }
 
-    private fun allocateItems() = viewModelScope.launch(dispatcherProvider.io) {
+    private fun allocateItems() = viewModelScope.launch(dispatcherProvider.io + GlobalAsyncErrorHandler.coroutineExceptionHandler) {
         val from = from.value ?: return@launch
         val to = to.value ?: return@launch
 
@@ -172,7 +173,7 @@ class LendingCreationViewModel(
         val to = to.value ?: return log.w { "To date not set" }
         val items = allocatedItems.value ?: return log.w { "Items allocation not ready" }
 
-        viewModelScope.launch(dispatcherProvider.io) {
+        viewModelScope.launch(dispatcherProvider.io + GlobalAsyncErrorHandler.coroutineExceptionHandler) {
             val itemIds = items.map { it.id }
 
             try {

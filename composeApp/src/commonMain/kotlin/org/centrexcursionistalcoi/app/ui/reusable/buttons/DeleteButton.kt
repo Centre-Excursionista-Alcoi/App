@@ -17,6 +17,7 @@ import cea_app.composeapp.generated.resources.delete_dialog_no_name_title
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialog
 import org.centrexcursionistalcoi.app.ui.dialog.DeleteDialogContext
@@ -39,7 +40,7 @@ fun DeleteButton(
             message = stringResource(Res.string.delete_dialog_no_name_message),
             showReasonField = showReasonField,
             onDelete = {
-                CoroutineScope(dispatcherProvider.io).launch {
+                CoroutineScope(dispatcherProvider.io + GlobalAsyncErrorHandler.coroutineExceptionHandler).launch {
                     onClick()
                 }
             },
