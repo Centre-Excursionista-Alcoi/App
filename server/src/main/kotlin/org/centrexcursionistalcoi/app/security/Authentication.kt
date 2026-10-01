@@ -128,13 +128,14 @@ data class UserSession(val sub: String, val fullName: String, val email: String,
          * Gets the [UserSession] authenticating the call from its bearer access token (see [AuthTokens]), or `null`
          * if there's none. Resolved once per call.
          *
-         * Also appends a header (`CEA-LoggedIn`) to the response indicating whether the user is logged in or not.
+         * Also appends a header (`CEA-LoggedIn`) to the response indicating whether the user is logged in or not,
+         * unless the response has already started (e.g. an SSE stream, which sends its headers first).
          */
         fun ApplicationCall.getUserSession(): UserSession? {
             attributes.getOrNull(resolvedSessionKey)?.let { return it.session }
             val resolved = resolveSession()
             attributes.put(resolvedSessionKey, resolved)
-            response.header("CEA-LoggedIn", (resolved.session != null).toString())
+            if (!response.isCommitted) response.header("CEA-LoggedIn", (resolved.session != null).toString())
             return resolved.session
         }
 
