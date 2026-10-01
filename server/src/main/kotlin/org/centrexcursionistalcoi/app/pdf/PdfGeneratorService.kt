@@ -1,14 +1,28 @@
 package org.centrexcursionistalcoi.app.pdf
 
+import io.ktor.http.ContentType
+import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDDocumentInformation
 import org.apache.pdfbox.pdmodel.PDPageContentStream
+import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.Sports
+import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
+import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService.VERSION
+import org.centrexcursionistalcoi.app.security.FileReadWriteRules
+import org.centrexcursionistalcoi.app.storage.FileStorageProvider
 import org.intellij.markdown.parser.CancellationToken
 import org.slf4j.LoggerFactory
 import java.awt.Color
+import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.util.Calendar
 import kotlin.uuid.Uuid
@@ -19,6 +33,10 @@ object PdfGeneratorService {
     private const val FONT_SIZE_HEADER = 12f
     private const val FONT_SIZE_BODY = 10f
     internal const val MARGIN = 50f
+
+    private const val META_VERSION = "version"
+    private const val META_MEMORY_ID = "memoryId"
+    private const val META_LENDING_ID = "lendingId"
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -36,9 +54,112 @@ object PdfGeneratorService {
         Sports.CULTURAL_TOURISM -> "Turisme cultural"
     }
 
-    fun generateLendingPdf(
+    /**
+     * Checks if the PDF for the given file needs to be updated.
+     * This is determined by checking the version metadata in the PDF's document information.
+     *
+     * A PDF needs an update if:
+     * 1. The version metadata is missing.
+     * 2. The version metadata is less than the current [VERSION].
+     */
+    fun needsUpdate(file: FileEntity): Boolean {
+        val bytes = FileStorageProvider.current.open(file.objectKey).use { stream -> stream.readAllBytes() }
+        return Loader.loadPDF(bytes).use { document ->
+            val information = document.documentInformation
+
+            val version = information.getCustomMetadataValue(META_VERSION)?.toIntOrNull()
+            version == null || version < VERSION
+        }
+    }
+
+    /**
+     * Updates all memories in the database that need a PDF update.
+     * A memory needs a PDF update if it has no PDF, or if the existing PDF is outdated (as determined by [needsUpdate]).
+     * This function will generate a new PDF for each memory that needs an update, and save it to the database.
+     * If a memory already has a PDF, it will be replaced with the new one.
+     * This function is safe to call multiple times, as it will only update memories that actually need an update.
+     * @param cancellationToken A [CancellationToken] that can be used to cancel the operation. If not provided, the operation will not be cancellable.
+     */
+    fun updateMemoriesIfNeeded(cancellationToken: CancellationToken = CancellationToken.NonCancellable) {
+        val memories = Database { MemoryEntity.all() }
+        val memoriesToUpdate = memories.filter { memory ->
+            memory.pdf == null || needsUpdate(memory.pdf!!)
+        }
+        if (memoriesToUpdate.isEmpty()) {
+            logger.info("No memories need PDF updates")
+            return
+        }
+        logger.info("Found ${memoriesToUpdate.size} memories that need PDF updates")
+        for (memory in memoriesToUpdate) {
+            logger.info("Updating PDF for memory ${memory.id.value}")
+            generateMemoryPdf(memory, cancellationToken)
+        }
+    }
+
+    /**
+     * Generates a PDF for the given memory and saves it to the database.
+     * If the memory already has a PDF, it will be replaced.
+     */
+    fun generateMemoryPdf(memory: MemoryEntity, cancellationToken: CancellationToken = CancellationToken.NonCancellable) {
+        val baos = ByteArrayOutputStream()
+        baos.use { output ->
+            generateMemoryPdf(
+                memory,
+                photoProvider = { uuid -> Database { FileEntity[uuid] }.readBytes() },
+                outputStream = output,
+                cancellationToken = cancellationToken,
+            )
+        }
+
+        Database {
+            val oldPdf = memory.pdf
+            memory.pdf = FileEntity.create(
+                bytes = baos.toByteArray(),
+                name = "memory_${memory.id.value}.pdf",
+                contentType = ContentType.Application.Pdf,
+                // Best-effort: restricted to the submitter and admins. Department MEMORY_MANAGERs and tagged
+                // members can see this memory's data via GET /memories/{id} (see memoryRequest()) but won't be able
+                // to download this specific file -- FileReadWriteRules only supports flat user/group lists, not the
+                // department-role checks that read access to the memory itself is based on.
+                rules = FileReadWriteRules(readUsers = listOf(memory.submittedBy.sub.value), readGroups = listOf(ADMIN_GROUP_NAME)),
+            )
+            oldPdf?.delete()
+        }
+    }
+
+    fun generateMemoryPdf(
+        memory: MemoryEntity,
+        photoProvider: (Uuid) -> ByteArray, // Callback to fetch actual image data
+        outputStream: OutputStream,
+        cancellationToken: CancellationToken = CancellationToken.NonCancellable
+    ) {
+        val (referencedMemory, itemsUsed, submittedByName) = Database {
+            val users = UserReferenceEntity.all().map { it.toData() }
+            val departments = DepartmentEntity.all().map { it.toData() }
+            val referencedMemory = memory.toData().referenced(
+                users = users,
+                members = memory.members.map { it.toMember() },
+                departments = departments,
+            )
+            val itemsUsed = memory.lending?.items?.toList().orEmpty().map { item ->
+                item.toData().referenced(item.type.toData().referenced(departments))
+            }
+            Triple(referencedMemory, itemsUsed, memory.submittedBy.fullName)
+        }
+
+        generateMemoryPdf(
+            memory = referencedMemory,
+            itemsUsed = itemsUsed,
+            submittedBy = submittedByName,
+            photoProvider = photoProvider,
+            outputStream = outputStream,
+            cancellationToken = cancellationToken
+        )
+    }
+
+    fun generateMemoryPdf(
         memory: ReferencedMemory,
-        itemsUsed: List<ReferencedInventoryItem>,
+        itemsUsed: List<ReferencedInventoryItem>?,
         submittedBy: String,
         photoProvider: (Uuid) -> ByteArray, // Callback to fetch actual image data
         outputStream: OutputStream,
@@ -53,9 +174,9 @@ object PdfGeneratorService {
                 keywords = "PDF, Memòria, Activitat, CEA"
                 creationDate = Calendar.getInstance()
 
-                setCustomMetadataValue("version", VERSION.toString())
-                setCustomMetadataValue("memoryId", memory.id.toString())
-                setCustomMetadataValue("lendingId", memory.lending?.toString())
+                setCustomMetadataValue(META_VERSION, VERSION.toString())
+                setCustomMetadataValue(META_MEMORY_ID, memory.id.toString())
+                setCustomMetadataValue(META_LENDING_ID, memory.lending?.toString())
             }
 
             // --- State Management ---
@@ -78,7 +199,7 @@ object PdfGeneratorService {
 
                 // If a department is given, and it has an image, draw it on the right hand side. Before the title,
                 // which moves the cursor down.
-                val department = memory.department ?: itemsUsed.firstNotNullOfOrNull { it.type.department }
+                val department = memory.department ?: itemsUsed?.firstNotNullOfOrNull { it.type.department }
                 if (department?.image != null) {
                     context.drawImageAtCursor(
                         photoProvider(department.image!!),
@@ -141,7 +262,7 @@ object PdfGeneratorService {
             // =========================================
             // 4. Items Used
             // =========================================
-            if (itemsUsed.isNotEmpty()) {
+            if (!itemsUsed.isNullOrEmpty()) {
                 context.drawTextAtCursor("Material del club utilitzat:", fontTitles, FONT_SIZE_HEADER)
                 itemsUsed.groupBy { item -> item.type }.forEach { (type, items) ->
                     context.drawTextAtCursor("- x${items.size} ${type.displayName}", fontRegular, FONT_SIZE_BODY)

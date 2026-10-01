@@ -6,12 +6,16 @@ import io.ktor.server.netty.Netty
 import io.sentry.ProfileLifecycle
 import io.sentry.Sentry
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.integration.CEA
 import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.NotificationsConfig
 import org.centrexcursionistalcoi.app.notifications.Push
+import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.configureForwardedHeaders
 import org.centrexcursionistalcoi.app.plugins.configureRateLimits
@@ -32,9 +36,6 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.time.Clock
 import kotlin.time.Instant
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
 
 private val logger = LoggerFactory.getLogger("Application")
 
@@ -119,6 +120,9 @@ fun main() {
         username = System.getenv("DB_USER") ?: "",
         password = System.getenv("DB_PASS") ?: "",
     )
+
+    // Migrate PDFs if needed
+    PdfGeneratorService.updateMemoriesIfNeeded()
 
     // Initialize Push Notification service - Firebase Cloud Messaging
     Push.initFCM()

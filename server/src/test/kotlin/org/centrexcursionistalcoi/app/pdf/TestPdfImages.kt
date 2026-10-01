@@ -1,16 +1,5 @@
 package org.centrexcursionistalcoi.app.pdf
 
-import java.awt.Color
-import java.awt.GradientPaint
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
-import javax.imageio.ImageIO
-import kotlin.test.Test
-import kotlin.test.assertContains
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
-import kotlin.time.Clock
-import kotlin.uuid.Uuid
 import kotlinx.datetime.TimeZone
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.contentstream.PDFStreamEngine
@@ -29,9 +18,20 @@ import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.utils.toUuid
+import java.awt.Color
+import java.awt.GradientPaint
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
+import javax.imageio.ImageIO
+import kotlin.test.Test
+import kotlin.test.assertContains
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.uuid.Uuid
 
 /**
- * The images drawn by [PdfGeneratorService.generateLendingPdf]: downscaled to the size they're drawn at.
+ * The images drawn by [PdfGeneratorService.generateMemoryPdf]: downscaled to the size they're drawn at.
  */
 class TestPdfImages {
     /** An image as drawn: its pixels, and the size it's drawn at, in points. */
@@ -83,7 +83,7 @@ class TestPdfImages {
             lending = null,
         )
         val bytes = ByteArrayOutputStream().use { output ->
-            PdfGeneratorService.generateLendingPdf(
+            PdfGeneratorService.generateMemoryPdf(
                 memory = memory.referenced(listOf(FakeUser.data()), emptyList(), emptyList()),
                 itemsUsed = emptyList(),
                 submittedBy = "Admin User",

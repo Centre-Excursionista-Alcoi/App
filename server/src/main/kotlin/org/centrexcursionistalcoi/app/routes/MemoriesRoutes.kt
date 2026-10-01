@@ -14,12 +14,9 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toKotlinLocalDate
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.DepartmentRole
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
-import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -66,7 +63,6 @@ import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.slf4j.LoggerFactory
-import java.io.ByteArrayOutputStream
 import kotlin.uuid.Uuid
 
 /**
@@ -109,51 +105,6 @@ private suspend fun RoutingContext.memoryRequest(session: UserSession, requireOw
 }
 
 private class StoredAttachment(val objectKey: String, val size: Long, val name: String)
-
-/**
- * (Re)generates the memory's summary PDF from its current data and stores it as [MemoryEntity.pdf], deleting the
- * previous one (if any). Must be called after all field changes (including patched ones) have already been persisted.
- */
-private fun regenerateMemoryPdf(memory: MemoryEntity) {
-    val baos = ByteArrayOutputStream()
-    baos.use { output ->
-        val (referencedMemory, itemsUsed, submittedByName) = Database {
-            val users = UserReferenceEntity.all().map { it.toData() }
-            val departments = DepartmentEntity.all().map { it.toData() }
-            val referencedMemory = memory.toData().referenced(
-                users = users,
-                members = memory.members.map { it.toMember() },
-                departments = departments,
-            )
-            val itemsUsed = memory.lending?.items?.toList().orEmpty().map { item ->
-                item.toData().referenced(item.type.toData().referenced(departments))
-            }
-            Triple(referencedMemory, itemsUsed, memory.submittedBy.fullName)
-        }
-        PdfGeneratorService.generateLendingPdf(
-            referencedMemory,
-            itemsUsed = itemsUsed,
-            submittedBy = submittedByName,
-            photoProvider = { uuid -> Database { FileEntity[uuid] }.readBytes() },
-            outputStream = output,
-        )
-    }
-
-    Database {
-        val oldPdf = memory.pdf
-        memory.pdf = FileEntity.create(
-            bytes = baos.toByteArray(),
-            name = "memory_${memory.id.value}.pdf",
-            contentType = ContentType.Application.Pdf,
-            // Best-effort: restricted to the submitter and admins. Department MEMORY_MANAGERs and tagged
-            // members can see this memory's data via GET /memories/{id} (see memoryRequest()) but won't be able
-            // to download this specific file -- FileReadWriteRules only supports flat user/group lists, not the
-            // department-role checks that read access to the memory itself is based on.
-            rules = FileReadWriteRules(readUsers = listOf(memory.submittedBy.sub.value), readGroups = listOf(ADMIN_GROUP_NAME)),
-        )
-        oldPdf?.delete()
-    }
-}
 
 private val logger = LoggerFactory.getLogger("MemoriesRoutes")
 
@@ -284,7 +235,7 @@ fun Route.memoriesRoutes() {
         }
 
         // Generate the summary PDF for the memory
-        regenerateMemoryPdf(memoryEntity)
+        PdfGeneratorService.generateMemoryPdf(memoryEntity)
 
         memoryEntity.updated()
 
@@ -419,7 +370,7 @@ fun Route.memoriesRoutes() {
             respondError(Error.PermissionRejected())
             return@patch
         }
-        regenerateMemoryPdf(memory)
+        PdfGeneratorService.generateMemoryPdf(memory)
         memory.updated()
 
         call.respond(HttpStatusCode.NoContent)

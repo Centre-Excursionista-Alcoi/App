@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
 import kotlin.time.Clock
 
 /**
- * The text of a memory, Markdown, as drawn by [PdfGeneratorService.generateLendingPdf].
+ * The text of a memory, Markdown, as drawn by [PdfGeneratorService.generateMemoryPdf].
  */
 class TestPdfMarkdown {
     private class Glyph(val text: String, val font: String, val size: Float, val right: Float)
@@ -41,7 +41,7 @@ class TestPdfMarkdown {
             lending = null,
         )
         val bytes = ByteArrayOutputStream().use { output ->
-            PdfGeneratorService.generateLendingPdf(
+            PdfGeneratorService.generateMemoryPdf(
                 memory = memory.referenced(listOf(FakeUser.data()), emptyList(), emptyList()),
                 itemsUsed = emptyList(),
                 submittedBy = "Admin User",
