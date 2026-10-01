@@ -5,7 +5,6 @@ import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.KMPNotifier
 import com.mmk.kmpnotifier.push.firebase.firebasePushNotifier
 import kotlinx.coroutines.CancellationException
-import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.koin.core.annotation.Singleton
 
@@ -47,8 +46,11 @@ class FCMTokenManager(
         try {
             FCMTokenRemote.registerNewToken(newToken)
             settings.set(SETTINGS_FCM_TOKEN, newToken)
-        } catch (e: ServerException) {
-            log.e(e) { "Could not register FCM token." }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // Registered again with the next token, or the next login
+            log.w(e) { "Could not register FCM token." }
         }
     }
 
@@ -71,7 +73,7 @@ class FCMTokenManager(
         } catch (e: Exception) {
             // Best-effort, e.g. no connectivity while logging out: the token stops being used anyway once the
             // user is logged out.
-            log.e(e) { "Could not revoke FCM token." }
+            log.w(e) { "Could not revoke FCM token." }
             false
         }
     }

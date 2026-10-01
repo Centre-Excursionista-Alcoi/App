@@ -6,6 +6,7 @@ import com.mmk.kmpnotifier.push.PushListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
@@ -36,7 +37,7 @@ class PushNotifierListener(
             return
         }
 
-        CoroutineScope(dispatcherProvider.io).launch {
+        CoroutineScope(dispatcherProvider.io + GlobalAsyncErrorHandler.coroutineExceptionHandler).launch {
             fcmTokenManager.renovate(token)
         }
     }

@@ -5,6 +5,8 @@ import androidx.room3.ConstructedBy
 import androidx.room3.Database
 import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
+import androidx.room3.immediateTransaction
+import androidx.room3.useWriterConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.coroutines.CoroutineDispatcher
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -86,3 +88,10 @@ fun getRoomDatabase(
         .fallbackToDestructiveMigration(dropAllTables = true)
         .build()
 }
+
+/**
+ * Runs [block] in a write transaction. Writes are serialized, so checking whether a row exists and then inserting or
+ * updating it can't race with another write, e.g. two syncs storing the same entity at once.
+ */
+suspend fun <R> AppDatabase.writeTransaction(block: suspend () -> R): R =
+    useWriterConnection { it.immediateTransaction { block() } }

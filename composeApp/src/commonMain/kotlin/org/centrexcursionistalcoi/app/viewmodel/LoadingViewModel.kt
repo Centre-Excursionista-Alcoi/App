@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
@@ -53,7 +54,7 @@ class LoadingViewModel(
     fun load(
         onLoggedIn: () -> Unit,
         onNotLoggedIn: () -> Unit,
-    ): Job = viewModelScope.launch(dispatcherProvider.io) {
+    ): Job = viewModelScope.launch(dispatcherProvider.io + GlobalAsyncErrorHandler.coroutineExceptionHandler) {
         log.d { "Loading app content..." }
         error.value = null
 

@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.nav.DeepLinks
 import org.centrexcursionistalcoi.app.nav.Destination
@@ -39,7 +40,7 @@ class PlatformInitializerViewModel(
         field = MutableStateFlow<Destination?>(null)
 
     init {
-        viewModelScope.launch(dispatcherProvider.io) {
+        viewModelScope.launch(dispatcherProvider.io + GlobalAsyncErrorHandler.coroutineExceptionHandler) {
             log.d { "Running platform loading logic..." }
             PlatformLoadLogic.load()
 

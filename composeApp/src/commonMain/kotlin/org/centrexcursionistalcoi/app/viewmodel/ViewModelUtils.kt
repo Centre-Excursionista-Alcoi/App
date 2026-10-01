@@ -40,7 +40,7 @@ fun ViewModel.launch(
     try {
         block()
     } catch (e: Exception) {
-        log.e(e) { "Error in ViewModel coroutine." }
+        log.w(e) { "Error in ViewModel coroutine." }
         GlobalAsyncErrorHandler.setError(e)
     }
 }
@@ -58,7 +58,7 @@ fun <T> ViewModel.async(
         log.e(e) { "Coroutine cancelled." }
         null
     } catch (e: Exception) {
-        log.e(e) { "Error in ViewModel coroutine." }
+        log.w(e) { "Error in ViewModel coroutine." }
         GlobalAsyncErrorHandler.setError(e)
         null
     }
@@ -84,7 +84,7 @@ fun ViewModel.launchWithLock(
             } catch (e: CancellationException) {
                 log.e(e) { "Coroutine cancelled." }
             } catch (e: Exception) {
-                log.e(e) { "Error in ViewModel coroutine." }
+                log.w(e) { "Error in ViewModel coroutine." }
                 GlobalAsyncErrorHandler.setError(e)
             }
         }

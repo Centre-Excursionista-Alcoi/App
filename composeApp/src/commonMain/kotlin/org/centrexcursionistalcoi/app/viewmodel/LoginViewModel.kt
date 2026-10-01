@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.auth.CredentialsStore
 import org.centrexcursionistalcoi.app.auth.PasskeyException
@@ -45,7 +46,7 @@ class LoginViewModel(
     // taps either button, so losing liveness here costs nothing.
     val existingAccountEmail: StateFlow<String?> = MutableStateFlow(credentialsStore.current.value?.email).asStateFlow()
 
-    fun forgetExistingAccount() = viewModelScope.launch(dispatcherProvider.io) {
+    fun forgetExistingAccount() = viewModelScope.launch(dispatcherProvider.io + GlobalAsyncErrorHandler.coroutineExceptionHandler) {
         authBackend.forgetLocalAccount()
     }
 
@@ -56,7 +57,7 @@ class LoginViewModel(
      * Logs in with a password the user typed.
      * @param isSaved Whether the password came from the password manager, so it doesn't need saving.
      */
-    fun login(email: String, password: String, isSaved: Boolean = false, afterLogin: () -> Unit) = viewModelScope.launch {
+    fun login(email: String, password: String, isSaved: Boolean = false, afterLogin: () -> Unit) = viewModelScope.launch(GlobalAsyncErrorHandler.coroutineExceptionHandler) {
         try {
             _isLoading.emit(true)
             clearError()
@@ -79,7 +80,7 @@ class LoginViewModel(
      * Shows the platform's sign-in sheet, with the user's passkeys and saved passwords, and logs in with the one they
      * pick. If they have nothing saved, or cancel, nothing happens: the email and password form is still there.
      */
-    fun signInWithSavedCredential(afterLogin: () -> Unit) = viewModelScope.launch {
+    fun signInWithSavedCredential(afterLogin: () -> Unit) = viewModelScope.launch(GlobalAsyncErrorHandler.coroutineExceptionHandler) {
         try {
             _isLoading.emit(true)
             clearError()
@@ -113,7 +114,7 @@ class LoginViewModel(
     val canRegisterWithPasskey: Boolean get() = passkeys.isSupported
 
     /** Emails [email] the code that proves it's theirs, and asks for it. */
-    fun requestRegistrationCode(email: String) = viewModelScope.launch {
+    fun requestRegistrationCode(email: String) = viewModelScope.launch(GlobalAsyncErrorHandler.coroutineExceptionHandler) {
         try {
             _isLoading.emit(true)
             clearError()
@@ -144,7 +145,7 @@ class LoginViewModel(
     }
 
     /** Registers the account with a new passkey, and logs it in. */
-    fun registerWithPasskey(afterLogin: () -> Unit) = viewModelScope.launch {
+    fun registerWithPasskey(afterLogin: () -> Unit) = viewModelScope.launch(GlobalAsyncErrorHandler.coroutineExceptionHandler) {
         val step = registrationStep.value as? RegistrationStep.Method ?: return@launch
         try {
             _isLoading.emit(true)
@@ -184,7 +185,7 @@ class LoginViewModel(
         }
     }
 
-    fun forgotPassword(email: String, afterRequest: () -> Unit) = viewModelScope.launch {
+    fun forgotPassword(email: String, afterRequest: () -> Unit) = viewModelScope.launch(GlobalAsyncErrorHandler.coroutineExceptionHandler) {
         try {
             _isLoading.emit(true)
             clearError()

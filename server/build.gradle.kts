@@ -108,7 +108,7 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.migration.core)
     implementation(libs.exposed.migration.jdbc)
-    implementation(libs.h2)
+    testImplementation(libs.h2)
     implementation(libs.postgresql)
     implementation(libs.sqlite)
 
@@ -185,6 +185,9 @@ tasks.jar {
 tasks.withType<ShadowJar> {
     // Make sure all drivers are included in the fat jar
     mergeServiceFiles()
+
+    // The dependencies add up to more than the 65535 entries a plain zip can hold
+    isZip64 = true
 
     // Add manifest attributes
     manifest.configureAppManifest()
