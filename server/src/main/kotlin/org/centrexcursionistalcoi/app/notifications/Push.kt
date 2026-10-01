@@ -105,6 +105,9 @@ object Push {
 
         logger.debug("Sending push notification to {} devices with data: {}", tokens.size, data)
 
+        // The apps register FCM registration tokens, which addAllFids, its replacement, doesn't take: a Firebase
+        // Installation ID is a different identifier
+        @Suppress("DEPRECATION")
         val message = MulticastMessage.builder()
             .putAllData(data)
             .addAllTokens(tokens)
