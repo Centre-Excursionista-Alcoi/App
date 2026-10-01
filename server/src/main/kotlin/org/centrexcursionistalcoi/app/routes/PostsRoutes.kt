@@ -1,25 +1,17 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
 import io.ktor.server.routing.Route
-import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.DepartmentRole
-import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.integration.Telegram
-import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreatePostRequest
-import org.centrexcursionistalcoi.app.request.FileRequestData
-import org.centrexcursionistalcoi.app.request.FileRequestData.Companion.toFileRequestData
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.jdbc.insert
-import kotlin.uuid.Uuid
 
 fun Route.postsRoutes() {
     provideEntityRoutes(
@@ -28,74 +20,6 @@ fun Route.postsRoutes() {
         idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session -> PostEntity.forSession(session) },
         visibleTo = { post, session -> post.isVisibleTo(session) },
-        // TODO(#659): multipart creation, kept only for app installs predating jsonCreator below -- the current
-        //   app always sends JSON for posts now (PostsRemoteRepository.create -> createJson). Delete this whole
-        //   `creator` lambda (and its `updater`-adjacent `createRequestSerializer`/`jsonCreator` pair collapses
-        //   into a plain, always-JSON provideEntityRoutes call) once the app version requiring it is unsupported.
-        creator = { formParameters ->
-            var title: String? = null
-            var content: String? = null
-            var departmentId: Uuid? = null
-            var link: String? = null
-            val files: MutableList<FileRequestData> = mutableListOf()
-
-            formParameters.forEachPart { partData ->
-                when (partData) {
-                    is PartData.FormItem -> {
-                        when (partData.name) {
-                            "title" -> title = partData.value
-                            "content" -> content = partData.value
-                            "department" -> departmentId = partData.value.toUuidOrNull()
-                            "link" -> link = partData.value
-                            "files" -> {
-                                val fileList: List<FileWithContext> = json.decodeFromString(
-                                    ListSerializer(FileWithContext.serializer()),
-                                    partData.value
-                                )
-                                files += fileList.map { it.toFileRequestData() }
-                            }
-                            else -> if (partData.name?.startsWith("file_") == true) {
-                                val reference = FileRequestData()
-                                reference.populate(partData)
-                                files += reference
-                            }
-                        }
-                    }
-                    is PartData.FileItem -> {
-                        val reference = FileRequestData()
-                        reference.populate(partData)
-                        files += reference
-                    }
-                    else -> { /* nothing */ }
-                }
-            }
-
-            title ?: throw NullPointerException("Missing title")
-            content ?: throw NullPointerException("Missing content")
-
-            // Check that the department exists if departmentId is provided
-            val department = departmentId?.let {
-                Database { DepartmentEntity.findById(it) }  ?: throw IllegalArgumentException("Department with id $it does not exist")
-            }
-
-            val fileEntities = Database { files.map { it.newEntity() } }
-
-            Database {
-                PostEntity.new {
-                    this.title = title
-                    this.content = content
-                    this.department = department
-                    this.link = link
-                }.also { postEntity ->
-                    for (fileEntity in fileEntities) {
-                        PostFiles.insert {
-                            it[file] = fileEntity.id
-                            it[post] = postEntity.id
-                        }
-                    }
-                }
-            }
-        },
         afterCreate = { postEntity ->
             Telegram.launch {
                 val post = Database { postEntity.toData() }
@@ -112,9 +36,7 @@ fun Route.postsRoutes() {
         // logic behind it.
         updater = UpdatePostRequest.serializer(),
         createRequestSerializer = CreatePostRequest.serializer(),
-        jsonCreator = { request ->
-            // Mirrors the multipart creator above -- same department lookup, same file creation, same
-            // PostFiles wiring -- just reading a decoded CreatePostRequest instead of MultiPartData (#659).
+        creator = { request ->
             val department = request.department?.let {
                 Database { DepartmentEntity.findById(it) }
                     ?: throw IllegalArgumentException("Department with id $it does not exist")

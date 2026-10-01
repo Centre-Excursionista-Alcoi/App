@@ -318,8 +318,8 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   streams (`request/MultipartRequests.kt`; `FileEntity.newFrom`/`replaceContents` resolve `part` through
   `UploadedParts`, set by `ReceivedRequest.withUploads`). The server still accepts plain JSON too, for installed
   app versions. A new request with files must implement `RequestWithFiles.mapFiles`, and its route must receive it
-  with `receiveRequestWithFiles` (the generic POST/PATCH in `RoutesBase.kt` already do). On POST, a multipart body
-  whose first part isn't `request` is the legacy multipart creation (`LegacyMultipartCreate.kt`). Every error path
+  with `receiveRequestWithFiles` (the generic POST/PATCH in `RoutesBase.kt` already do): a multipart body whose
+  first part isn't `request` is rejected. Every error path
   must read the rest of a multipart body before responding (`discardRemaining()`), or the connection stalls.
 - Client-side gating mirrors this in two places that are easy to forget one of: (1) list/picker screens must
   filter to departments the viewer actually has the relevant role in, not show everything and rely on the

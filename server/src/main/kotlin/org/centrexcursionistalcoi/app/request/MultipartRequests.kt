@@ -180,10 +180,3 @@ suspend fun <T> RoutingContext.receiveRequestWithFiles(
         }
     }
 }
-
-/**
- * Gives [first] back as the first part of [rest], once it has been read to find out what kind of request it is.
- */
-internal class PushedBackMultiPartData(private var first: PartData?, private val rest: MultiPartData) : MultiPartData {
-    override suspend fun readPart(): PartData? = first?.also { first = null } ?: rest.readPart()
-}

@@ -30,8 +30,7 @@ import org.centrexcursionistalcoi.app.test.LoginType
 import org.jetbrains.exposed.v1.jdbc.insert
 
 /**
- * `POST /departments` accepting a JSON body (#659), same pattern as the other three entities. The multipart path
- * stays covered by `TestRoutes.kt`'s generic `runTestsOnRoute` harness, unaffected by any of this.
+ * Creating departments (`POST /departments`) from a JSON [CreateDepartmentRequest], like `TestPostsJsonCreation`.
  */
 class TestDepartmentJsonCreation : ApplicationTestBase() {
     private suspend fun HttpClient.postJson(request: CreateDepartmentRequest) = post(Api.Departments()) {

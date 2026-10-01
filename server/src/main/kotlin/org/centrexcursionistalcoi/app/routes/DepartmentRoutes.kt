@@ -3,8 +3,6 @@ package org.centrexcursionistalcoi.app.routes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
 import io.ktor.server.request.receiveText
 import io.ktor.server.resources.get
 import io.ktor.server.resources.patch
@@ -28,7 +26,6 @@ import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.request.CreateDepartmentRequest
-import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentMemberRolesRequest
 import org.centrexcursionistalcoi.app.request.UpdateDepartmentRequest
 import org.centrexcursionistalcoi.app.security.UserSession
@@ -87,49 +84,9 @@ fun Route.departmentsRoutes() {
         // listProvider-scanning visibleTo, which would otherwise scan every department to confirm what's already
         // known to always be true.
         visibleTo = { _, _ -> true },
-        // TODO(#659): multipart creation, kept only for app installs predating jsonCreator below -- the app
-        //   always sends JSON for departments now. Delete this whole `creator` lambda once the app version
-        //   requiring it is unsupported.
-        creator = { formParameters ->
-            var displayName: String? = null
-            val image = FileRequestData()
-
-            formParameters.forEachPart { partData ->
-                when (partData) {
-                    is PartData.FormItem -> {
-                        if (partData.name == "displayName") {
-                            displayName = partData.value
-                        } else if (partData.name == "image") {
-                            image.populate(partData)
-                        }
-                    }
-                    is PartData.FileItem -> {
-                        if (partData.name == "image") {
-                            image.populate(partData)
-                        }
-                    }
-                    else -> { /* nothing */ }
-                }
-            }
-
-            if (displayName == null) {
-                throw NullPointerException("Missing displayName")
-            }
-
-            val imageFile = if (image.isNotEmpty()) {
-                image.newEntity()
-            } else null
-            Database {
-                DepartmentEntity.new {
-                    this.displayName = displayName
-                    this.image = imageFile
-                }
-            }
-        },
         updater = UpdateDepartmentRequest.serializer(),
         createRequestSerializer = CreateDepartmentRequest.serializer(),
-        jsonCreator = { request ->
-            // Mirrors the multipart creator above (#659).
+        creator = { request ->
             val imageFile = request.image?.let { Database { FileEntity.newFrom(it) } }
             Database {
                 DepartmentEntity.new {

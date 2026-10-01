@@ -13,13 +13,4 @@ data class LendingUser(
     val phoneNumber: String,
 
     val sports: List<Sports>,
-): Entity<Uuid> {
-    override fun toMap(): Map<String, Any?> {
-        return mapOf(
-            "id" to id,
-            "sub" to sub,
-            "phoneNumber" to phoneNumber,
-            "sports" to sports,
-        )
-    }
-}
+): Entity<Uuid>

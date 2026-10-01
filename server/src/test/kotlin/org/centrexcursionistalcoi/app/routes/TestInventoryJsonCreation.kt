@@ -36,9 +36,8 @@ import org.centrexcursionistalcoi.app.test.LoginType
 import org.jetbrains.exposed.v1.jdbc.insert
 
 /**
- * `POST /inventory/types` and `POST /inventory/items` accepting a JSON body (#659), same pattern as
- * `TestPostsJsonCreation`. The multipart path stays covered by `TestRoutes.kt`'s generic `runTestsOnRoute`
- * harness, unaffected by any of this.
+ * Creating inventory item types (`POST /inventory/types`) and items (`POST /inventory/items`) from JSON requests,
+ * like `TestPostsJsonCreation`.
  */
 class TestInventoryJsonCreation : ApplicationTestBase() {
     private suspend fun HttpClient.postTypeJson(request: CreateInventoryItemTypeRequest) = post(Api.Inventory.Types()) {

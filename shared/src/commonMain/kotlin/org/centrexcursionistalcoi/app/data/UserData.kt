@@ -23,10 +23,6 @@ data class UserData(
         return groups.contains(ADMIN_GROUP_NAME)
     }
 
-    override fun toMap(): Map<String, Any?> {
-        throw UnsupportedOperationException("UserData cannot be converted to a Map. This is a read-only entity.")
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other is ProfileResponse) return other.sub == sub

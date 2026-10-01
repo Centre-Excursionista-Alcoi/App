@@ -5,8 +5,8 @@ import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.data.FileWithContext
 
 /**
- * `POST /inventory/types` request body, JSON-only (#659) -- the same shape [UpdateInventoryItemTypeRequest]
- * already uses for a patch, with `displayName` required since a type can't exist without one.
+ * `POST /inventory/types` request body: the same shape [UpdateInventoryItemTypeRequest] uses for a patch, with
+ * `displayName` required since a type can't exist without one.
  */
 @Serializable
 data class CreateInventoryItemTypeRequest(

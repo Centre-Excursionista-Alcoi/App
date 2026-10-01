@@ -3,15 +3,12 @@ package org.centrexcursionistalcoi.app.routes
 import kotlinx.datetime.LocalDate
 import kotlin.time.Duration.Companion.days
 import io.ktor.client.HttpClient
-import io.ktor.client.request.forms.formData
-import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
-import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -23,7 +20,6 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 import java.util.Random
 import kotlin.uuid.Uuid
-import kotlin.io.encoding.Base64
 import kotlin.reflect.KCallable
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.full.memberProperties
@@ -69,7 +65,6 @@ import kotlinx.datetime.LocalTime as KotlinLocalTime
 import org.centrexcursionistalcoi.app.collectionHref
 import org.centrexcursionistalcoi.app.itemHref
 import org.jetbrains.exposed.v1.dao.Entity as ExposedEntity
-import kotlin.time.Instant as KotlinInstant
 
 object ProvidedRouteTests {
     private suspend fun HttpClient.request(url: String, method: HttpMethod, contentType: ContentType?, expectedStatusCode: HttpStatusCode) {
@@ -89,32 +84,12 @@ object ProvidedRouteTests {
     }
 
     context(base: ApplicationTestBase)
-    fun test_notLoggedIn_form(baseUrl: String) = base.runApplicationTest {
-        assertTrue { baseUrl.startsWith('/') }
-
-        client.submitFormWithBinaryData(baseUrl, emptyList()).apply {
-            assertStatusCode(HttpStatusCode.Unauthorized)
-        }
-    }
-
-    context(base: ApplicationTestBase)
     fun test_loggedIn_notAdmin(baseUrl: String, method: HttpMethod = HttpMethod.Get, contentType: ContentType? = null) = base.runApplicationTest {
         assertTrue { baseUrl.startsWith('/') }
 
         with(base) { loginAsFakeUser() }
 
         client.request(baseUrl, method, contentType, HttpStatusCode.Forbidden)
-    }
-
-    context(base: ApplicationTestBase)
-    fun test_loggedIn_notAdmin_form(baseUrl: String) = base.runApplicationTest {
-        assertTrue { baseUrl.startsWith('/') }
-
-        with(base) { loginAsFakeUser() }
-
-        client.submitFormWithBinaryData(baseUrl, listOf()).apply {
-            assertStatusCode(HttpStatusCode.Forbidden)
-        }
     }
 
     context(base: ApplicationTestBase)
@@ -158,27 +133,10 @@ object ProvidedRouteTests {
         }
     }
 
-    private fun formDataOf(pairs: List<Pair<String, Any?>>) = formData {
-        println("Constructing form data:")
-        for ((key, value) in pairs) {
-            when (value) {
-                is String -> append(key, value).also { println("- $key: $value") }
-                is ByteArray -> append(key, Base64.UrlSafe.encode(value).also { println("- $key: $it") })
-                is FileWithContext -> append(
-                    key,
-                    value.bytes,
-                    Headers.build {
-                        append(HttpHeaders.ContentType, (value.contentType ?: ContentType.Application.OctetStream).toString())
-                        append(HttpHeaders.ContentDisposition, "filename=\"${value.name ?: "raw-bytes"}\"")
-                    }
-                ).also { println("- $key: byte array (size=${value.bytes.size})") }
-                is Number -> append(key, value).also { println("- $key: $value") }
-                is Boolean -> append(key, value).also { println("- $key: $value") }
-                is Instant -> append(key, value.toEpochMilliseconds()).also { println("- $key: $value") }
-                null -> {}
-                else -> append(key, value.toString()).also { println("- $key: $value") }
-            }
-        }
+    /** Creates an entity from [pairs], sent as a JSON object, the way the app does. */
+    private suspend fun HttpClient.postCreate(baseUrl: String, pairs: List<Pair<String, Any?>>) = post(baseUrl) {
+        contentType(ContentType.Application.Json)
+        setBody(json.encodeToString(JsonObject(pairs.filter { it.second != null }.associate { (name, value) -> name to value.toJsonElement() })))
     }
 
     context(_: JdbcTransaction)
@@ -601,10 +559,10 @@ object ProvidedRouteTests {
             },
 
             "$title - Test create when not logged in" runs {
-                test_notLoggedIn_form(baseUrl)
+                test_notLoggedIn(baseUrl, HttpMethod.Post, ContentType.Application.Json)
             },
             "$title - Test create not admin" runs {
-                test_loggedIn_notAdmin_form(baseUrl)
+                test_loggedIn_notAdmin(baseUrl, HttpMethod.Post, ContentType.Application.Json)
             } skipIf (modificationsLoginType != LoginType.ADMIN),
             "$title - Test create with invalid content type" runs {
                 runApplicationTest(shouldLogIn = modificationsLoginType) {
@@ -615,7 +573,7 @@ object ProvidedRouteTests {
             },
             "$title - Test create without data" runs {
                 runApplicationTest(shouldLogIn = modificationsLoginType) {
-                    client.submitFormWithBinaryData(baseUrl, formData = listOf()).apply {
+                    client.postCreate(baseUrl, emptyList()).apply {
                         assertStatusCode(HttpStatusCode.BadRequest)
                     }
                 }
@@ -625,8 +583,7 @@ object ProvidedRouteTests {
                 requiredCreationValues.map { (name) ->
                     "$title - Test create without $name" runs {
                         runApplicationTest(shouldLogIn = modificationsLoginType) {
-                            val data = formDataOf(requiredCreationValues.toList().filter { it.first != name })
-                            client.submitFormWithBinaryData(baseUrl, formData = data).apply {
+                            client.postCreate(baseUrl, requiredCreationValues.toList().filter { it.first != name }).apply {
                                 assertStatusCode(HttpStatusCode.BadRequest)
                             }
                         }
@@ -636,8 +593,7 @@ object ProvidedRouteTests {
             (provideRequiredCreationValues() to provideOptionalCreationValues()).let { (requiredCreationValues, optionalCreationValues) ->
                 "$title - Test creation with required parameters (${requiredCreationValues.keys.joinToString()})" withEntities auxiliaryEntitiesProvider runs {
                     runApplicationTest(shouldLogIn = modificationsLoginType, userEntityPatches = userEntityPatches) {
-                        val data = formDataOf(requiredCreationValues.toList())
-                        val location = client.submitFormWithBinaryData(baseUrl, formData = data).run {
+                        val location = client.postCreate(baseUrl, requiredCreationValues.toList()).run {
                             assertStatusCode(HttpStatusCode.Created)
                             val location = headers[HttpHeaders.Location]
                             assertNotNull(location)
@@ -659,10 +615,8 @@ object ProvidedRouteTests {
                 optionalCreationValues.map { (name) ->
                     "$title - Test create with optional parameter \"$name\"" withEntities auxiliaryEntitiesProvider runs {
                         runApplicationTest(shouldLogIn = modificationsLoginType, userEntityPatches = userEntityPatches) {
-                            val data = formDataOf(
-                                requiredCreationValues.toList() + (name to optionalCreationValues[name]!!)
-                            )
-                            val location = client.submitFormWithBinaryData(baseUrl, formData = data).run {
+                            val data = requiredCreationValues.toList() + (name to optionalCreationValues[name]!!)
+                            val location = client.postCreate(baseUrl, data).run {
                                 assertStatusCode(HttpStatusCode.Created)
                                 val location = headers[HttpHeaders.Location]
                                 assertNotNull(location)

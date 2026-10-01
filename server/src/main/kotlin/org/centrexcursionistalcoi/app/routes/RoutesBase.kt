@@ -4,12 +4,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.MultiPartData
-import io.ktor.http.content.PartData
 import io.ktor.resources.serialization.ResourcesFormat
 import io.ktor.server.request.contentType
-import io.ktor.server.request.receiveMultipart
-import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
@@ -29,11 +25,9 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.MissingPartException
-import org.centrexcursionistalcoi.app.request.PushedBackMultiPartData
 import org.centrexcursionistalcoi.app.request.RequestWithFiles
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
 import org.centrexcursionistalcoi.app.request.assertRequestWithFilesContentType
-import org.centrexcursionistalcoi.app.request.readRequestWithFiles
 import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModifiedForType
@@ -85,7 +79,7 @@ class EntityWritePermission<EE>(
     val departmentOfEntity: (EE) -> Uuid?,
 )
 
-suspend fun RoutingContext.assertContentType(contentType: ContentType = ContentType.MultiPart.FormData): Unit? {
+suspend fun RoutingContext.assertContentType(contentType: ContentType): Unit? {
     val requestContentType = call.request.contentType()
     if (!requestContentType.match(contentType)) {
         respondError(Error.InvalidContentType(contentType, requestContentType))
@@ -109,109 +103,20 @@ suspend fun RoutingContext.assertIdParameter(): Uuid? {
 }
 
 @Suppress("USELESS_CAST")
-inline fun <EID : Any, reified EE : ExposedEntity<EID>, C : Any, I : Any> Route.provideEntityRoutes(
-    resources: EntityResources<C, I>,
-    entityClass: EntityClass<EID, EE>,
-    noinline idTypeConverter: (String) -> EID?,
-    noinline creator: suspend (MultiPartData) -> EE,
-    noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() },
-    /**
-     * Cheap, targeted check for whether a single already-fetched entity is visible to [session] -- must agree
-     * with [listProvider] but without scanning its whole result. Defaults to doing exactly that scan (correct
-     * but potentially O(n) per single-item GET); override with a direct predicate whenever [listProvider] does
-     * more than trivial filtering.
-     */
-    noinline visibleTo: JdbcTransaction.(EE, UserSession?) -> Boolean = { entity, session -> listProvider(session).any { it.id.value == entity.id.value } },
-    /**
-     * A check to be performed before deleting an entity.
-     * Verifies whether there are references to this entity that would prevent its deletion.
-     * If it returns `false`, the deletion is aborted and an error is returned.
-     */
-    noinline deleteReferencesCheck: JdbcTransaction.(EE) -> Boolean = { true },
-    writePermission: EntityWritePermission<EE>? = null,
-    /**
-     * Runs once a newly created entity has passed [writePermission]'s fine-grained check -- the place for side
-     * effects that must not fire for a rejected (department-unauthorized) creation, such as external notifications.
-     */
-    noinline afterCreate: suspend (EE) -> Unit = {},
-    /**
-     * Cleans up a newly created entity that failed [writePermission]'s fine-grained check. Defaults to just
-     * deleting the entity; override when [creator] also persists dependent rows (e.g. uploaded files) that would
-     * otherwise be orphaned by a rejected creation.
-     */
-    noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
-) = provideEntityRoutes<EID, EE, Any, Entity<Any>, UpdateEntityRequest<Any, Entity<Any>>, Any, C, I>(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, null, null, null, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
-
-@Suppress("USELESS_CAST")
-inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, C : Any, I : Any> Route.provideEntityRoutes(
-    resources: EntityResources<C, I>,
-    entityClass: EntityClass<EID, EE>,
-    noinline idTypeConverter: (String) -> EID?,
-    /**
-     * Creates a new entity from the provided [MultiPartData].
-     * @throws NullPointerException if a required argument is missing.
-     * @throws IllegalArgumentException if an argument is malformed.
-     * @throws NoSuchElementException if a referenced entity is not found.
-     * @throws NumberFormatException if a numeric argument is malformed.
-     */
-    noinline creator: suspend (MultiPartData) -> EE,
-    /**
-     * If null, the PATCH endpoint will not be created.
-     *
-     * Otherwise, the entity class must implement [EntityPatcher].
-     */
-    updater: KSerializer<UER>,
-    noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() },
-    /**
-     * Cheap, targeted check for whether a single already-fetched entity is visible to [session] -- must agree
-     * with [listProvider] but without scanning its whole result. Defaults to doing exactly that scan (correct
-     * but potentially O(n) per single-item GET); override with a direct predicate whenever [listProvider] does
-     * more than trivial filtering.
-     */
-    noinline visibleTo: JdbcTransaction.(EE, UserSession?) -> Boolean = { entity, session -> listProvider(session).any { it.id.value == entity.id.value } },
-    /**
-     * A check to be performed before deleting an entity.
-     * Verifies whether there are references to this entity that would prevent its deletion.
-     * If it returns `false`, the deletion is aborted and an error is returned.
-     */
-    noinline deleteReferencesCheck: JdbcTransaction.(EE) -> Boolean = { true },
-    writePermission: EntityWritePermission<EE>? = null,
-    /**
-     * Runs once a newly created entity has passed [writePermission]'s fine-grained check -- the place for side
-     * effects that must not fire for a rejected (department-unauthorized) creation, such as external notifications.
-     */
-    noinline afterCreate: suspend (EE) -> Unit = {},
-    /**
-     * Cleans up a newly created entity that failed [writePermission]'s fine-grained check. Defaults to just
-     * deleting the entity; override when [creator] also persists dependent rows (e.g. uploaded files) that would
-     * otherwise be orphaned by a rejected creation.
-     */
-    noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
-) = provideEntityRoutes<EID, EE, ID, E, UER, Any, C, I>(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, null, null, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
-
-/**
- * Like the [provideEntityRoutes] overload above, but also lets `POST` on the collection accept an `application/json` body
- * (decoded with [createRequestSerializer], built into an entity by [jsonCreator]) alongside the existing
- * multipart path -- see [RoutingContext]'s collection `POST` handler in the base implementation. Transitional
- * (#659): a client old enough to only know multipart keeps working unchanged either way.
- */
-@Suppress("USELESS_CAST")
 inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any, C : Any, I : Any> Route.provideEntityRoutes(
     resources: EntityResources<C, I>,
     entityClass: EntityClass<EID, EE>,
     noinline idTypeConverter: (String) -> EID?,
-    noinline creator: suspend (MultiPartData) -> EE,
-    updater: KSerializer<UER>,
     createRequestSerializer: KSerializer<CR>,
-    /** @see [provideEntityRoutes]'s [creator] -- throws the same exceptions, for the same reasons. */
-    noinline jsonCreator: suspend (CR) -> EE,
+    noinline creator: suspend (CR) -> EE,
+    updater: KSerializer<UER>,
     noinline listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() },
     noinline visibleTo: JdbcTransaction.(EE, UserSession?) -> Boolean = { entity, session -> listProvider(session).any { it.id.value == entity.id.value } },
     noinline deleteReferencesCheck: JdbcTransaction.(EE) -> Boolean = { true },
     writePermission: EntityWritePermission<EE>? = null,
     noinline afterCreate: suspend (EE) -> Unit = {},
     noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
-) = provideEntityRoutes(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, creator, updater, createRequestSerializer, jsonCreator, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
+) = provideEntityRoutes(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, createRequestSerializer, creator, updater, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
 
 @OptIn(InternalSerializationApi::class)
 fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any, C : Any, I : Any> Route.provideEntityRoutes(
@@ -220,36 +125,24 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
     entityKClass: KClass<EE>,
     idTypeConverter: (String) -> EID?,
     /**
-     * Creates a new entity from the provided [MultiPartData].
+     * Decodes the body of a `POST` on the collection: sent as JSON, or as multipart with its files in parts of their
+     * own (see [RequestWithFiles]).
+     */
+    createRequestSerializer: KSerializer<CR>,
+    /**
+     * Creates a new entity from a request decoded with [createRequestSerializer].
      * @throws NullPointerException if a required argument is missing.
      * @throws IllegalArgumentException if an argument is malformed.
      * @throws NoSuchElementException if a referenced entity is not found.
      * @throws NumberFormatException if a numeric argument is malformed.
-     *
-     * TODO(#659): server-only backward compat for app installs older than the JSON create endpoint -- the current
-     *   app never sends multipart for an entity once it has [createRequestSerializer]/[jsonCreator] (see Posts).
-     *   Remove [creator]/[MultiPartData] entirely, along with every entity's multipart lambda and the `else`
-     *   branch of the collection `POST` handler below, once every entity has a JSON creator and the oldest app version the
-     *   backend still needs to serve sends JSON for all of them.
      */
-    creator: suspend (MultiPartData) -> EE,
+    creator: suspend (CR) -> EE,
     /**
      * If null, the PATCH endpoint will not be created.
      *
      * Otherwise, [entityKClass] must implement [EntityPatcher].
      */
     updater: KSerializer<UER>? = null,
-    /**
-     * If non-null (together with [jsonCreator]), `POST` on the collection also accepts an `application/json` body decoded
-     * with this serializer, alongside the existing multipart path -- see [jsonCreator]. Transitional (#659): a
-     * client old enough to only know multipart keeps working unchanged either way.
-     */
-    createRequestSerializer: KSerializer<CR>? = null,
-    /**
-     * Creates a new entity from a JSON body already decoded with [createRequestSerializer]. Only used when both
-     * are non-null; throws the same exceptions [creator] does, for the same reasons, mapped to the same errors.
-     */
-    jsonCreator: (suspend (CR) -> EE)? = null,
     listProvider: JdbcTransaction.(UserSession?) -> SizedIterable<EE> = { entityClass.all() },
     /**
      * Cheap, targeted check for whether a single already-fetched entity is visible to [session] -- must agree
@@ -279,7 +172,6 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
 ) {
     val base = ResourcesFormat().encodeToPathPattern(resources.collectionSerializer).trim('/')
     require(updater == null || entityKClass.isSubclassOf(EntityPatcher::class)) { "${entityKClass.simpleName} doesn't extend EntityPatcher" }
-    require((createRequestSerializer == null) == (jsonCreator == null)) { "createRequestSerializer and jsonCreator must be given together" }
 
     /**
      * Coarse pre-check, before the entity is looked up (PATCH/DELETE) or created (POST): requires global admin,
@@ -369,10 +261,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         }
     }
 
-    /**
-     * Runs the JSON [creator] call, mapping the exceptions it's documented to throw to the matching [Error]. The
-     * multipart path's identical exception mapping lives separately, in `LegacyMultipartCreate.kt`.
-     */
+    /** Runs the [creator] call, mapping the exceptions it's documented to throw to the matching [Error]. */
     suspend fun RoutingContext.tryCreate(block: suspend () -> EE): EE? = try {
         block()
     } catch (e: NullPointerException) {
@@ -394,50 +283,14 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
     }
 
     handle(resources.collectionSerializer, HttpMethod.Post) {
-        val requestContentType = call.request.contentType()
-        val isJsonCreate = createRequestSerializer != null && jsonCreator != null && requestContentType.match(ContentType.Application.Json)
-        val isMultipartCreate = requestContentType.match(ContentType.MultiPart.FormData)
-        if (!isJsonCreate && !isMultipartCreate) {
-            respondError(Error.InvalidContentType(ContentType.MultiPart.FormData, requestContentType))
-            return@handle
-        }
-
+        assertRequestWithFilesContentType() ?: return@handle
         val session = assertMayWriteAtAll() ?: return@handle
 
-        val item = if (isJsonCreate) {
-            val body = call.receiveText()
-            val request = try {
-                json.decodeFromString(requireNotNull(createRequestSerializer), body)
-            } catch (e: Exception) {
-                logger.error("Failed to decode create request. Body: $body", e)
-                respondError(Error.MalformedRequest())
-                return@handle
-            }
-            tryCreate { requireNotNull(jsonCreator)(request) } ?: return@handle
-        } else {
-            val multipart = call.receiveMultipart()
-            val first = multipart.readPart()
-            if (createRequestSerializer != null && jsonCreator != null &&
-                first is PartData.FormItem && first.name == RequestWithFiles.REQUEST_PART
-            ) {
-                // The JSON request, with its files in parts of their own (see RequestWithFiles)
-                val received = try {
-                    multipart.readRequestWithFiles(first, createRequestSerializer)
-                } catch (e: Exception) {
-                    logger.error("Failed to decode multipart create request", e)
-                    respondError(Error.MalformedRequest())
-                    return@handle
-                }
-                tryCreate { received.withUploads { jsonCreator(received.request) } } ?: return@handle
-            } else {
-                // TODO(#659): see LegacyMultipartCreate.kt -- server-only backward compat, delete this branch
-                //   once the oldest app version still served sends JSON (or the multipart form above).
-                createFromMultipart(creator, entityKClass, PushedBackMultiPartData(first, multipart)) ?: return@handle
-            }
-        }
+        val received = receiveRequestWithFiles(createRequestSerializer) ?: return@handle
+        val item = tryCreate { received.withUploads { creator(received.request) } } ?: return@handle
 
-        // The fine-grained check can only run once the entity (and thus its department) exists -- multipart
-        // bodies can't be peeked twice. If the caller isn't allowed after all, roll the creation back -- including
+        // The fine-grained check can only run once the entity (and thus its department) exists. If the caller isn't
+        // allowed after all, roll the creation back -- including
         // any dependent rows (e.g. uploaded files) onWriteRejected cleans up, so a rejected creation never leaves
         // orphaned data behind.
         if (assertWritePermission(session, item) == null) {

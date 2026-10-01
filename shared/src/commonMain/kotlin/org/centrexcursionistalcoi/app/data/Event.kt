@@ -36,20 +36,4 @@ data class Event(
     val qualificationRequirements: List<List<Uuid>> = emptyList(),
 ): Entity<Uuid>, ImageFileContainer {
     override val files: Map<String, Uuid?> = mapOf("image" to image)
-
-    override fun toMap(): Map<String, Any?> = mapOf(
-        "id" to id,
-        "start" to start,
-        "end" to end,
-        "place" to place,
-        "title" to title,
-        "description" to description,
-        "maxPeople" to maxPeople,
-        "requiresConfirmation" to requiresConfirmation,
-        "requiresInsurance" to requiresInsurance,
-        "department" to department,
-        "image" to image,
-        "userSubList" to userSubList,
-        "qualificationRequirements" to qualificationRequirements,
-    )
 }

@@ -177,21 +177,18 @@ class TestMultipartRequests : ApplicationTestBase() {
     }
 
     @Test
-    fun test_create_legacyMultipart_stillWorks() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
-        // Sent by app versions from before JSON creation: fields as parts, no "request" part
+    fun test_create_withoutRequestPart_rejected() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
+        // Fields as parts of their own, with no "request" part
         val body = MultiPartFormDataContent(
             formData {
-                append("displayName", "Legacy")
+                append("displayName", "Department")
                 append("image", png, Headers.build { append(HttpHeaders.ContentDisposition, "filename=logo.png") })
             }
         )
-        val response = postMultipart("/departments", body).also { it.assertStatusCode(HttpStatusCode.Created) }
+        postMultipart("/departments", body).assertError(Error.MalformedRequest())
 
-        Database {
-            val department = DepartmentEntity[createdId(response)]
-            assertEquals("Legacy", department.displayName)
-            assertContentEquals(png, department.image!!.readBytes())
-        }
+        assertEquals(0, Database { DepartmentEntity.count() })
+        assertTrue(testStorage.keys().isEmpty())
     }
 
     @Test
