@@ -1,6 +1,5 @@
 package org.centrexcursionistalcoi.app.plugins
 
-import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.ratelimit.rateLimit
@@ -15,6 +14,8 @@ import org.centrexcursionistalcoi.app.data.ServerInfo
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.routes.appLinkFallbackRoutes
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
@@ -51,12 +52,12 @@ fun Application.configureRouting() {
         get<Api.Download.Id> { downloadId ->
             val uuid = downloadId.uuid.toUuidOrNull()
             if (uuid == null) {
-                return@get call.respondText("Missing or malformed uuid", status = HttpStatusCode.BadRequest)
+                return@get respondError(Error.MalformedRequest())
             }
 
             val file = Database { FileEntity.findById(uuid) }
             if (file == null) {
-                return@get call.respondText("File not found", status = HttpStatusCode.NotFound)
+                return@get respondError(Error.EntityNotFound("File", downloadId.uuid))
             }
 
             val session = getUserSession()
@@ -67,16 +68,10 @@ fun Application.configureRouting() {
                 // Require at least a logged-in session as a safe default; per-resource-type rules restricting
                 // reads further (e.g. to the owning user) are set explicitly where the file is created.
                 if (session == null) {
-                    return@get call.respondText(
-                        "You must be logged in to access this file",
-                        status = HttpStatusCode.Unauthorized
-                    )
+                    return@get respondError(Error.NotLoggedIn())
                 }
             } else if (!rules.canBeReadBy(session)) {
-                return@get call.respondText(
-                    "You don't have permission to access this file",
-                    status = HttpStatusCode.Forbidden
-                )
+                return@get respondError(Error.PermissionRejected())
             }
 
             call.respondStoredFile(file.objectKey, file.size, file.contentType, file.lastModified)

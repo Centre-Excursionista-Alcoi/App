@@ -478,8 +478,9 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             }.let {
                 if (!it.status.isSuccess()) {
                     val error = it.bodyAsError()
-                    log.e { "Failed to download file with ID $uuid: $error" }
-                    throw error.toThrowable().also(GlobalAsyncErrorHandler::setError)
+                    log.w { "Failed to download file with ID $uuid: $error" }
+                    // Not reported here: an image that can't be loaded is shown as such, and other callers report it
+                    throw error.toThrowable()
                 }
                 it.bodyAsChannel()
             }
