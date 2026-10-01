@@ -107,6 +107,11 @@ loads (and fails to decrypt) the old value first.
   defaults in development and tests, but the server **refuses to start with `ENV=production`** unless both are
   set to non-default values. The access token signing key (`$KEYS_PATH/jwt-es256.key`/`.pub`) is generated on
   first run like `aes.key`; replacing it only forces every client to refresh, it doesn't log anyone out.
+- **Generated PDFs are signed** (`pdf/PdfSigner.kt`) with the key and certificate in `$KEYS_PATH/pdf-signing.p12`
+  (password in `PDF_SIGNING_PASSWORD`, none if unset). Without that file, a self-signed certificate is generated on
+  first run: changes to a PDF are detected, but readers report its signer as unknown. To sign with a certificate
+  readers trust (e.g. an electronic seal issued to the club), replace the file and set its password. In tests,
+  `PdfSigner` isn't initialised, so PDFs are saved unsigned.
 - **File contents live in object storage, not the database** (`storage/`). With `S3_ENDPOINT`, `S3_BUCKET`,
   `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` set (Cloudflare R2 in production; `S3_REGION` defaults to `auto`)
   they go to that bucket; without them, a development server stores them in `FILES_PATH` (default `./files`,
