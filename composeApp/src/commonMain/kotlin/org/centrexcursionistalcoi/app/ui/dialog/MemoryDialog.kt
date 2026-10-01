@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +41,9 @@ import cea_app.composeapp.generated.resources.memory_text
 import cea_app.composeapp.generated.resources.memory_title
 import cea_app.composeapp.generated.resources.memory_to
 import coil3.compose.AsyncImage
+import com.mikepenz.markdown.m3.Markdown
+import com.mikepenz.markdown.model.markdownAnnotator
+import com.mikepenz.markdown.model.markdownAnnotatorConfig
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.data.rememberImageFiles
@@ -52,7 +54,6 @@ import org.centrexcursionistalcoi.app.ui.screen.MemoryViewButtons
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun MemoryDialog(
     memory: ReferencedMemory,
     onEditRequest: (() -> Unit)?,
@@ -95,7 +96,7 @@ fun MemoryDialog(
 }
 
 @Composable
-fun LabelWithTitle(title: String, text: String) {
+private fun LabelWithTitle(title: String, text: String, isMarkdown: Boolean = false) {
     Text(
         text = title.uppercase(),
         style = MaterialTheme.typography.labelLargeEmphasized,
@@ -104,11 +105,20 @@ fun LabelWithTitle(title: String, text: String) {
             .padding(horizontal = 16.dp)
             .padding(top = 8.dp, bottom = 4.dp)
     )
-    Text(
-        text = text,
-        style = MaterialTheme.typography.bodyLarge,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-    )
+    if (isMarkdown) {
+        Markdown(
+            content = text,
+            // A single line break starts a new line, as users expect, instead of being joined with a space
+            annotator = remember { markdownAnnotator(config = markdownAnnotatorConfig(eolAsNewLine = true)) },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+        )
+    } else {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+        )
+    }
 }
 
 @Composable
@@ -145,7 +155,7 @@ fun MemoryDisplay(memory: ReferencedMemory, modifier: Modifier = Modifier, snack
             LabelWithTitle(title = stringResource(Res.string.memory_place), text = place)
         }
 
-        LabelWithTitle(title = stringResource(Res.string.memory_text), text = memory.text)
+        LabelWithTitle(title = stringResource(Res.string.memory_text), text = memory.text, isMarkdown = true)
 
         if (memory.attachments.isNotEmpty()) {
             Text(

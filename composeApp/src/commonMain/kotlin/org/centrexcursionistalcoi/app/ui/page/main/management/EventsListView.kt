@@ -49,6 +49,8 @@ import cea_app.composeapp.generated.resources.management_event_create
 import cea_app.composeapp.generated.resources.management_no_events
 import cea_app.composeapp.generated.resources.submit
 import com.mikepenz.markdown.m3.Markdown
+import com.mikepenz.markdown.model.markdownAnnotator
+import com.mikepenz.markdown.model.markdownAnnotatorConfig
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
@@ -446,7 +448,12 @@ private fun EventsListView(
         Spacer(Modifier.height(12.dp))
 
         event.description?.let { description ->
-            Markdown(description, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp))
+            Markdown(
+                content = description,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                // A single line break starts a new line, as users expect, instead of being joined with a space
+                annotator = remember { markdownAnnotator(config = markdownAnnotatorConfig(eolAsNewLine = true)) },
+            )
         }
 
         if (event.userSubList.isNotEmpty()) {

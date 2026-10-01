@@ -42,6 +42,8 @@ import cea_app.composeapp.generated.resources.post_upload_images
 import cea_app.composeapp.generated.resources.submit
 import coil3.compose.AsyncImage
 import com.mikepenz.markdown.m3.Markdown
+import com.mikepenz.markdown.model.markdownAnnotator
+import com.mikepenz.markdown.model.markdownAnnotatorConfig
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
@@ -269,6 +271,11 @@ private fun PostsListView(
             }
         }
 
-        Markdown(post.content, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+        Markdown(
+            content = post.content,
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            // A single line break starts a new line, as users expect, instead of being joined with a space
+            annotator = remember { markdownAnnotator(config = markdownAnnotatorConfig(eolAsNewLine = true)) },
+        )
     }
 }
