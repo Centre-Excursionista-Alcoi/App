@@ -80,6 +80,9 @@ kotlin {
             isStatic = true
             // Required when using NativeSQLiteDriver
             linkerOpts.add("-lsqlite3")
+            // Release builds have no debug information by default: the app's dSYM couldn't symbolicate Kotlin
+            // frames, which Sentry shows as <redacted>. Line tables are enough, and barely make the build larger.
+            freeCompilerArgs += "-Xadd-light-debug=enable"
             export(libs.calf.ui)
             export(libs.logging)
             export(libs.sentry.kotlinMultiplatform)

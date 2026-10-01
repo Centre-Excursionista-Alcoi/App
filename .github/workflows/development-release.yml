@@ -557,6 +557,11 @@ jobs:
 
               <key>stripSwiftSymbols</key>
               <true/>
+
+              <!-- Keep the build number, the version code, as Android does: by default, Xcode replaces it with the
+                   next one free in App Store Connect for this version (1, 2, ...), so builds can't be told apart in Sentry -->
+              <key>manageAppVersionAndBuildNumber</key>
+              <false/>
           </dict>
           </plist>
           EOF
