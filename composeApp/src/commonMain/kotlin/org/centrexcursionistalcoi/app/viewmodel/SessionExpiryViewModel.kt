@@ -29,7 +29,7 @@ class SessionExpiryViewModel(
     private val log = logging()
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(GlobalAsyncErrorHandler.coroutineExceptionHandler) {
             GlobalAsyncErrorHandler.sessionExpired.collect { expired ->
                 if (!expired) return@collect
 

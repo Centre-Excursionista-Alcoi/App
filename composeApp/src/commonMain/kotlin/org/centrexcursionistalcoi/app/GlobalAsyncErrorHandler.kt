@@ -1,12 +1,14 @@
 package org.centrexcursionistalcoi.app
 
 import com.diamondedge.logging.logging
-import io.sentry.kotlin.multiplatform.Sentry
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.centrexcursionistalcoi.app.error.Error
+import org.centrexcursionistalcoi.app.exception.InternetAccessNotAvailable
 import org.centrexcursionistalcoi.app.exception.ServerException
+import org.centrexcursionistalcoi.app.network.isNoConnectionError
 
 object GlobalAsyncErrorHandler {
     private val log = logging()
@@ -21,6 +23,12 @@ object GlobalAsyncErrorHandler {
     val sessionExpired: StateFlow<Boolean>
         field = MutableStateFlow(false)
 
+    /**
+     * Hands what a coroutine throws to [setError], instead of crashing the app: for coroutines launched without
+     * catching their errors, e.g. directly in `viewModelScope`.
+     */
+    val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable -> setError(throwable) }
+
     fun setError(throwable: Throwable) {
         if (throwable is CancellationException) {
             // Ignore cancellations
@@ -34,10 +42,21 @@ object GlobalAsyncErrorHandler {
             return
         }
 
-        log.e(throwable) { "Unhandled exception" }
-        Sentry.captureException(throwable)
+        if (throwable.isConnectivityError()) {
+            // Shown to the user, but nothing to fix in the app
+            log.w(throwable) { "Network error." }
+        } else {
+            // Reported to Sentry by SentryLogger
+            log.e(throwable) { "Unhandled exception" }
+        }
         error.value = throwable
     }
+
+    /** Whether this, or what caused it, is the device being offline or the connection failing. */
+    private fun Throwable.isConnectivityError(): Boolean =
+        generateSequence(this) { it.cause.takeIf { cause -> cause !== it } }.take(10).any {
+            it is InternetAccessNotAvailable || isNoConnectionError(it)
+        }
 
     fun clearError() {
         error.value = null

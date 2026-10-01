@@ -3,8 +3,11 @@ package org.centrexcursionistalcoi.app.network
 import androidx.datastore.preferences.core.Preferences
 import kotlinx.serialization.KSerializer
 import org.centrexcursionistalcoi.app.data.Entity
+import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.database.Repository
+import org.centrexcursionistalcoi.app.database.writeTransaction
 import org.centrexcursionistalcoi.app.routes.EntityResources
+import org.koin.core.component.get
 
 abstract class SymmetricRemoteRepository<IdType : Any, EntityType : Entity<IdType>>(
     resources: EntityResources<*, *>,
@@ -35,7 +38,9 @@ abstract class SymmetricRemoteRepository<IdType : Any, EntityType : Entity<IdTyp
     }
 
     override suspend fun upsertRemoteEntity(entity: EntityType): EntityType {
-        if (repository.get(entity.id) == null) repository.insert(entity) else repository.update(entity)
+        get<AppDatabase>().writeTransaction {
+            if (repository.get(entity.id) == null) repository.insert(entity) else repository.update(entity)
+        }
         return entity
     }
 }

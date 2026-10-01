@@ -49,7 +49,7 @@ class EventsRepository(private val db: AppDatabase) : Repository<ReferencedEvent
     }
 
     /** Inserts or updates the given raw [event], without needing to resolve its department/users first. */
-    suspend fun insertOrUpdate(event: Event) {
+    suspend fun insertOrUpdate(event: Event) = db.writeTransaction {
         if (dao.get(event.id) != null) updateRaw(event) else insertRaw(event)
     }
 

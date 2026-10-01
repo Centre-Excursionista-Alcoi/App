@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
@@ -47,7 +48,7 @@ class MemoriesManagementViewModel(
     val saveProgress: StateFlow<Progress?>
         field = MutableStateFlow(null)
 
-    fun delete(memory: ReferencedMemory) = viewModelScope.launch(dispatcherProvider.io) {
+    fun delete(memory: ReferencedMemory) = viewModelScope.launch(dispatcherProvider.io + GlobalAsyncErrorHandler.coroutineExceptionHandler) {
         memoriesRemoteRepository.delete(memory.id)
     }
 

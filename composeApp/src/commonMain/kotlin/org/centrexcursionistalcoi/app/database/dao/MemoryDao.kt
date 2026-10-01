@@ -31,6 +31,9 @@ interface MemoryDao {
     @Query("SELECT * FROM Memories WHERE lending = :lending")
     suspend fun getByLendingId(lending: Uuid): MemoryWithRelations?
 
+    @Query("UPDATE Memories SET lending = NULL WHERE lending = :lending")
+    suspend fun detachFromLending(lending: Uuid)
+
     @Transaction
     @Query("SELECT * FROM Memories WHERE lending = :lending")
     fun getByLendingIdAsFlow(lending: Uuid): Flow<MemoryWithRelations?>
