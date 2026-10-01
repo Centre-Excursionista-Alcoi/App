@@ -3,7 +3,6 @@ package org.centrexcursionistalcoi.app.network
 import com.diamondedge.logging.logging
 import io.github.vinceglb.filekit.PlatformFile
 import io.ktor.client.plugins.resources.delete
-import io.ktor.client.plugins.resources.get
 import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -48,7 +47,7 @@ class ProfileRemoteRepository(
      * @throws ResourceNotModifiedException if the profile has not changed since the last fetch.
      */
     suspend fun getProfile(progressNotifier: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): ProfileResponse? {
-        val response = httpClient.get(Api.Profile()) {
+        val response = httpClient.getTraced(Api.Profile()) {
             progressNotifier?.let { monitorDownloadProgress(it) }
             if (!ignoreIfModifiedSince) ifModifiedSince(SETTINGS_LAST_PROFILE_SYNC)
         }

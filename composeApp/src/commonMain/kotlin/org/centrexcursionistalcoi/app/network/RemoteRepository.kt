@@ -4,10 +4,8 @@ import androidx.datastore.preferences.core.Preferences
 import com.diamondedge.logging.logging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.onUpload
-import io.ktor.client.plugins.resources.get
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.delete
-import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -117,27 +115,21 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     suspend fun getAll(progress: ProgressNotifier? = null, ignoreIfModifiedSince: Boolean = false): List<RemoteEntity> {
         if (!endpointSupported()) return emptyList()
 
-        val (response, body) = traceSpan(TraceOperation.HTTP_CLIENT, "GET /$name") { span ->
-            val response = httpClient.get {
-                collection(httpClient, resources)
-                progress?.let { monitorDownloadProgress(it) }
-                if (!ignoreIfModifiedSince) ifModifiedSince(lastSyncSettingsKey)
-            }
-            span?.setData("http.response.status_code", response.status.value.toLong())
-            // Read inside the span: on success, downloading the body is most of the request's time
-            val body = if (response.status.isSuccess()) response.bodyAsText() else null
-            body?.let { span?.setData("http.response_content_length", it.length.toLong()) }
-            response to body
+        val response = httpClient.getTraced {
+            collection(httpClient, resources)
+            progress?.let { monitorDownloadProgress(it) }
+            if (!ignoreIfModifiedSince) ifModifiedSince(lastSyncSettingsKey)
         }
         val status = response.status
         if (status == HttpStatusCode.NotModified) {
             throw ResourceNotModifiedException()
-        } else if (body != null) {
+        } else if (status.isSuccess()) {
             val currentTime = Clock.System.now()
             settings.set(lastSyncSettingsKey, currentTime.toEpochMilliseconds())
 
             val remoteEntities = traceSpan(TraceOperation.SERIALIZE, "Decode $name") {
-                json.decodeFromString(ListSerializer(serializer), body.cleanNullFields())
+                val raw = response.bodyAsText().cleanNullFields()
+                json.decodeFromString(ListSerializer(serializer), raw)
             }
             return remoteEntities
         } else {
@@ -161,7 +153,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     ): RemoteEntity? {
         if (!endpointSupported()) return null
 
-        val response = httpClient.get {
+        val response = httpClient.getTraced {
             url()
             progress?.let { monitorDownloadProgress(it) }
             if (!ignoreIfModifiedSince) ifModifiedSince(lastSyncSettingsKey)
@@ -481,7 +473,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             progressNotifier: ProgressNotifier? = null
         ) {
             log.d { "Downloading $uuid..." }
-            val channel = httpClient.get(Api.Download.Id(uuid.toString())) {
+            val channel = httpClient.getTraced(Api.Download.Id(uuid.toString())) {
                 progressNotifier?.let { monitorDownloadProgress(it, uuid.toString()) }
             }.let {
                 if (!it.status.isSuccess()) {
