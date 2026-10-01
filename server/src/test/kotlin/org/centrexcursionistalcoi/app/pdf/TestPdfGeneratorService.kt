@@ -43,7 +43,7 @@ class TestPdfGeneratorService {
             place = "Alcoi - Ull del Moro",
             members = listOf(FakeUser.MEMBER_NUMBER),
             externalUsers = "Pep Gimeno\nJoan Miró",
-            text = "S'ha realitzat una activitat molt divertida. Jo què sé què més posar aquí, ha estat genial.",
+            text = "S'ha realitzat una activitat molt divertida. Jo què sé què més posar aquí, **ha estat genial**.",
             sport = Sports.ORIENTEERING,
             department = department.id,
             attachments = listOf(memoryImageFileUuid),
@@ -65,7 +65,7 @@ class TestPdfGeneratorService {
         ).referenced(emptyList())
 
         File("document.pdf").outputStream().use { outputStream ->
-            PdfGeneratorService.generateLendingPdf(
+            PdfGeneratorService.generateMemoryPdf(
                 memory = memory.referenced(listOf(FakeUser.data()), listOf(FakeUser.member()), listOf(department)),
                 itemsUsed = listOf(
                     InventoryItem(

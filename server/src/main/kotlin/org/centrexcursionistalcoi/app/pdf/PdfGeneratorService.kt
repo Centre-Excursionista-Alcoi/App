@@ -1,25 +1,42 @@
 package org.centrexcursionistalcoi.app.pdf
 
+import io.ktor.http.ContentType
+import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
-import org.apache.pdfbox.pdmodel.PDPage
+import org.apache.pdfbox.pdmodel.PDDocumentInformation
 import org.apache.pdfbox.pdmodel.PDPageContentStream
-import org.apache.pdfbox.pdmodel.common.PDRectangle
-import org.apache.pdfbox.pdmodel.font.PDFont
-import org.apache.pdfbox.pdmodel.font.PDType0Font
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
+import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem.Companion.referenced
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType.Companion.referenced
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.Sports
+import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
+import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
+import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService.VERSION
+import org.centrexcursionistalcoi.app.security.FileReadWriteRules
+import org.centrexcursionistalcoi.app.storage.FileStorageProvider
+import org.intellij.markdown.parser.CancellationToken
 import org.slf4j.LoggerFactory
 import java.awt.Color
+import java.io.ByteArrayOutputStream
 import java.io.OutputStream
+import java.util.Calendar
 import kotlin.uuid.Uuid
 
 object PdfGeneratorService {
+    private const val VERSION = 1
     private const val FONT_SIZE_TITLE = 18f
     private const val FONT_SIZE_HEADER = 12f
     private const val FONT_SIZE_BODY = 10f
-    private const val MARGIN = 50f
+    internal const val MARGIN = 50f
+
+    private const val META_VERSION = "version"
+    private const val META_MEMORY_ID = "memoryId"
+    private const val META_LENDING_ID = "lendingId"
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -37,218 +54,255 @@ object PdfGeneratorService {
         Sports.CULTURAL_TOURISM -> "Turisme cultural"
     }
 
-    private fun PDDocument.loadFontFromResources(fontName: String): PDType0Font {
-        return PDType0Font.load(this, this::class.java.getResourceAsStream("/fonts/$fontName.ttf"))
+    /**
+     * Checks if the PDF for the given file needs to be updated.
+     * This is determined by checking the version metadata in the PDF's document information.
+     *
+     * A PDF needs an update if:
+     * 1. The version metadata is missing.
+     * 2. The version metadata is less than the current [VERSION].
+     */
+    fun needsUpdate(file: FileEntity): Boolean {
+        val bytes = FileStorageProvider.current.open(file.objectKey).use { stream -> stream.readAllBytes() }
+        return Loader.loadPDF(bytes).use { document ->
+            val information = document.documentInformation
+
+            val version = information.getCustomMetadataValue(META_VERSION)?.toIntOrNull()
+            version == null || version < VERSION
+        }
     }
 
-    fun generateLendingPdf(
+    /**
+     * Updates all memories in the database that need a PDF update.
+     * A memory needs a PDF update if it has no PDF, or if the existing PDF is outdated (as determined by [needsUpdate]).
+     * This function will generate a new PDF for each memory that needs an update, and save it to the database.
+     * If a memory already has a PDF, it will be replaced with the new one.
+     * This function is safe to call multiple times, as it will only update memories that actually need an update.
+     * @param cancellationToken A [CancellationToken] that can be used to cancel the operation. If not provided, the operation will not be cancellable.
+     */
+    fun updateMemoriesIfNeeded(cancellationToken: CancellationToken = CancellationToken.NonCancellable) {
+        val memories = Database { MemoryEntity.all() }
+        val memoriesToUpdate = memories.filter { memory ->
+            memory.pdf == null || needsUpdate(memory.pdf!!)
+        }
+        if (memoriesToUpdate.isEmpty()) {
+            logger.info("No memories need PDF updates")
+            return
+        }
+        logger.info("Found ${memoriesToUpdate.size} memories that need PDF updates")
+        for (memory in memoriesToUpdate) {
+            logger.info("Updating PDF for memory ${memory.id.value}")
+            generateMemoryPdf(memory, cancellationToken)
+        }
+    }
+
+    /**
+     * Generates a PDF for the given memory and saves it to the database.
+     * If the memory already has a PDF, it will be replaced.
+     */
+    fun generateMemoryPdf(memory: MemoryEntity, cancellationToken: CancellationToken = CancellationToken.NonCancellable) {
+        val baos = ByteArrayOutputStream()
+        baos.use { output ->
+            generateMemoryPdf(
+                memory,
+                photoProvider = { uuid -> Database { FileEntity[uuid] }.readBytes() },
+                outputStream = output,
+                cancellationToken = cancellationToken,
+            )
+        }
+
+        Database {
+            val oldPdf = memory.pdf
+            memory.pdf = FileEntity.create(
+                bytes = baos.toByteArray(),
+                name = "memory_${memory.id.value}.pdf",
+                contentType = ContentType.Application.Pdf,
+                // Best-effort: restricted to the submitter and admins. Department MEMORY_MANAGERs and tagged
+                // members can see this memory's data via GET /memories/{id} (see memoryRequest()) but won't be able
+                // to download this specific file -- FileReadWriteRules only supports flat user/group lists, not the
+                // department-role checks that read access to the memory itself is based on.
+                rules = FileReadWriteRules(readUsers = listOf(memory.submittedBy.sub.value), readGroups = listOf(ADMIN_GROUP_NAME)),
+            )
+            oldPdf?.delete()
+        }
+    }
+
+    fun generateMemoryPdf(
+        memory: MemoryEntity,
+        photoProvider: (Uuid) -> ByteArray, // Callback to fetch actual image data
+        outputStream: OutputStream,
+        cancellationToken: CancellationToken = CancellationToken.NonCancellable
+    ) {
+        val (referencedMemory, itemsUsed, submittedByName) = Database {
+            val users = UserReferenceEntity.all().map { it.toData() }
+            val departments = DepartmentEntity.all().map { it.toData() }
+            val referencedMemory = memory.toData().referenced(
+                users = users,
+                members = memory.members.map { it.toMember() },
+                departments = departments,
+            )
+            val itemsUsed = memory.lending?.items?.toList().orEmpty().map { item ->
+                item.toData().referenced(item.type.toData().referenced(departments))
+            }
+            Triple(referencedMemory, itemsUsed, memory.submittedBy.fullName)
+        }
+
+        generateMemoryPdf(
+            memory = referencedMemory,
+            itemsUsed = itemsUsed,
+            submittedBy = submittedByName,
+            photoProvider = photoProvider,
+            outputStream = outputStream,
+            cancellationToken = cancellationToken
+        )
+    }
+
+    fun generateMemoryPdf(
         memory: ReferencedMemory,
-        itemsUsed: List<ReferencedInventoryItem>,
+        itemsUsed: List<ReferencedInventoryItem>?,
         submittedBy: String,
         photoProvider: (Uuid) -> ByteArray, // Callback to fetch actual image data
-        outputStream: OutputStream
+        outputStream: OutputStream,
+        cancellationToken: CancellationToken = CancellationToken.NonCancellable
     ) {
         PDDocument().use { document ->
-            // --- State Management ---
-            var page = PDPage(PDRectangle.A4)
-            document.addPage(page)
-            var contentStream = PDPageContentStream(document, page)
+            document.documentInformation = PDDocumentInformation().apply {
+                title = "Memòria d'Activitat"
+                author = submittedBy
+                creator = "Centre Excursionista Alcoi"
+                subject = "Memòria d'Activitat"
+                keywords = "PDF, Memòria, Activitat, CEA"
+                creationDate = Calendar.getInstance()
 
-            // Start Y position (Top of page, moving down)
-            var yPosition = page.mediaBox.height - MARGIN
-            val width = page.mediaBox.width - (2 * MARGIN)
+                setCustomMetadataValue(META_VERSION, VERSION.toString())
+                setCustomMetadataValue(META_MEMORY_ID, memory.id.toString())
+                setCustomMetadataValue(META_LENDING_ID, memory.lending?.toString())
+            }
+
+            // --- State Management ---
+            val context = DrawContext(document)
+
+            fun yPosition(): Float = context.yPosition
 
             // Load Fonts
-            val fontRegular = document.loadFontFromResources("RobotoCondensed-Light")
-            val fontTitles = document.loadFontFromResources("Nunito-Bold")
+            val fonts = PdfFonts(document)
+            val fontRegular = fonts.body.regular
+            val fontTitles = fonts.titles.regular
             val fontErrors = fontTitles
-
-            // --- Helper: Page Break Logic ---
-            fun checkPageBreak(neededHeight: Float) {
-                if (yPosition - neededHeight < MARGIN) {
-                    contentStream.close() // Close current
-                    page = PDPage(PDRectangle.A4)
-                    document.addPage(page)
-                    contentStream = PDPageContentStream(document, page)
-                    yPosition = page.mediaBox.height - MARGIN
-                }
-            }
-
-            // --- Helper: Text Drawer ---
-            fun drawText(text: String, font: PDFont, size: Float, color: Color = Color.BLACK) {
-                checkPageBreak(size + 2)
-                contentStream.beginText()
-                contentStream.setFont(font, size)
-                contentStream.setNonStrokingColor(color)
-                contentStream.newLineAtOffset(MARGIN, yPosition)
-                contentStream.showText(text)
-                contentStream.endText()
-                yPosition -= (size + 4) // Move cursor down
-            }
-
-            // --- Helper: Multi-line Text Wrapper ---
-            fun drawWrappedText(text: String, font: PDFont = fontRegular) {
-                val words = text.split(" ")
-                var line = ""
-
-                for (word in words) {
-                    val testLine = if (line.isEmpty()) word else "$line $word"
-                    val textSize = font.getStringWidth(testLine) / 1000 * FONT_SIZE_BODY
-
-                    if (textSize > width) {
-                        drawText(line, font, FONT_SIZE_BODY)
-                        line = word
-                    } else {
-                        line = testLine
-                    }
-                }
-                if (line.isNotEmpty()) {
-                    drawText(line, font, FONT_SIZE_BODY)
-                }
-            }
 
             // =========================================
             // 1. Header & Logo
             // =========================================
             try {
                 val logo = this::class.java.getResourceAsStream("/cea.png")!!.readBytes()
-                val logoImage = PDImageXObject.createFromByteArray(document, logo, "Logo CEA")
-                val scale = 50f / logoImage.height // Scale to 50px height
-                val logoWidth = logoImage.width * scale
+                val logoWidth = context.drawImageAtCursor(logo, "Logo CEA", height = 50f)
 
-                contentStream.drawImage(logoImage, MARGIN, yPosition - 50, logoWidth, 50f)
-
-                // Draw Title next to Logo
-                contentStream.beginText()
-                contentStream.setFont(fontTitles, FONT_SIZE_TITLE)
-                contentStream.newLineAtOffset(MARGIN + logoWidth + 10, yPosition - 30)
-                contentStream.showText("Memòria d'Activitat")
-                contentStream.endText()
-
-                // If a department is given, and it has an image, draw it on the right hand side
-                val department = memory.department ?: itemsUsed.firstNotNullOfOrNull { it.type.department }
+                // If a department is given, and it has an image, draw it on the right hand side. Before the title,
+                // which moves the cursor down.
+                val department = memory.department ?: itemsUsed?.firstNotNullOfOrNull { it.type.department }
                 if (department?.image != null) {
-                    val deptImageBytes = photoProvider(department.image!!)
-                    val deptImage = PDImageXObject.createFromByteArray(document, deptImageBytes, department.displayName)
-                    val deptScale = 50f / deptImage.height
-                    val deptWidth = deptImage.width * deptScale
-
-                    contentStream.drawImage(deptImage, page.mediaBox.width - MARGIN - deptWidth, yPosition - 50, deptWidth, 50f)
+                    context.drawImageAtCursor(
+                        photoProvider(department.image!!),
+                        department.displayName,
+                        height = 50f,
+                        alignment = DrawContext.ImageAlignment.End,
+                    )
                 }
 
-                yPosition -= 70 // Space after header
+                // Draw Title next to Logo
+                context.drawText("Memòria d'Activitat", fontTitles, FONT_SIZE_TITLE, offset = Pair(MARGIN + logoWidth + 10, yPosition() - 30))
+
+                context.moveDown(70) // Space after header
             } catch (e: Exception) {
-                drawText("[Logo Error]", fontErrors, FONT_SIZE_BODY, Color.RED)
+                context.drawTextAtCursor("[Logo Error]", fontErrors, FONT_SIZE_BODY, Color.RED)
                 logger.error("Error loading logo image for PDF", e)
             }
 
             // =========================================
             // 2. Metadata (Submitted By, Date, Place)
             // =========================================
-            drawText("Enviada per: $submittedBy", fontTitles, FONT_SIZE_HEADER)
+            context.drawTextAtCursor("Enviada per: $submittedBy", fontTitles, FONT_SIZE_HEADER)
 
             val fromDate = memory.from.toStringCompact()
             val toDate = memory.to.toStringCompact()
-            drawText("Dates: des del $fromDate fins al $toDate", fontRegular, FONT_SIZE_BODY)
+            context.drawTextAtCursor("Dates: des del $fromDate fins al $toDate", fontRegular, FONT_SIZE_BODY)
 
             if (memory.place != null) {
-                drawText("Lloc: ${memory.place}", fontRegular, FONT_SIZE_BODY)
+                context.drawTextAtCursor("Lloc: ${memory.place}", fontRegular, FONT_SIZE_BODY)
             }
 
             if (memory.sport != null) {
-                drawText("Esport: ${memory.sport?.displayName()}", fontRegular, FONT_SIZE_BODY)
+                context.drawTextAtCursor("Esport: ${memory.sport?.displayName()}", fontRegular, FONT_SIZE_BODY)
             }
 
-            yPosition -= 10 // Spacer
+            context.moveDown(10) // Spacer
 
             // =========================================
             // 3. Participants
             // =========================================
             if (memory.members.isNotEmpty()) {
-                drawText("Socis:", fontTitles, FONT_SIZE_HEADER)
+                context.drawTextAtCursor("Socis:", fontTitles, FONT_SIZE_HEADER)
                 memory.members.forEach { member ->
-                    drawText("- ${member.fullName}", fontRegular, FONT_SIZE_BODY)
+                    context.drawTextAtCursor("- ${member.fullName}", fontRegular, FONT_SIZE_BODY)
                 }
-                yPosition -= 10
+                context.moveDown(10)
             }
 
             if (!memory.externalUsers.isNullOrEmpty()) {
-                drawText("Altres participants:", fontTitles, FONT_SIZE_HEADER)
+                context.drawTextAtCursor("Altres participants:", fontTitles, FONT_SIZE_HEADER)
                 val externalUsers = memory.externalUsers
                 if (!externalUsers.isNullOrBlank()) {
                     externalUsers.split("\n").forEach { user ->
-                        drawText("- $user", fontRegular, FONT_SIZE_BODY)
+                        context.drawTextAtCursor("- $user", fontRegular, FONT_SIZE_BODY)
                     }
                 }
-                yPosition -= 10
+                context.moveDown(10)
             }
 
             // =========================================
             // 4. Items Used
             // =========================================
-            if (itemsUsed.isNotEmpty()) {
-                drawText("Material del club utilitzat:", fontTitles, FONT_SIZE_HEADER)
+            if (!itemsUsed.isNullOrEmpty()) {
+                context.drawTextAtCursor("Material del club utilitzat:", fontTitles, FONT_SIZE_HEADER)
                 itemsUsed.groupBy { item -> item.type }.forEach { (type, items) ->
-                    drawText("- x${items.size} ${type.displayName}", fontRegular, FONT_SIZE_BODY)
+                    context.drawTextAtCursor("- x${items.size} ${type.displayName}", fontRegular, FONT_SIZE_BODY)
                 }
-                yPosition -= 10
+                context.moveDown(10)
             }
 
             // =========================================
             // 5. Markdown Text (Long Text)
             // =========================================
-            drawText("Descripció de l'activitat:", fontTitles, FONT_SIZE_HEADER)
+            context.drawTextAtCursor("Descripció de l'activitat:", fontTitles, FONT_SIZE_HEADER)
 
-            // Simple Markdown Clean-up (PDFBox doesn't support bolding inside strings natively)
-            // We split by newlines to preserve paragraphs
-            val paragraphs = memory.text.split("\n")
-
-            paragraphs.forEach { paragraph ->
-                if (paragraph.isNotBlank()) {
-                    // Remove markdown headers logic for cleaner display
-                    val cleanText = paragraph.replace("#", "").trim()
-                    drawWrappedText(cleanText)
-                    yPosition -= 5 // small gap between paragraphs
-                }
-            }
-            yPosition -= 20
+            MarkdownPdfRenderer(context).draw(
+                markdownText = memory.text,
+                font = fonts.body,
+                size = FONT_SIZE_BODY,
+                color = Color.BLACK,
+                headingFont = fonts.titles,
+                codeFont = fonts.code,
+                cancellationToken = cancellationToken
+            )
 
             // =========================================
             // 6. Photos
             // =========================================
             if (memory.attachments.isNotEmpty()) {
-                drawText("Fotos:", fontTitles, FONT_SIZE_HEADER)
+                context.drawTextAtCursor("Fotos:", fontTitles, FONT_SIZE_HEADER)
 
                 memory.attachments.forEach { uuid ->
                     try {
-                        val photo = photoProvider(uuid)
-                        val pdImage = PDImageXObject.createFromByteArray(document, photo, uuid.toString())
-
-                        // Logic to fit image within page width
-                        var imgWidth = pdImage.width.toFloat()
-                        var imgHeight = pdImage.height.toFloat()
-
-                        val maxWidth = width
-                        if (imgWidth > maxWidth) {
-                            val scale = maxWidth / imgWidth
-                            imgWidth = maxWidth
-                            imgHeight *= scale
-                        }
-
-                        // Check space, if not enough, new page
-                        checkPageBreak(imgHeight + 20)
-
-                        contentStream.drawImage(pdImage, MARGIN, yPosition - imgHeight, imgWidth, imgHeight)
-                        yPosition -= (imgHeight + 20)
+                        context.drawImageBlock(photoProvider(uuid), uuid.toString(), spacing = 20f)
                     } catch (e: Exception) {
-                        drawText("Error loading image: $uuid", fontRegular, FONT_SIZE_BODY, Color.RED)
+                        context.drawTextAtCursor("Error loading image: $uuid", fontRegular, FONT_SIZE_BODY, Color.RED)
                         logger.error("Error loading image for PDF: $uuid", e)
                     }
                 }
             }
 
             // Close the final content stream before adding footers
-            contentStream.close()
+            context.close()
 
             // =========================================
             // 7. Footer (Page Numbers)

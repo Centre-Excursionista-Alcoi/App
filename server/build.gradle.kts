@@ -135,6 +135,9 @@ dependencies {
     // PDF generation
     implementation(libs.pdfbox)
 
+    // Markdown parser
+    implementation(libs.jetbrains.markdown)
+
     // Firebase Admin
     implementation(libs.firebase.admin)
 
