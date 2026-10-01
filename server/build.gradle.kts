@@ -135,6 +135,9 @@ dependencies {
     // PDF generation
     implementation(libs.pdfbox)
 
+    // PDF signing (CMS signatures, and generating the self-signed certificate)
+    implementation(libs.bouncycastle.pkix)
+
     // Markdown parser
     implementation(libs.jetbrains.markdown)
 

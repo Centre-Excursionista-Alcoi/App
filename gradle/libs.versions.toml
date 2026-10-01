@@ -20,6 +20,7 @@ androidx-test = "1.7.0"
 androidx-test-ext-junit = "1.3.0"
 androidx-work = "2.11.2"
 awssdk = "2.55.6"
+bouncycastle = "1.86"
 junit = "4.13.2"
 buildkonfig = "0.23.0"
 bcrypt = "0.10.2"
@@ -88,6 +89,7 @@ zoomable = "2.14.0"
 [libraries]
 aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "awssdk" }
 aws-urlConnectionClient = { module = "software.amazon.awssdk:url-connection-client", version.ref = "awssdk" }
+bouncycastle-pkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 android-appUpdate = { module = "com.google.android.play:app-update-ktx", version.ref = "android-appUpdate" }
 android-desugaring = { module = "com.android.tools:desugar_jdk_libs", version.ref = "android-desugaring" }

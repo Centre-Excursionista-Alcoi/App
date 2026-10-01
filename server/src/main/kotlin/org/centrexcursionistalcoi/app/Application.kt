@@ -16,6 +16,7 @@ import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.NotificationsConfig
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService
+import org.centrexcursionistalcoi.app.pdf.PdfSigner
 import org.centrexcursionistalcoi.app.plugins.configureContentNegotiation
 import org.centrexcursionistalcoi.app.plugins.configureForwardedHeaders
 import org.centrexcursionistalcoi.app.plugins.configureRateLimits
@@ -89,6 +90,9 @@ fun main() {
 
     // Load (or generate) the access token signing key
     AuthTokens.init(File(System.getenv("KEYS_PATH") ?: "/keys"))
+
+    // Load (or generate) the key PDFs are signed with
+    PdfSigner.init(File(System.getenv("KEYS_PATH") ?: "/keys"))
 
     // Validate Session encryption keys
     if (SessionsKeys.secretEncryptKey == null || SessionsKeys.secretSignKey == null) {

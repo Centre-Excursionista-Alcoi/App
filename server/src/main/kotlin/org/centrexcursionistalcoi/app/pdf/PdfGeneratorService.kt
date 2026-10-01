@@ -335,7 +335,7 @@ object PdfGeneratorService {
                 footerStream.close()
             }
 
-            document.save(outputStream)
+            PdfSigner.save(document, outputStream)
         }
     }
 }
