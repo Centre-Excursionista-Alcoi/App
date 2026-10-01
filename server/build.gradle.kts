@@ -67,6 +67,8 @@ dependencies {
     // auto-installs.
     implementation(libs.sentry.jvm)
     implementation(libs.sentry.kotlinExtensions)
+    // Required for profiling on the JVM: without it, the profiling options in main() do nothing
+    implementation(libs.sentry.asyncProfiler)
 
     // CSV serialization
     implementation(libs.kotlinx.serializationCsv)
