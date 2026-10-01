@@ -481,8 +481,22 @@ jobs:
 
           security list-keychains -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | sed -e 's/^[[:space:]]*"//' -e 's/"[[:space:]]*$//')
 
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+          # The runner persists between jobs, and Xcode picks a profile by name: remove every
+          # installed profile with this one's name first (from both the legacy and the Xcode 16+
+          # location), so a stale copy (e.g. one regenerated with a different certificate since)
+          # can't be chosen over it.
+          PROFILES_DIR=~/Library/MobileDevice/Provisioning\ Profiles
+          XCODE_PROFILES_DIR=~/Library/Developer/Xcode/UserData/Provisioning\ Profiles
+          PP_NAME=$(security cms -D -i $PP_PATH | plutil -extract Name raw -o - -)
+          mkdir -p "$PROFILES_DIR"
+          for profile in "$PROFILES_DIR"/*.mobileprovision "$XCODE_PROFILES_DIR"/*.mobileprovision; do
+            [ -e "$profile" ] || continue
+            if [ "$(security cms -D -i "$profile" 2>/dev/null | plutil -extract Name raw -o - - 2>/dev/null)" = "$PP_NAME" ]; then
+              echo "Removing stale profile: $profile"
+              rm -f "$profile"
+            fi
+          done
+          cp $PP_PATH "$PROFILES_DIR"/
 
       - name: Create GoogleService.plist
         env:
