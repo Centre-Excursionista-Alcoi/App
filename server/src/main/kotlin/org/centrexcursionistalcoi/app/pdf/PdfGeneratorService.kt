@@ -25,6 +25,7 @@ import java.awt.Color
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.util.Calendar
+import java.util.Date
 import kotlin.uuid.Uuid
 
 object PdfGeneratorService {
@@ -154,7 +155,14 @@ object PdfGeneratorService {
             photoProvider = photoProvider,
             outputStream = outputStream,
             cancellationToken = cancellationToken
-        )
+        ) {
+            creationDate = Calendar.getInstance().apply {
+                time = Date(memory.createdAt.toEpochMilliseconds())
+            }
+            modificationDate = Calendar.getInstance().apply {
+                time = Date(memory.lastUpdate.toEpochMilliseconds())
+            }
+        }
     }
 
     fun generateMemoryPdf(
@@ -163,7 +171,8 @@ object PdfGeneratorService {
         submittedBy: String,
         photoProvider: (Uuid) -> ByteArray, // Callback to fetch actual image data
         outputStream: OutputStream,
-        cancellationToken: CancellationToken = CancellationToken.NonCancellable
+        cancellationToken: CancellationToken = CancellationToken.NonCancellable,
+        extraMeta: PDDocumentInformation.() -> Unit = {}
     ) {
         PDDocument().use { document ->
             document.documentInformation = PDDocumentInformation().apply {
@@ -172,11 +181,12 @@ object PdfGeneratorService {
                 creator = "Centre Excursionista Alcoi"
                 subject = "Memòria d'Activitat"
                 keywords = "PDF, Memòria, Activitat, CEA"
-                creationDate = Calendar.getInstance()
 
                 setCustomMetadataValue(META_VERSION, VERSION.toString())
                 setCustomMetadataValue(META_MEMORY_ID, memory.id.toString())
                 setCustomMetadataValue(META_LENDING_ID, memory.lending?.toString())
+
+                extraMeta()
             }
 
             // --- State Management ---
