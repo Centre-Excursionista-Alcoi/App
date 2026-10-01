@@ -106,15 +106,21 @@ class TestPdfMarkdown {
 
     @Test
     fun test_styles() {
-        val pdf = pdf("# Capçalera\nText normal i `codi`")
+        val pdf = pdf("# Capçalera\nText normal, **negreta**, *cursiva*, ***totes dues*** i `codi`")
+
+        // Fonts embedded as subsets are named like "ABCDEF+RobotoCondensed-Bold"
+        fun List<Glyph>.assertFont(name: String) =
+            assertTrue(all { it.font.substringAfter('+') == name }, "Expected $name, got: ${map { it.font }.distinct()}")
 
         val heading = pdf.glyphsOf("Capçalera")
         val body = pdf.glyphsOf("normal")
-        val code = pdf.glyphsOf("codi")
-        assertTrue(heading.all { "Nunito" in it.font }, "Heading font: ${heading.first().font}")
+        heading.assertFont("Nunito-Bold")
         assertTrue(heading.first().size > body.first().size, "Heading not larger than body text")
-        assertTrue(body.all { "RobotoCondensed" in it.font }, "Body font: ${body.first().font}")
-        assertTrue(code.all { "Courier" in it.font }, "Code font: ${code.first().font}")
+        body.assertFont("RobotoCondensed-Light")
+        pdf.glyphsOf("negreta").assertFont("RobotoCondensed-Bold")
+        pdf.glyphsOf("cursiva").assertFont("RobotoCondensed-LightItalic")
+        pdf.glyphsOf("totes dues").filter { it.text.isNotBlank() }.assertFont("RobotoCondensed-BoldItalic")
+        pdf.glyphsOf("codi").assertFont("Courier")
     }
 
     @Test

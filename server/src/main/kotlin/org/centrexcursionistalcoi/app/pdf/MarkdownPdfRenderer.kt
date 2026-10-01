@@ -1,9 +1,6 @@
 package org.centrexcursionistalcoi.app.pdf
 
 import org.apache.pdfbox.pdmodel.font.PDFont
-import org.apache.pdfbox.pdmodel.font.PDType1Font
-import org.apache.pdfbox.pdmodel.font.Standard14Fonts
-import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode
 import org.apache.pdfbox.util.Matrix
 import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService.MARGIN
 import org.intellij.markdown.IElementType
@@ -23,18 +20,18 @@ import java.awt.Color
  * Draws Markdown at the cursor of [context], styled and wrapped to the page's width, breaking pages as needed (see
  * [draw]).
  *
- * Like the app (see `MemoryDialog`), a single line break starts a new line. Bold and italic text are drawn
- * from the body font itself (stroked and slanted), since it has no bold or italic variants, headings with
- * the heading font, and code with the code font. Characters the body font can't draw (e.g. emojis) are drawn as `?`.
+ * Like the app (see `MemoryDialog`), a single line break starts a new line. Headings are drawn with the heading
+ * font, code with the code font, and bold and italic text with the bold and italic variants of each ([FontFamily]).
+ * Characters a font can't draw (e.g. emojis) are drawn as `?`.
  */
 internal class MarkdownPdfRenderer(private val context: DrawContext) {
     fun draw(
         markdownText: CharSequence,
-        font: PDFont,
+        font: FontFamily,
         size: Float,
         color: Color = Color.BLACK,
-        headingFont: PDFont = font,
-        codeFont: PDFont = PDType1Font(Standard14Fonts.FontName.COURIER),
+        headingFont: FontFamily = font,
+        codeFont: FontFamily,
         flavour: MarkdownFlavourDescriptor = GFMFlavourDescriptor(),
         cancellationToken: CancellationToken = CancellationToken.NonCancellable
     ) {
@@ -126,7 +123,7 @@ internal class MarkdownPdfRenderer(private val context: DrawContext) {
         val content = heading.children.firstOrNull {
             it.type == MarkdownTokenTypes.ATX_CONTENT || it.type == MarkdownTokenTypes.SETEXT_CONTENT
         } ?: return
-        val style = base.copy(font = markdown.headingFont, size = base.size * scale)
+        val style = base.copy(family = markdown.headingFont, size = base.size * scale)
         context.moveDown(base.size * 0.4f)
         drawRuns(inlineRuns(content, markdown, style).dropWhile { it is InlineRun.Text && it.text.isBlank() }, indent)
         context.moveDown(base.size * 0.2f)
@@ -285,18 +282,10 @@ internal class MarkdownPdfRenderer(private val context: DrawContext) {
             val style = segment.style
             context.contentStream.setFont(style.font, style.size)
             context.contentStream.setNonStrokingColor(style.color)
-            if (style.bold) {
-                context.contentStream.setRenderingMode(RenderingMode.FILL_STROKE)
-                context.contentStream.setStrokingColor(style.color)
-                context.contentStream.setLineWidth(style.size * 0.04f)
-            } else {
-                context.contentStream.setRenderingMode(RenderingMode.FILL)
-            }
-            context.contentStream.setTextMatrix(Matrix(1f, 0f, if (style.italic) 0.2f else 0f, 1f, start, context.yPosition))
+            context.contentStream.setTextMatrix(Matrix.getTranslateInstance(start, context.yPosition))
             context.contentStream.showText(segment.text)
         }
         context.contentStream.endText()
-        context.contentStream.setRenderingMode(RenderingMode.FILL)
 
         for ((start, segment) in drawn.filter { it.second.style.strikethrough }) {
             val style = segment.style
@@ -340,26 +329,28 @@ private val ESCAPE = Regex("""\\([!-/:-@\[-`{-~])""")
 /** Words and the spaces between them. */
 private val WORD = Regex("""\s+|\S+""")
 
-/** How a piece of text is drawn. Bold and italic are drawn from [font] itself (see `drawLine`). */
+/** How a piece of text is drawn: with the variant of [family] for [bold] and [italic] ([font]). */
 private data class TextStyle(
-    val font: PDFont,
+    val family: FontFamily,
     val size: Float,
     val color: Color,
     val bold: Boolean = false,
     val italic: Boolean = false,
     val strikethrough: Boolean = false,
 ) {
+    val font: PDFont get() = family[bold, italic]
+
     fun width(text: String): Float = font.getStringWidth(text) / 1000 * size
 }
 
 private data class MarkdownStyles(
     val source: String,
     val base: TextStyle,
-    val headingFont: PDFont,
-    val codeFont: PDFont,
+    val headingFont: FontFamily,
+    val codeFont: FontFamily,
 ) {
     /** [style] for code: [codeFont] is monospaced, and so looks larger than text of the same size. */
-    fun code(style: TextStyle) = style.copy(font = codeFont, size = style.size * 0.9f, bold = false, italic = false)
+    fun code(style: TextStyle) = style.copy(family = codeFont, size = style.size * 0.9f)
 }
 
 private sealed interface InlineRun {

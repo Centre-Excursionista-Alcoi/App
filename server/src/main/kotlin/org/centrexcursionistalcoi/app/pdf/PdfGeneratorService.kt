@@ -3,8 +3,6 @@ package org.centrexcursionistalcoi.app.pdf
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDDocumentInformation
 import org.apache.pdfbox.pdmodel.PDPageContentStream
-import org.apache.pdfbox.pdmodel.font.PDType0Font
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
 import org.centrexcursionistalcoi.app.data.Sports
@@ -38,10 +36,6 @@ object PdfGeneratorService {
         Sports.CULTURAL_TOURISM -> "Turisme cultural"
     }
 
-    private fun PDDocument.loadFontFromResources(fontName: String): PDType0Font {
-        return PDType0Font.load(this, this::class.java.getResourceAsStream("/fonts/$fontName.ttf"))
-    }
-
     fun generateLendingPdf(
         memory: ReferencedMemory,
         itemsUsed: List<ReferencedInventoryItem>,
@@ -67,12 +61,12 @@ object PdfGeneratorService {
             // --- State Management ---
             val context = DrawContext(document)
 
-            fun contentStream(): PDPageContentStream = context.contentStream
             fun yPosition(): Float = context.yPosition
 
             // Load Fonts
-            val fontRegular = document.loadFontFromResources("RobotoCondensed-Light")
-            val fontTitles = document.loadFontFromResources("Nunito-Bold")
+            val fonts = PdfFonts(document)
+            val fontRegular = fonts.body.regular
+            val fontTitles = fonts.titles.regular
             val fontErrors = fontTitles
 
             // =========================================
@@ -80,25 +74,22 @@ object PdfGeneratorService {
             // =========================================
             try {
                 val logo = this::class.java.getResourceAsStream("/cea.png")!!.readBytes()
-                val logoImage = PDImageXObject.createFromByteArray(document, logo, "Logo CEA")
-                val scale = 50f / logoImage.height // Scale to 50px height
-                val logoWidth = logoImage.width * scale
+                val logoWidth = context.drawImageAtCursor(logo, "Logo CEA", height = 50f)
 
-                contentStream().drawImage(logoImage, MARGIN, yPosition() - 50, logoWidth, 50f)
+                // If a department is given, and it has an image, draw it on the right hand side. Before the title,
+                // which moves the cursor down.
+                val department = memory.department ?: itemsUsed.firstNotNullOfOrNull { it.type.department }
+                if (department?.image != null) {
+                    context.drawImageAtCursor(
+                        photoProvider(department.image!!),
+                        department.displayName,
+                        height = 50f,
+                        alignment = DrawContext.ImageAlignment.End,
+                    )
+                }
 
                 // Draw Title next to Logo
                 context.drawText("Memòria d'Activitat", fontTitles, FONT_SIZE_TITLE, offset = Pair(MARGIN + logoWidth + 10, yPosition() - 30))
-
-                // If a department is given, and it has an image, draw it on the right hand side
-                val department = memory.department ?: itemsUsed.firstNotNullOfOrNull { it.type.department }
-                if (department?.image != null) {
-                    val deptImageBytes = photoProvider(department.image!!)
-                    val deptImage = PDImageXObject.createFromByteArray(document, deptImageBytes, department.displayName)
-                    val deptScale = 50f / deptImage.height
-                    val deptWidth = deptImage.width * deptScale
-
-                    contentStream().drawImage(deptImage, context.page.mediaBox.width - MARGIN - deptWidth, yPosition() - 50, deptWidth, 50f)
-                }
 
                 context.moveDown(70) // Space after header
             } catch (e: Exception) {
@@ -165,10 +156,11 @@ object PdfGeneratorService {
 
             MarkdownPdfRenderer(context).draw(
                 markdownText = memory.text,
-                font = fontRegular,
+                font = fonts.body,
                 size = FONT_SIZE_BODY,
                 color = Color.BLACK,
-                headingFont = fontTitles,
+                headingFont = fonts.titles,
+                codeFont = fonts.code,
                 cancellationToken = cancellationToken
             )
 
@@ -180,25 +172,7 @@ object PdfGeneratorService {
 
                 memory.attachments.forEach { uuid ->
                     try {
-                        val photo = photoProvider(uuid)
-                        val pdImage = PDImageXObject.createFromByteArray(document, photo, uuid.toString())
-
-                        // Logic to fit image within page width
-                        var imgWidth = pdImage.width.toFloat()
-                        var imgHeight = pdImage.height.toFloat()
-
-                        val maxWidth = context.width
-                        if (imgWidth > maxWidth) {
-                            val scale = maxWidth / imgWidth
-                            imgWidth = maxWidth
-                            imgHeight *= scale
-                        }
-
-                        // Check space, if not enough, new page
-                        context.checkPageBreak(imgHeight + 20)
-
-                        context.contentStream.drawImage(pdImage, MARGIN, context.yPosition - imgHeight, imgWidth, imgHeight)
-                        context.moveDown(imgHeight + 20)
+                        context.drawImageBlock(photoProvider(uuid), uuid.toString(), spacing = 20f)
                     } catch (e: Exception) {
                         context.drawTextAtCursor("Error loading image: $uuid", fontRegular, FONT_SIZE_BODY, Color.RED)
                         logger.error("Error loading image for PDF: $uuid", e)
