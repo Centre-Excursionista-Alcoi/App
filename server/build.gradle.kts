@@ -108,7 +108,7 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.migration.core)
     implementation(libs.exposed.migration.jdbc)
-    implementation(libs.h2)
+    testImplementation(libs.h2)
     implementation(libs.postgresql)
     implementation(libs.sqlite)
 
