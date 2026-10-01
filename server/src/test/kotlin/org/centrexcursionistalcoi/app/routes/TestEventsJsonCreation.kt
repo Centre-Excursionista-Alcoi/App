@@ -34,6 +34,7 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreateEventRequest
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.utils.requestWithFilesBody
 import org.jetbrains.exposed.v1.jdbc.insert
 
 /**
@@ -44,8 +45,7 @@ class TestEventsJsonCreation : ApplicationTestBase() {
     private val future = Clock.System.now().plus(7.days)
 
     private suspend fun HttpClient.postJson(request: CreateEventRequest) = post(Api.Events()) {
-        contentType(ContentType.Application.Json)
-        setBody(json.encodeToString(CreateEventRequest.serializer(), request))
+        setBody(requestWithFilesBody(request, CreateEventRequest.serializer()))
     }
 
     @Test

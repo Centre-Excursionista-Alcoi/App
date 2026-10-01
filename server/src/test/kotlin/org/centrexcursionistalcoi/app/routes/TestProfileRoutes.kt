@@ -263,25 +263,6 @@ class TestProfileRoutes : ApplicationTestBase() {
     }
 
     @Test
-    fun test_insurances_post_base64Documents() = runApplicationTest(shouldLogIn = LoginType.USER) {
-        client.sendJson(
-            "/profile/insurances",
-            CreateInsuranceRequest.serializer(),
-            insurance(
-                listOf(
-                    FileWithContext(pdf, "policy.pdf", ContentType.Application.Pdf),
-                    FileWithContext(png, "card.png", ContentType.Image.PNG),
-                )
-            ),
-        ).assertStatusCode(HttpStatusCode.NoContent)
-
-        val insurance = client.insurances().single()
-        assertEquals(2, insurance.documents.size)
-        assertContentEquals(pdf, client.get(Api.Download.Id("${insurance.documents[0]}")).bodyAsBytes())
-        assertContentEquals(png, client.get(Api.Download.Id("${insurance.documents[1]}")).bodyAsBytes())
-    }
-
-    @Test
     fun test_insurances_post_multipartDocuments_restricted() = runApplicationTest(shouldLogIn = LoginType.USER) {
         val request = insurance(listOf(FileWithContext(part = "file_0"), FileWithContext(part = "file_1")))
         client.post(Api.Profile.Insurances()) {

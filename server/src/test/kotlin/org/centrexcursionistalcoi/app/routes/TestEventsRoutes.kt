@@ -33,6 +33,7 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreateEventRequest
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.utils.requestWithFilesBody
 import org.centrexcursionistalcoi.app.utils.toJsonElement
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -52,8 +53,7 @@ import kotlin.test.assertTrue
  */
 class TestEventsRoutes : ApplicationTestBase() {
     private suspend fun HttpClient.createEvent(request: CreateEventRequest) = post(Api.Events()) {
-        contentType(ContentType.Application.Json)
-        setBody(json.encodeToString(CreateEventRequest.serializer(), request))
+        setBody(requestWithFilesBody(request, CreateEventRequest.serializer()))
     }
 
     @Test

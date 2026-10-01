@@ -11,6 +11,7 @@ import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.FileReferences
 import org.centrexcursionistalcoi.app.database.table.Files
 import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.request.requirePart
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.centrexcursionistalcoi.app.storage.FileObjectsTransactionHook
 import org.centrexcursionistalcoi.app.storage.FileStorageProvider
@@ -102,14 +103,13 @@ class FileEntity(id: EntityID<Uuid>) : UuidEntity(id) {
         }
 
         /**
-         * Creates a file from [withContext]: from its contents, or from the upload named by its
-         * [part][FileWithContext.part] (see [UploadedParts]).
+         * Creates a file from the upload named by the [part][FileWithContext.part] of [withContext] (see
+         * [UploadedParts]).
          */
         context(_: JdbcTransaction)
         fun newFrom(withContext: FileWithContext, rules: FileReadWriteRules? = null): FileEntity {
             val id = withContext.id
-            val part = withContext.part ?: return create(withContext.bytes, withContext.name, withContext.contentType, rules, id)
-            val upload = UploadedParts.get(part)
+            val upload = UploadedParts.get(withContext.requirePart())
             return upload.store(withContext.name ?: upload.originalFileName, withContext.contentType ?: upload.contentType, rules, id)
         }
 
@@ -188,13 +188,12 @@ class FileEntity(id: EntityID<Uuid>) : UuidEntity(id) {
         get() = type?.let(ContentType::parse) ?: ContentType.Application.OctetStream
 
     /**
-     * Replaces the contents of this file with those of [from] (its bytes, or the upload named by its
-     * [part][FileWithContext.part]), keeping its id.
+     * Replaces the contents of this file with the upload named by the [part][FileWithContext.part] of [from],
+     * keeping its id.
      */
     context(_: JdbcTransaction)
     fun replaceContents(from: FileWithContext) {
-        val part = from.part ?: return replaceContents(from.bytes, from.name, from.contentType)
-        val upload = UploadedParts.get(part)
+        val upload = UploadedParts.get(from.requirePart())
         upload.replaceContentsOf(this, from.name ?: upload.originalFileName, from.contentType ?: upload.contentType)
     }
 

@@ -26,6 +26,8 @@ import org.centrexcursionistalcoi.app.storage.InMemoryFileStorage
 import org.centrexcursionistalcoi.app.storage.createTestFile
 import org.centrexcursionistalcoi.app.storage.testStorage
 import kotlinx.coroutines.test.runTest
+import org.centrexcursionistalcoi.app.utils.UPLOADED_PART
+import org.centrexcursionistalcoi.app.utils.withUploadedFile
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
 class TestFileEntityStorage {
@@ -169,8 +171,10 @@ class TestFileEntityStorage {
 
     @Test
     fun test_updateOrCreate_createsFile() {
-        val bytes = Database {
-            FileEntity.updateOrCreate(FileWithContext(byteArrayOf(1, 2), name = "new"), ownedIds = emptyList())?.readBytes()
+        val bytes = withUploadedFile(byteArrayOf(1, 2)) {
+            Database {
+                FileEntity.updateOrCreate(FileWithContext(name = "new", part = UPLOADED_PART), ownedIds = emptyList())?.readBytes()
+            }
         }
         assertContentEquals(byteArrayOf(1, 2), bytes)
     }

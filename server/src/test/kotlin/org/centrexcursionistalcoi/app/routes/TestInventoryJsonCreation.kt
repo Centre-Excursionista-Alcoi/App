@@ -33,6 +33,7 @@ import org.centrexcursionistalcoi.app.request.CreateInventoryItemRequest
 import org.centrexcursionistalcoi.app.request.CreateInventoryItemTypeRequest
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.utils.requestWithFilesBody
 import org.jetbrains.exposed.v1.jdbc.insert
 
 /**
@@ -41,8 +42,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
  */
 class TestInventoryJsonCreation : ApplicationTestBase() {
     private suspend fun HttpClient.postTypeJson(request: CreateInventoryItemTypeRequest) = post(Api.Inventory.Types()) {
-        contentType(ContentType.Application.Json)
-        setBody(json.encodeToString(CreateInventoryItemTypeRequest.serializer(), request))
+        setBody(requestWithFilesBody(request, CreateInventoryItemTypeRequest.serializer()))
     }
 
     private suspend fun HttpClient.postItemJson(request: CreateInventoryItemRequest) = post(Api.Inventory.Items()) {

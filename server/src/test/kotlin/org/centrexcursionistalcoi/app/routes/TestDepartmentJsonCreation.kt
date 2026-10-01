@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreateDepartmentRequest
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
+import org.centrexcursionistalcoi.app.utils.requestWithFilesBody
 import org.jetbrains.exposed.v1.jdbc.insert
 
 /**
@@ -34,8 +35,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
  */
 class TestDepartmentJsonCreation : ApplicationTestBase() {
     private suspend fun HttpClient.postJson(request: CreateDepartmentRequest) = post(Api.Departments()) {
-        contentType(ContentType.Application.Json)
-        setBody(json.encodeToString(CreateDepartmentRequest.serializer(), request))
+        setBody(requestWithFilesBody(request, CreateDepartmentRequest.serializer()))
     }
 
     @Test
