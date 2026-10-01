@@ -1,8 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
 import io.ktor.server.resources.get
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -30,7 +28,6 @@ import org.centrexcursionistalcoi.app.integration.Telegram
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.request.CreateEventRequest
-import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
@@ -47,7 +44,6 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import kotlin.time.Instant
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -77,76 +73,6 @@ fun Route.eventsRoutes() {
         idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session -> EventEntity.forSession(session) },
         visibleTo = { event, session -> event.isVisibleTo(session) },
-        // TODO(#659): multipart creation, kept only for app installs predating jsonCreator below -- the app
-        //   always sends JSON for events now. Delete this whole `creator` lambda once the app version requiring
-        //   it is unsupported. Note it never read requiresInsurance (see jsonCreator's comment) -- don't port
-        //   that gap forward if this ever needs touching before removal.
-        creator = { formParameters ->
-            var start: Instant? = null
-            var end: Instant? = null
-            var place: String? = null
-            var title: String? = null
-            var description: String? = null
-            var maxPeople: Long? = null
-            var requiresConfirmation = false
-            var departmentId: Uuid? = null
-            var qualificationRequirements: List<List<Uuid>> = emptyList()
-            val image = FileRequestData()
-
-            formParameters.forEachPart { partData ->
-                when (partData) {
-                    is PartData.FormItem -> {
-                        when (partData.name) {
-                            "start" -> start = partData.value.toLong().let(Instant::fromEpochMilliseconds)
-                            "end" -> end = partData.value.toLong().let(Instant::fromEpochMilliseconds)
-                            "place" -> place = partData.value
-                            "title" -> title = partData.value
-                            "description" -> description = partData.value
-                            "maxPeople" -> maxPeople = partData.value.toLongOrNull()
-                            "requiresConfirmation" -> requiresConfirmation = partData.value.toBoolean()
-                            "department" -> departmentId = partData.value.toUuidOrNull()
-                            "qualificationRequirements" -> qualificationRequirements = parseQualificationRequirements(partData.value)
-                            "image" -> {
-                                image.populate(partData)
-                            }
-                        }
-                    }
-                    is PartData.FileItem -> {
-                        image.populate(partData)
-                    }
-                    else -> { /* nothing */ }
-                }
-            }
-
-            start ?: throw NullPointerException("Missing start")
-            place ?: throw NullPointerException("Missing place")
-            title ?: throw NullPointerException("Missing title")
-
-            // Check that the department exists if departmentId is provided
-            val department = departmentId?.let {
-                Database { DepartmentEntity.findById(it) }  ?: throw NoSuchElementException("Department with id $it does not exist")
-            }
-
-            // Checked before anything is created, so an invalid requirement can't leave a half-created event (or
-            // an orphaned image) behind. Throws an IllegalArgumentException, which is reported as a 400.
-            val requirements = Database { validatedQualificationRequirements(department?.id?.value, qualificationRequirements) }
-
-            val imageEntity = if (image.isNotEmpty()) image.newEntity() else null
-
-            Database {
-                EventEntity.new {
-                    this.start = start
-                    this.end = end
-                    this.place = place
-                    this.title = title
-                    this.description = description
-                    this.maxPeople = maxPeople
-                    this.requiresConfirmation = requiresConfirmation
-                    this.department = department
-                    this.image = imageEntity
-                }.also { it.setQualificationRequirements(requirements) }
-            }
-        },
         afterCreate = { eventEntity ->
             Telegram.launch {
                 val event = Database { eventEntity.toData() }
@@ -155,11 +81,7 @@ fun Route.eventsRoutes() {
         },
         updater = UpdateEventRequest.serializer(),
         createRequestSerializer = CreateEventRequest.serializer(),
-        jsonCreator = { request ->
-            // Mirrors the multipart creator above -- same department lookup, same requirement validation, same
-            // image creation (#659) -- except requiresInsurance is actually wired up here: the multipart creator
-            // never read it at all, even though the client already sent it (Event.toMap()) and PATCH already
-            // supports it (UpdateEventRequest.requiresInsurance), so it silently had no effect at creation time.
+        creator = { request ->
             val department = request.department?.let {
                 Database { DepartmentEntity.findById(it) } ?: throw NoSuchElementException("Department with id $it does not exist")
             }

@@ -4,8 +4,8 @@ import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.data.FileWithContext
 
 /**
- * `POST /departments` request body, JSON-only (#659) -- the same shape [UpdateDepartmentRequest] already uses
- * for a patch, with `displayName` required since a department can't exist without one.
+ * `POST /departments` request body: the same shape [UpdateDepartmentRequest] uses for a patch, with
+ * `displayName` required since a department can't exist without one.
  */
 @Serializable
 data class CreateDepartmentRequest(

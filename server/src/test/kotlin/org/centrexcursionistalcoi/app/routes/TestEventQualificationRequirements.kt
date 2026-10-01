@@ -6,8 +6,6 @@ import io.ktor.client.plugins.resources.patch
 import io.ktor.client.plugins.resources.post
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
-import io.ktor.client.request.forms.formData
-import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
@@ -37,7 +35,6 @@ import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.EventQualificationRequirements
 import org.centrexcursionistalcoi.app.database.table.UserQualifications
 import org.centrexcursionistalcoi.app.error.Error
-import org.centrexcursionistalcoi.app.href
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.UpdateEventRequest
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
@@ -264,18 +261,21 @@ class TestEventQualificationRequirements : ApplicationTestBase() {
 
     // ---- Creating: POST /events ----
 
+    /** [qualificationRequirements] is inserted into the JSON body as is, so malformed values can be sent too. */
     private suspend fun io.ktor.client.HttpClient.createEvent(
         department: Uuid?,
         qualificationRequirements: String?,
-    ): HttpResponse = submitFormWithBinaryData(href(Api.Events()),
-        formData {
-            append("start", (Clock.System.now() + 3600.seconds).toEpochMilliseconds())
-            append("title", "New event")
-            append("place", "Somewhere")
-            department?.let { append("department", it.toString()) }
-            qualificationRequirements?.let { append("qualificationRequirements", it) }
-        },
-    )
+    ): HttpResponse = post(Api.Events()) {
+        contentType(ContentType.Application.Json)
+        setBody(
+            buildString {
+                append("""{"start":${(Clock.System.now() + 3600.seconds).toEpochMilliseconds()},"title":"New event","place":"Somewhere"""")
+                department?.let { append(""","department":"$it"""") }
+                qualificationRequirements?.let { append(""","qualificationRequirements":$it""") }
+                append("}")
+            }
+        )
+    }
 
     @Test
     fun test_create_withRequirements_storesThem() = runApplicationTest(

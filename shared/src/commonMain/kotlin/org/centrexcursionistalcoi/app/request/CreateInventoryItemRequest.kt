@@ -5,8 +5,8 @@ import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.serializer.Base64Serializer
 
 /**
- * `POST /inventory/items` request body, JSON-only (#659) -- the same shape [UpdateInventoryItemRequest] already
- * uses for a patch, with `type` required since an item can't exist without knowing what type it is.
+ * `POST /inventory/items` request body: the same shape [UpdateInventoryItemRequest] uses for a patch, with `type`
+ * required since an item can't exist without knowing what type it is.
  */
 @Serializable
 data class CreateInventoryItemRequest(

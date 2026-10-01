@@ -26,7 +26,6 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.plugins.CallUploads
 import org.centrexcursionistalcoi.app.storage.FileStorageProvider
 import org.centrexcursionistalcoi.app.storage.LocalFileStorage
-import org.centrexcursionistalcoi.app.storage.testStorage
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.io.TempDir
 
@@ -120,20 +119,5 @@ class TestFileRequestData {
         assertEquals(0, upload.readBytes().size)
         upload.close()
         upload.close()
-    }
-
-    @Test
-    fun test_formItem() = runTest {
-        val bytes = byteArrayOf(10, 20, 30)
-        val encoded = kotlin.io.encoding.Base64.UrlSafe.encode(bytes)
-        val upload = FileRequestData()
-        upload.populate(PartData.FormItem(encoded, {}, Headers.build {
-            append(HttpHeaders.ContentDisposition, "form-data; name=\"file_0\"; filename=\"a.bin\"")
-        }))
-
-        assertEquals("a.bin", upload.originalFileName)
-        assertContentEquals(bytes, upload.readBytes())
-        val file = upload.newEntity()
-        assertContentEquals(bytes, testStorage.readBytes(Database { file.objectKey }))
     }
 }

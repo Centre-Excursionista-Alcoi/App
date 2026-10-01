@@ -33,9 +33,7 @@ import org.centrexcursionistalcoi.app.test.LoginType
 import org.jetbrains.exposed.v1.jdbc.insert
 
 /**
- * `POST /posts` accepting a JSON body (#659), alongside the existing multipart path (still covered by
- * `TestRoutes.kt`'s generic `runTestsOnRoute` harness, unaffected by any of this). Posts is the pilot entity for
- * the migration described in #659 -- see `RoutesBase.kt`'s `createRequestSerializer`/`jsonCreator` and
+ * Creating posts (`POST /posts`) from a JSON [CreatePostRequest]: see `RoutesBase.kt`'s `provideEntityRoutes` and
  * `PostsRoutes.kt`.
  */
 class TestPostsJsonCreation : ApplicationTestBase() {
@@ -160,7 +158,7 @@ class TestPostsJsonCreation : ApplicationTestBase() {
         ).assertError(Error.PermissionRejected())
 
         // Neither the post nor the file it referenced (created before the department could be authorized) may
-        // survive the rejection -- same guarantee the multipart path already has, now for the JSON path too.
+        // survive the rejection.
         val remainingPosts = Database { PostEntity.all().toList() }
         val remainingFiles = Database { FileEntity.all().toList() }
         assertEquals(0, remainingPosts.size, "Rejected post creation should have been rolled back")
@@ -168,10 +166,10 @@ class TestPostsJsonCreation : ApplicationTestBase() {
     }
 
     @Test
-    fun test_create_multipartStillWorks_alongsideJson() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
+    fun test_create_withoutContentType_badRequest() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
         client.post(Api.Posts()) {
-            // No body/content-type at all: neither multipart nor JSON -- must still be rejected the same way
-            // it always was, not silently accepted as an empty JSON create.
+            // No body/content-type at all: neither JSON nor multipart -- must be rejected, not accepted as an
+            // empty JSON create.
         }.assertStatusCode(HttpStatusCode.BadRequest)
     }
 }

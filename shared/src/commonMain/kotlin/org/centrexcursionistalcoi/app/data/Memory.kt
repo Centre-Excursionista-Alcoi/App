@@ -32,22 +32,6 @@ data class Memory(
     /** The user-attached photos, exposed as an [ImageFileListContainer] (fetched on demand, like [Post.images]). */
     override val images: List<Uuid> = attachments
 
-    override fun toMap(): Map<String, Any?> = mapOf(
-        "id" to id,
-        "place" to place,
-        "members" to members,
-        "externalUsers" to externalUsers,
-        "text" to text,
-        "sport" to sport?.name,
-        "department" to department,
-        "attachments" to attachments,
-        "submittedBy" to submittedBy,
-        "from" to from,
-        "to" to to,
-        "pdf" to pdf,
-        "lending" to lending,
-    )
-
     @OptIn(ExperimentalSerializationApi::class)
     override fun toJsonObject(): JsonObject = buildJsonObject {
         put("id", JsonPrimitive(id.toString()))

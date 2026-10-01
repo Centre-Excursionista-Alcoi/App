@@ -1,8 +1,6 @@
 package org.centrexcursionistalcoi.app.request
 
-import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
 import io.ktor.http.content.PartData
 import io.ktor.utils.io.core.Closeable
 import io.ktor.utils.io.jvm.javaio.copyTo
@@ -11,13 +9,11 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import kotlin.coroutines.coroutineContext
-import kotlin.io.encoding.Base64
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.outputStream
 import kotlin.io.path.readBytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.plugins.CallUploads
@@ -33,17 +29,6 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
  * [CallUploads]).
  */
 class FileRequestData : Closeable {
-    companion object {
-        /**
-         * Converts a [FileWithContext] to a [FileRequestData].
-         */
-        suspend fun FileWithContext.toFileRequestData() = FileRequestData().apply {
-            this.contentType = this@toFileRequestData.contentType
-            this.originalFileName = this@toFileRequestData.name
-            write { it.write(this@toFileRequestData.bytes) }
-        }
-    }
-
     var contentType: ContentType? = null
     var originalFileName: String? = null
 
@@ -74,25 +59,6 @@ class FileRequestData : Closeable {
         contentType = partData.contentType
         originalFileName = partData.originalFileName
         write { output -> partData.provider().copyTo(output) }
-    }
-
-    /**
-     * Populates this file data from the given [PartData.FormItem].
-     *
-     * Data will be provided as a Base64-encoded string in the form item.
-     */
-    suspend fun populate(partData: PartData.FormItem) {
-        contentType = partData.contentType
-
-        val filename = partData.headers[HttpHeaders.ContentDisposition]
-            ?.let(ContentDisposition::parse)
-            ?.parameters
-            ?.find { it.name.equals("filename", true) }
-            ?.value
-        originalFileName = filename
-
-        val value = Base64.UrlSafe.decode(partData.value)
-        write { it.write(value) }
     }
 
     /**

@@ -24,14 +24,6 @@ data class Member(
 
     override val id: UInt get() = memberNumber
 
-    override fun toMap(): Map<String, Any?> = mapOf(
-        "memberNumber" to memberNumber,
-        "status" to status,
-        "fullName" to fullName,
-        "nif" to nif,
-        "email" to email,
-    )
-
     /**
      * Returns a copy of this member with sensitive fields removed.
      */

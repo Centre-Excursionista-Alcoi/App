@@ -33,19 +33,6 @@ data class UserInsurance(
 
     override val documentFiles: List<Uuid> get() = documents
 
-    override fun toMap(): Map<String, Any?> = mapOf(
-        "id" to id,
-        "userSub" to userSub,
-        "insuranceCompany" to insuranceCompany,
-        "policyNumber" to policyNumber,
-        "validFrom" to validFrom.toString(),
-        "validTo" to validTo.toString(),
-        "documentId" to documentId?.let { FileReference(it) },
-        "documents" to documents,
-        "femecvLicense" to femecvLicense,
-        "cardImage" to cardImage,
-    )
-
     /**
      * Obtains a list of all the user's insurances active at the given [instant] in the given [timeZone].
      * @param instant The instant to check.

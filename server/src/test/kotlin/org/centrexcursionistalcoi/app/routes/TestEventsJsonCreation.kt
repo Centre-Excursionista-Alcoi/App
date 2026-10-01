@@ -37,9 +37,8 @@ import org.centrexcursionistalcoi.app.test.LoginType
 import org.jetbrains.exposed.v1.jdbc.insert
 
 /**
- * `POST /events` accepting a JSON body (#659), same pattern as `TestPostsJsonCreation`/`TestInventoryJsonCreation`.
- * The multipart path (including its exhaustive qualification-requirements edge cases) stays covered by
- * `TestRoutes.kt` and `TestEventQualificationRequirements.kt`, unaffected by any of this.
+ * Creating events (`POST /events`) from a JSON [CreateEventRequest], like `TestPostsJsonCreation`. The
+ * qualification requirements' edge cases are covered by `TestEventQualificationRequirements`.
  */
 class TestEventsJsonCreation : ApplicationTestBase() {
     private val future = Clock.System.now().plus(7.days)
@@ -95,9 +94,7 @@ class TestEventsJsonCreation : ApplicationTestBase() {
         }
     }
 
-    // Regression: the multipart creator never read requiresInsurance at all (see EventsRoutes.kt), even though
-    // the client already sent it and PATCH already supported it -- silently ignored on create. Fixed as part of
-    // building the JSON creator (#659); this is the test for that fix specifically.
+    // requiresInsurance must be stored on creation too, not only by PATCH.
     @Test
     fun test_create_json_requiresInsurance_isActuallyPersisted() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
         val location = client.postJson(

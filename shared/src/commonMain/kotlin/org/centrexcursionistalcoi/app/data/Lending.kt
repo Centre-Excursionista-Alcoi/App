@@ -50,25 +50,6 @@ data class Lending(
         fun canBeCancelled() = this in listOf(REQUESTED, CONFIRMED)
     }
 
-    override fun toMap(): Map<String, Any?> = mapOf(
-        "id" to id,
-        "userSub" to userSub,
-        "timestamp" to timestamp,
-        "confirmed" to confirmed,
-        "taken" to taken,
-        "givenBy" to givenBy,
-        "givenAt" to givenAt,
-        "returned" to returned,
-        "memorySubmitted" to memorySubmitted,
-        "memorySubmittedAt" to memorySubmittedAt,
-        "memory" to memory,
-        "memoryReviewed" to memoryReviewed,
-        "from" to from,
-        "to" to to,
-        "notes" to notes,
-        "items" to items,
-    )
-
     fun status(): Status = when {
         memoryReviewed -> Status.COMPLETE
         memorySubmitted && !memoryReviewed -> Status.MEMORY_SUBMITTED

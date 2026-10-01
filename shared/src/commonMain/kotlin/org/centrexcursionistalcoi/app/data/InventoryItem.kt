@@ -12,14 +12,6 @@ data class InventoryItem(
     @Serializable(Base64Serializer::class) val nfcId: ByteArray?,
     val manufacturerTraceabilityCode: String?,
 ): Entity<Uuid> {
-    override fun toMap(): Map<String, Any?> = mapOf(
-        "id" to id,
-        "variation" to variation,
-        "type" to type,
-        "nfcId" to nfcId,
-        "manufacturerTraceabilityCode" to manufacturerTraceabilityCode,
-    )
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false

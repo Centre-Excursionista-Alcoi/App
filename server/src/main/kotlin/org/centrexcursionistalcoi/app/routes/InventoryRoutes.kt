@@ -1,10 +1,6 @@
 package org.centrexcursionistalcoi.app.routes
 
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
 import io.ktor.server.routing.Route
-import io.sentry.Sentry
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
@@ -17,13 +13,10 @@ import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.InventoryItemTypes
 import org.centrexcursionistalcoi.app.database.table.InventoryItems
 import org.centrexcursionistalcoi.app.database.table.LendingItems
-import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreateInventoryItemRequest
 import org.centrexcursionistalcoi.app.request.CreateInventoryItemTypeRequest
-import org.centrexcursionistalcoi.app.request.FileRequestData
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemRequest
 import org.centrexcursionistalcoi.app.request.UpdateInventoryItemTypeRequest
-import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -32,8 +25,6 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.EmptySizedIterable
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import kotlin.io.encoding.Base64
-import kotlin.uuid.Uuid
 
 fun Route.inventoryRoutes() {
     provideEntityRoutes(
@@ -54,78 +45,9 @@ fun Route.inventoryRoutes() {
             }
         },
         visibleTo = { type, session -> type.isVisibleTo(session) },
-        // TODO(#659): multipart creation, kept only for app installs predating jsonCreator below -- the app
-        //   always sends JSON for inventory item types now. Delete this whole `creator` lambda once the app
-        //   version requiring it is unsupported.
-        creator = { formParameters ->
-            var displayName: String? = null
-            var description: String? = null
-            var categories: List<String>? = null
-            var weight: Double? = null
-            var department: Uuid? = null
-            val image = FileRequestData()
-
-            formParameters.forEachPart { partData ->
-                when (partData) {
-                    is PartData.FormItem -> {
-                        when (partData.name) {
-                            "displayName" -> displayName = partData.value
-                            "description" -> description = partData.value
-                            "categories" -> categories = partData.value.let {
-                                try {
-                                    json.decodeFromString(String.serializer().list(), it)
-                                } catch (e: SerializationException) {
-                                    Sentry.captureException(e)
-                                    null
-                                } catch (e: IllegalArgumentException) {
-                                    Sentry.captureException(e)
-                                    null
-                                }
-                            }
-                            "weight" -> weight = partData.value.toDoubleOrNull()
-                            "department" -> department = partData.value.toUuidOrNull()
-                            "image" -> {
-                                image.populate(partData)
-                            }
-                        }
-                    }
-                    is PartData.FileItem -> {
-                        when (partData.name) {
-                            "image" -> {
-                                image.populate(partData)
-                            }
-                        }
-                    }
-                    else -> { /* nothing */ }
-                }
-            }
-
-            if (displayName == null) {
-                throw NullPointerException("Missing displayName")
-            }
-
-            val deptEntity = department?.let { id ->
-                Database { DepartmentEntity.findById(id) } ?: throw NoSuchElementException("Department with given id does not exist")
-            }
-
-            val imageFile = if (image.isNotEmpty()) {
-                image.newEntity()
-            } else null
-            Database {
-                InventoryItemTypeEntity.new {
-                    this.displayName = displayName
-                    this.description = description
-                    this.categories = categories
-                    this.weight = weight
-                    this.department = deptEntity
-                    this.image = imageFile
-                }
-            }
-        },
         updater = UpdateInventoryItemTypeRequest.serializer(),
         createRequestSerializer = CreateInventoryItemTypeRequest.serializer(),
-        jsonCreator = { request ->
-            // Mirrors the multipart creator above -- same department lookup, same image creation (#659).
+        creator = { request ->
             val deptEntity = request.department?.let { id ->
                 Database { DepartmentEntity.findById(id) } ?: throw NoSuchElementException("Department with given id does not exist")
             }
@@ -170,55 +92,6 @@ fun Route.inventoryRoutes() {
             }
         },
         visibleTo = { item, session -> item.isVisibleTo(session) },
-        // TODO(#659): multipart creation, kept only for app installs predating jsonCreator below -- the app
-        //   always sends JSON for inventory items now. Delete this whole `creator` lambda once the app version
-        //   requiring it is unsupported.
-        creator = { formParameters ->
-            var variation: String? = null
-            var type: Uuid? = null
-            var nfcId: ByteArray? = null
-            var manufacturerTraceabilityCode: String? = null
-
-            formParameters.forEachPart { partData ->
-                when (partData) {
-                    is PartData.FormItem -> {
-                        when (partData.name) {
-                            "variation" -> variation = partData.value
-                            "type" -> type = try {
-                                Uuid.parse(partData.value)
-                            } catch (_: IllegalArgumentException) {
-                                null
-                            }
-                            "nfcId" -> {
-                                val bytes = Base64.UrlSafe.decode(partData.value)
-                                println("Decoded nfcId! Bytes: ${bytes.joinToString(",") { it.toString() }}")
-                                nfcId = bytes
-                            }
-                            "manufacturerTraceabilityCode" -> manufacturerTraceabilityCode = partData.value
-                        }
-                    }
-                    else -> { /* nothing */ }
-                }
-            }
-
-            if (type == null) {
-                throw NullPointerException("Missing or invalid type")
-            }
-
-            val itemType = Database { InventoryItemTypeEntity.findById(type!!) }
-            if (itemType == null) {
-                throw NoSuchElementException("Type with given id does not exist")
-            }
-
-            Database {
-                InventoryItemEntity.new {
-                    this.variation = variation
-                    this.type = itemType
-                    this.nfcId = nfcId
-                    this.manufacturerTraceabilityCode = manufacturerTraceabilityCode
-                }
-            }
-        },
         deleteReferencesCheck = { item ->
             LendingItems.select(LendingItems.item)
                 .where { LendingItems.item eq item.id }
@@ -226,8 +99,7 @@ fun Route.inventoryRoutes() {
         },
         updater = UpdateInventoryItemRequest.serializer(),
         createRequestSerializer = CreateInventoryItemRequest.serializer(),
-        jsonCreator = { request ->
-            // Mirrors the multipart creator above (#659).
+        creator = { request ->
             val itemType = Database { InventoryItemTypeEntity.findById(request.type) }
                 ?: throw NoSuchElementException("Type with given id does not exist")
 

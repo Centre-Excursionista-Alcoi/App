@@ -25,15 +25,5 @@ data class InventoryItemType(
 
     override val files: Map<String, Uuid?> = mapOf("image" to image)
 
-    override fun toMap(): Map<String, Any?> = mapOf(
-        "id" to id,
-        "displayName" to displayName,
-        "description" to description,
-        "categories" to categories,
-        "weight" to weight,
-        "department" to department,
-        "image" to image?.let { FileReference(it) },
-    )
-
     override fun toString(): String = displayName
 }

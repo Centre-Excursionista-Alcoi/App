@@ -64,15 +64,6 @@ data class Department(
     @Transient
     override val files: Map<String, Uuid?> = mapOf("image" to image)
 
-    override fun toMap(): Map<String, Any?> = mapOf(
-        "id" to id,
-        "displayName" to displayName,
-        "image" to image?.let { FileReference(it) },
-        "members" to members?.map { it.toMap() },
-        "qualifications" to qualifications,
-        "qualificationGrants" to qualificationGrants,
-    )
-
     override fun toString(): String {
         return displayName
     }

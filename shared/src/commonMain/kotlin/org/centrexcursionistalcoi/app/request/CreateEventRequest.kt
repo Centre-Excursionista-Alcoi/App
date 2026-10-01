@@ -7,8 +7,8 @@ import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.serializer.InstantSerializer
 
 /**
- * `POST /events` request body, JSON-only (#659) -- the same shape [UpdateEventRequest] already uses for a patch,
- * with `start`/`place`/`title` required since an event can't exist without them.
+ * `POST /events` request body: the same shape [UpdateEventRequest] uses for a patch, with `start`/`place`/`title`
+ * required since an event can't exist without them.
  */
 @Serializable
 data class CreateEventRequest(

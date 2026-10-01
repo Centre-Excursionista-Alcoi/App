@@ -1,16 +1,15 @@
 package org.centrexcursionistalcoi.app.routes
 
+import io.ktor.client.HttpClient
 import io.ktor.client.plugins.resources.delete
 import io.ktor.client.plugins.resources.get
 import io.ktor.client.plugins.resources.patch
+import io.ktor.client.plugins.resources.post
 import kotlin.time.toJavaInstant
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
-import io.ktor.client.request.forms.formData
-import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
-import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -20,6 +19,7 @@ import org.centrexcursionistalcoi.app.ResourcesUtils
 import org.centrexcursionistalcoi.app.assertError
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.DepartmentRole
+import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.EventEntity
@@ -28,16 +28,15 @@ import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.error.Error
-import org.centrexcursionistalcoi.app.href
 import org.centrexcursionistalcoi.app.ifModifiedSinceFormatter
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.request.CreateEventRequest
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.LoginType
 import org.centrexcursionistalcoi.app.utils.toJsonElement
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import kotlin.time.Instant
 import java.time.ZoneOffset
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -52,6 +51,10 @@ import kotlin.test.assertTrue
  * the role in *some* department.
  */
 class TestEventsRoutes : ApplicationTestBase() {
+    private suspend fun HttpClient.createEvent(request: CreateEventRequest) = post(Api.Events()) {
+        contentType(ContentType.Application.Json)
+        setBody(json.encodeToString(CreateEventRequest.serializer(), request))
+    }
 
     @Test
     fun test_create_event_contentManager_ownDepartment_succeeds() = runApplicationTest(
@@ -70,13 +73,13 @@ class TestEventsRoutes : ApplicationTestBase() {
     ) { context ->
         val department = context.dibResult!!
 
-        client.submitFormWithBinaryData(href(Api.Events()),
-            formData {
-                append("start", Clock.System.now().toEpochMilliseconds())
-                append("title", "Managed event")
-                append("place", "Somewhere")
-                append("department", department.id.value.toString())
-            }
+        client.createEvent(
+            CreateEventRequest(
+                start = Clock.System.now(),
+                title = "Managed event",
+                place = "Somewhere",
+                department = department.id.value,
+            )
         ).apply {
             assertEquals(HttpStatusCode.Created, status)
             assertNotNull(headers[HttpHeaders.Location])
@@ -101,13 +104,13 @@ class TestEventsRoutes : ApplicationTestBase() {
     ) { context ->
         val otherDepartment = context.dibResult!!
 
-        client.submitFormWithBinaryData(href(Api.Events()),
-            formData {
-                append("start", Clock.System.now().toEpochMilliseconds())
-                append("title", "Cross-department event")
-                append("place", "Somewhere")
-                append("department", otherDepartment.id.value.toString())
-            }
+        client.createEvent(
+            CreateEventRequest(
+                start = Clock.System.now(),
+                title = "Cross-department event",
+                place = "Somewhere",
+                department = otherDepartment.id.value,
+            )
         ).apply {
             assertError(Error.PermissionRejected())
         }
@@ -135,21 +138,18 @@ class TestEventsRoutes : ApplicationTestBase() {
     ) { context ->
         val otherDepartment = context.dibResult!!
 
-        client.submitFormWithBinaryData(href(Api.Events()),
-            formData {
-                append("start", Clock.System.now().toEpochMilliseconds())
-                append("title", "Cross-department event with image")
-                append("place", "Somewhere")
-                append("department", otherDepartment.id.value.toString())
-                append(
-                    "image",
-                    ResourcesUtils.bytesFromResource("/square.png"),
-                    Headers.build {
-                        append(HttpHeaders.ContentType, ContentType.Image.PNG.toString())
-                        append(HttpHeaders.ContentDisposition, "filename=\"square.png\"")
-                    },
-                )
-            }
+        client.createEvent(
+            CreateEventRequest(
+                start = Clock.System.now(),
+                title = "Cross-department event with image",
+                place = "Somewhere",
+                department = otherDepartment.id.value,
+                image = FileWithContext(
+                    bytes = ResourcesUtils.bytesFromResource("/square.png"),
+                    name = "square.png",
+                    contentType = ContentType.Image.PNG,
+                ),
+            )
         ).apply {
             assertError(Error.PermissionRejected())
         }

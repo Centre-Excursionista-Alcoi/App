@@ -10,12 +10,4 @@ data class DepartmentMemberInfo(
     val departmentId: Uuid,
     val confirmed: Boolean,
     val roles: List<DepartmentRole> = emptyList(),
-): Entity<Uuid> {
-    override fun toMap(): Map<String, Any?> = mapOf(
-        "id" to id,
-        "userSub" to userSub,
-        "departmentId" to departmentId,
-        "confirmed" to confirmed,
-        "roles" to roles,
-    )
-}
+): Entity<Uuid>

@@ -9,7 +9,6 @@ import io.ktor.http.defaultForFileExtension
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
-import org.centrexcursionistalcoi.app.data.FileReference
 import org.centrexcursionistalcoi.app.data.FileWithContext
 
 object InMemoryFileAllocator {
@@ -24,8 +23,6 @@ object InMemoryFileAllocator {
         val id: Uuid,
     ) {
         fun toFileWithContext(name: String? = null): FileWithContext = FileWithContext(bytes, name, contentType, lastModified, id)
-
-        fun toFileReference() = FileReference(id)
     }
 
     fun put(bytes: ByteArray, uuid: Uuid? = null, contentType: ContentType? = null): Data {
