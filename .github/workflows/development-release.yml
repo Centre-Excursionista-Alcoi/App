@@ -519,6 +519,11 @@ jobs:
 
       - name: Archive iOS App
         run: |
+          # Xcode generates CFBundleVersion and CFBundleShortVersionString from these build settings, not from
+          # Info.plist: without them, every build would be version 1.0 (1), as in Config.xcconfig
+          VERSION_NAME=$(grep '^VERSION_NAME=' version.properties | cut -d'=' -f2)
+          VERSION_CODE=$(grep '^VERSION_CODE=' version.properties | cut -d'=' -f2)
+          echo "Archiving version $VERSION_NAME ($VERSION_CODE)"
           xcodebuild -workspace iosApp/iosApp.xcworkspace \
             -scheme iosApp \
             -sdk iphoneos \
@@ -527,6 +532,8 @@ jobs:
             CODE_SIGN_STYLE=Manual \
             PROVISIONING_PROFILE_SPECIFIER="CEA App" \
             DEVELOPMENT_TEAM="UQSVPP37UL" \
+            MARKETING_VERSION="$VERSION_NAME" \
+            CURRENT_PROJECT_VERSION="$VERSION_CODE" \
             clean archive
 
       - name: Generate ExportOptions.plist
@@ -558,8 +565,9 @@ jobs:
               <key>stripSwiftSymbols</key>
               <true/>
 
-              <!-- Keep the build number, the version code, as Android does: by default, Xcode replaces it with the
-                   next one free in App Store Connect for this version (1, 2, ...), so builds can't be told apart in Sentry -->
+              <!-- Keep the build number, the version code (see "Archive iOS App"), as Android does: by default, Xcode
+                   replaces it with the next one free in App Store Connect for this version, so builds can't be told
+                   apart in Sentry -->
               <key>manageAppVersionAndBuildNumber</key>
               <false/>
           </dict>
