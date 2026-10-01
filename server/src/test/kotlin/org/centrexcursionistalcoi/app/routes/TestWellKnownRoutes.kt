@@ -67,13 +67,16 @@ class TestWellKnownRoutes : ApplicationTestBase() {
         val components = client.get("/.well-known/apple-app-site-association").association()
             .details.single().jsonObject.getValue("components").jsonArray.map { it.jsonObject }
 
-        // The first match wins: the password reset page has to be excluded before "everything" claims it. Android
-        // makes the same exception (MainActivity.WEB_ONLY_PATHS), since the page has no screen in the app.
-        assertEquals(2, components.size)
-        assertEquals("/reset_password", components[0].getValue("/").jsonPrimitive.content)
-        assertTrue(components[0].getValue("exclude").jsonPrimitive.boolean)
-        assertEquals("*", components[1].getValue("/").jsonPrimitive.content)
-        assertTrue("exclude" !in components[1])
+        // The first match wins: the web-only pages (password reset, document verification) have to be excluded
+        // before "everything" claims them. Android makes the same exception (MainActivity.WEB_ONLY_PATHS), since
+        // those pages have no screen in the app.
+        assertEquals(3, components.size)
+        for ((i, path) in listOf("/reset_password", "/verify").withIndex()) {
+            assertEquals(path, components[i].getValue("/").jsonPrimitive.content)
+            assertTrue(components[i].getValue("exclude").jsonPrimitive.boolean)
+        }
+        assertEquals("*", components[2].getValue("/").jsonPrimitive.content)
+        assertTrue("exclude" !in components[2])
     }
 
     @Test

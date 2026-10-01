@@ -112,6 +112,11 @@ loads (and fails to decrypt) the old value first.
   first run: changes to a PDF are detected, but readers report its signer as unknown. To sign with a certificate
   readers trust (e.g. an electronic seal issued to the club), replace the file and set its password. In tests,
   `PdfSigner` isn't initialised, so PDFs are saved unsigned.
+- **Generated documents can be verified at `/verify`** (`verification/DocumentVerification.kt`, `routes/VerifyRoutes.kt`).
+  Each memory PDF gets a random code, printed on every page with a link to `/verify?code=...`, and recorded in
+  `DocumentVerifications` with the SHA-256 of the file as stored. The page checks a code, an uploaded file, or both, and
+  never shows anything from the document itself. `/verify` is a web-only path: when adding another, add it to both
+  `WEB_ONLY_PATHS` (`WellKnownRoutes.kt` for iOS, `MainActivity` for Android), or the app opens the link instead.
 - **File contents live in object storage, not the database** (`storage/`). With `S3_ENDPOINT`, `S3_BUCKET`,
   `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` set (Cloudflare R2 in production; `S3_REGION` defaults to `auto`)
   they go to that bucket; without them, a development server stores them in `FILES_PATH` (default `./files`,

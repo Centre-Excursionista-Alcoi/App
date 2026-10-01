@@ -29,6 +29,7 @@ import org.centrexcursionistalcoi.app.routes.respondAppLinkFallbackOr
 import org.centrexcursionistalcoi.app.routes.robotsRoute
 import org.centrexcursionistalcoi.app.routes.securityRoutes
 import org.centrexcursionistalcoi.app.routes.usersRoutes
+import org.centrexcursionistalcoi.app.routes.verifyRoutes
 import org.centrexcursionistalcoi.app.routes.webDavRoutes
 import org.centrexcursionistalcoi.app.routes.wellKnownRoutes
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
@@ -107,6 +108,8 @@ fun Application.configureRouting() {
         route(".well-known") {
             wellKnownRoutes()
         }
+
+        verifyRoutes()
 
         appLinkFallbackRoutes()
 

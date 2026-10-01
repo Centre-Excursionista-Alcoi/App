@@ -136,6 +136,6 @@ class MainActivity : NfcIntentHandlerActivity() {
         private const val APP_LINKS_HOST = "centrexcursionistalcoi.app"
 
         /** Paths on [APP_LINKS_HOST] that must always open as a web page. See [openWebOnlyLinkIfNeeded]. */
-        private val WEB_ONLY_PATHS = setOf("/reset_password")
+        private val WEB_ONLY_PATHS = setOf("/reset_password", "/verify")
     }
 }

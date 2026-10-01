@@ -15,6 +15,7 @@ import org.centrexcursionistalcoi.app.database.table.AuthSessions
 import org.centrexcursionistalcoi.app.database.table.ConfigTable
 import org.centrexcursionistalcoi.app.database.table.DepartmentMembers
 import org.centrexcursionistalcoi.app.database.table.Departments
+import org.centrexcursionistalcoi.app.database.table.DocumentVerifications
 import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.EventQualificationRequirements
 import org.centrexcursionistalcoi.app.database.table.Events
@@ -87,6 +88,7 @@ object Database {
         Qualifications,
         UserQualifications,
         EventQualificationRequirements,
+        DocumentVerifications,
     ).let { sortTablesByReferences(it) }
     private var database: JdbcDatabase? = null
 

@@ -39,7 +39,7 @@ internal object WellKnownConfigProvider : ConfigProvider() {
  * Paths on this server that are web pages with no screen in the app, so they must open in a browser even though
  * the app claims the whole host. Android does the same, see `MainActivity.WEB_ONLY_PATHS`.
  */
-private val WEB_ONLY_PATHS = listOf("/reset_password")
+private val WEB_ONLY_PATHS = listOf("/reset_password", "/verify")
 
 /**
  * The `apple-app-site-association` file: which iOS apps may open this server's links (universal links), and share
