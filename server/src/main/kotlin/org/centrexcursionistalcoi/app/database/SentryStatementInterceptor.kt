@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.database
 import io.sentry.ISpan
 import io.sentry.Sentry
 import io.sentry.SpanStatus
+import org.centrexcursionistalcoi.app.tracing.TraceOperation
 import org.jetbrains.exposed.v1.core.Key
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.statements.GlobalStatementInterceptor
@@ -23,7 +24,7 @@ class SentryStatementInterceptor : GlobalStatementInterceptor {
 
     override fun beforeExecution(transaction: Transaction, context: StatementContext) {
         val parent = Sentry.getSpan() ?: return
-        val span = parent.startChild("db.sql.query", context.sql(transaction))
+        val span = parent.startChild(TraceOperation.DB_SQL_QUERY.value, context.sql(transaction))
         (transaction as? JdbcTransaction)?.db?.vendor?.let { span.setData("db.system", it) }
         transaction.putUserData(spanKey, span)
     }

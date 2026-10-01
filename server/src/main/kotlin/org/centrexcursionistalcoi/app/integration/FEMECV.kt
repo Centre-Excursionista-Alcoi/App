@@ -19,6 +19,7 @@ import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
 import org.centrexcursionistalcoi.app.integration.femecv.LicenseData
 import org.centrexcursionistalcoi.app.storage.RedisStoreMap
+import org.centrexcursionistalcoi.app.tracing.SentryHttpClientTracing
 import org.jetbrains.annotations.VisibleForTesting
 import org.slf4j.LoggerFactory
 
@@ -50,6 +51,7 @@ object FEMECV {
             install(HttpCookies) {
                 storage = cookiesStorage
             }
+            install(SentryHttpClientTracing)
             defaultRequest {
                 url("https://femecv.playoffinformatica.com")
             }

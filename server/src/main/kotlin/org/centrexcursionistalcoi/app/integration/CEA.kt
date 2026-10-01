@@ -33,6 +33,7 @@ import org.centrexcursionistalcoi.app.exception.HttpResponseException
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.security.NIFValidation
 import org.centrexcursionistalcoi.app.serialization.list
+import org.centrexcursionistalcoi.app.tracing.SentryHttpClientTracing
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
@@ -205,6 +206,7 @@ object CEA : PeriodicWorker(period = 1.days) {
             install(HttpCookies) {
                 storage = cookiesStorage
             }
+            install(SentryHttpClientTracing)
             install(Logging) {
                 level = LogLevel.HEADERS
                 logger = object : Logger {

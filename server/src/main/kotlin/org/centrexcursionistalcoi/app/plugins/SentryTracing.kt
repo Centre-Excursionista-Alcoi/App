@@ -12,6 +12,7 @@ import io.sentry.SpanStatus
 import io.sentry.TransactionOptions
 import io.sentry.kotlin.SentryContext
 import kotlinx.coroutines.withContext
+import org.centrexcursionistalcoi.app.tracing.TraceOperation
 
 /**
  * Wraps every request in a Sentry transaction, named/tagged by its resolved route (e.g.
@@ -34,7 +35,7 @@ fun Application.configureSentryTracing() {
                 val method = call.request.httpMethod.value
                 val transaction = Sentry.startTransaction(
                     "$method ${call.request.path()}",
-                    "http.server",
+                    TraceOperation.HTTP_SERVER.value,
                     TransactionOptions().apply { isBindToScope = true },
                 )
                 try {
