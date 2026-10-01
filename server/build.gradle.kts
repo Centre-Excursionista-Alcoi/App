@@ -186,6 +186,9 @@ tasks.withType<ShadowJar> {
     // Make sure all drivers are included in the fat jar
     mergeServiceFiles()
 
+    // The dependencies add up to more than the 65535 entries a plain zip can hold
+    isZip64 = true
+
     // Add manifest attributes
     manifest.configureAppManifest()
 }
