@@ -38,7 +38,7 @@ import kotlin.uuid.Uuid
 
 object PdfGeneratorService {
     /** Increase when the PDFs change, so existing ones are generated again (see [updateMemoriesIfNeeded]). */
-    private const val VERSION = 2
+    private const val VERSION = 1
     private const val FONT_SIZE_TITLE = 18f
     private const val FONT_SIZE_HEADER = 12f
     private const val FONT_SIZE_BODY = 10f
