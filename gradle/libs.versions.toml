@@ -84,7 +84,7 @@ testcontainers = "1.21.4"
 turbine = "1.2.1"
 webauthn4j = "0.31.10.RELEASE"
 xmlutil = "1.0.2.1"
-zoomable = "2.14.0"
+zoomable = "2.15.0"
 
 [libraries]
 aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "awssdk" }
