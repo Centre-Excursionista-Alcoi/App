@@ -9,10 +9,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.Category
 import org.centrexcursionistalcoi.app.data.CategoryPrice
@@ -50,7 +46,7 @@ import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.MemoriesFiles
 import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.database.table.UserQualifications
-import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
+import org.centrexcursionistalcoi.app.database.utils.encodeList
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
@@ -62,10 +58,10 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import kotlin.uuid.Uuid
 
 /**
- * What the server answers for an entity is its shared data class (`toData`). While the reflective encoder still
- * exists, this checks that both give the same JSON for every kind of entity and for different users.
+ * What the server answers for an entity is its shared data class (`toData`): for every kind of entity and for several
+ * users, the list can be decoded as the app does, and means the same once decoded.
  */
-class TestToDataParity {
+class TestEntityToData {
     private fun session(sub: String, name: String, vararg groups: String) = UserSession(sub, name, "$sub@example.com", groups.toList())
 
     private val sessions = listOf(
@@ -77,56 +73,29 @@ class TestToDataParity {
         null,
     )
 
-    /** Order of lists and nulls don't matter: the app doesn't tell them apart. */
-    private fun JsonElement.normalized(ignoreKeys: Set<String> = emptySet(), renames: Map<String, String> = emptyMap()): JsonElement = when (this) {
-        is JsonObject -> JsonObject(
-            filter { (key, value) -> value !is JsonNull && key !in ignoreKeys }
-                .map { (key, value) -> (renames[key] ?: key) to value.normalized(ignoreKeys, renames) }
-                .toMap()
-        )
-        is JsonArray -> JsonArray(map { it.normalized(ignoreKeys, renames) }.sortedBy { it.toString() })
-        else -> this
-    }
-
-    /**
-     * Columns the encoder sent that no data class has, so the app never read them (it ignores unknown keys).
-     */
-    private val columnsNoDataClassHas = setOf("created", "createdAt")
-
-    /**
-     * The encoder named it after the column, so the app, which reads `externalUsers`, never got it: a bug of the
-     * encoder that `toData` fixes.
-     */
-    private val renamedColumns = mapOf("externalPeople" to "externalUsers")
-
-    /**
-     * Files: the encoder sent the columns of the table (`type`), `FileEntity.toData` sends `contentType`,
-     * the one the app reads.
-     */
-    private val fileColumns = setOf("type", "contentType")
-
-    private fun <ID : Any, E : org.jetbrains.exposed.v1.dao.Entity<ID>, D : Entity<*>> assertParity(
+    private fun <ID : Any, E : org.jetbrains.exposed.v1.dao.Entity<ID>, D : Entity<*>> assertRoundTrip(
         name: String,
         entityClass: EntityClass<ID, E>,
         serializer: KSerializer<D>,
     ) where E : EntityDataConverter<D, *> {
         for (session in sessions) {
-            val (old, new) = Database {
+            val encoded = Database {
                 val entities = entityClass.all().toList()
                 assert(entities.isNotEmpty()) { "No $name in the fixture" }
-                json.encodeEntityListToString(entities, entityClass, session) to
-                    json.encodeToString(ListSerializer(serializer), entities.map { it.toData(session) })
+                encodeList(serializer, entities, session)
             }
+            // The app decodes it, and it means the same once decoded (the database keeps more precision for instants)
+            val decoded = json.decodeFromString(ListSerializer(serializer), encoded)
             assertEquals(
-                json.parseToJsonElement(old).normalized(columnsNoDataClassHas + fileColumns, renamedColumns),
-                json.parseToJsonElement(new).normalized(fileColumns),
-                "$name differs for ${session?.sub}",
+                json.parseToJsonElement(encoded),
+                json.parseToJsonElement(json.encodeToString(ListSerializer(serializer), decoded)),
+                "$name differ for ${session?.sub}",
             )
         }
     }
 
     @Test
-    fun test_to_data_gives_what_the_encoder_gives() = runTest {
+    fun test_entities_are_answered_as_their_data_classes() = runTest {
         Database.initForTests()
         Database {
             val user = FakeUser.provideEntity()
@@ -288,15 +257,15 @@ class TestToDataParity {
             }
         }
 
-        assertParity("departments", DepartmentEntity, Department.serializer())
-        assertParity("events", EventEntity, Event.serializer())
-        assertParity("posts", PostEntity, Post.serializer())
-        assertParity("inventory types", InventoryItemTypeEntity, InventoryItemType.serializer())
-        assertParity("inventory items", InventoryItemEntity, InventoryItem.serializer())
-        assertParity("lendings", LendingEntity, Lending.serializer())
-        assertParity("memories", MemoryEntity, Memory.serializer())
-        assertParity("spaces", SpaceEntity, Space.serializer())
-        assertParity("space keys", SpaceKeyEntity, SpaceKey.serializer())
-        assertParity("space lendings", SpaceLendingEntity, SpaceLending.serializer())
+        assertRoundTrip("departments", DepartmentEntity, Department.serializer())
+        assertRoundTrip("events", EventEntity, Event.serializer())
+        assertRoundTrip("posts", PostEntity, Post.serializer())
+        assertRoundTrip("inventory types", InventoryItemTypeEntity, InventoryItemType.serializer())
+        assertRoundTrip("inventory items", InventoryItemEntity, InventoryItem.serializer())
+        assertRoundTrip("lendings", LendingEntity, Lending.serializer())
+        assertRoundTrip("memories", MemoryEntity, Memory.serializer())
+        assertRoundTrip("spaces", SpaceEntity, Space.serializer())
+        assertRoundTrip("space keys", SpaceKeyEntity, SpaceKey.serializer())
+        assertRoundTrip("space lendings", SpaceLendingEntity, SpaceLending.serializer())
     }
 }

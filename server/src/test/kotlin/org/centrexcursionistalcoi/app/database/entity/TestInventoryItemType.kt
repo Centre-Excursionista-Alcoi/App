@@ -5,7 +5,7 @@ import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
+import org.centrexcursionistalcoi.app.database.utils.encodeOne
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.utils.toUuid
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -51,7 +51,7 @@ class TestInventoryItemType {
         )
 
         assertJsonEquals(
-            json.encodeEntityToString(entity),
+            encodeOne(InventoryItemType.serializer(), entity),
             json.encodeToString(InventoryItemType.serializer(), typeClass),
             ignoreKeys = setOf("files")
         )

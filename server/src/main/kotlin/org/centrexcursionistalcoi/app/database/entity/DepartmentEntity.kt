@@ -85,7 +85,7 @@ class DepartmentEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, E
      * The subset of [members] visible to [session]: everyone (including pending/unconfirmed requests) for an
      * admin or a confirmed `PEOPLE_MANAGER` of this department, otherwise just the caller's own row (or none,
      * for an anonymous caller or a non-member). This is the single source of truth for that rule -- both
-     * `GET /departments/{id}` (via `Departments.extraColumns`) and `GET /departments/{id}/members`
+     * `GET /departments/{id}` (via `DepartmentEntity.toData(session)`) and `GET /departments/{id}/members`
      * (`DepartmentRoutes.kt`) call this rather than each re-implementing it, so they can't silently diverge.
      *
      * Reuses the already-loaded [members] collection instead of issuing a separate department-role query, so

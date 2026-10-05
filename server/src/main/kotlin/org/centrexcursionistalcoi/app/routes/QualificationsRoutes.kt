@@ -107,7 +107,7 @@ private fun nameTaken(departmentId: Uuid, name: String, exceptId: Uuid? = null):
 
 fun Route.qualificationsRoutes() {
     // Qualification definitions and their grants aren't listed here (bulk or single): they're embedded on
-    // GET /departments/{id} (see Departments.extraColumns), synced along with the rest of a department like any
+    // GET /departments/{id} (see DepartmentEntity.toData), synced along with the rest of a department like any
     // other referenced data, rather than fetched separately.
 
     post<Api.Departments.Id.Qualifications> {

@@ -1,22 +1,14 @@
 package org.centrexcursionistalcoi.app.database.table
 
-import kotlinx.serialization.SerializationStrategy
-import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
-import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
-import org.centrexcursionistalcoi.app.database.utils.CustomTableSerializer
-import org.centrexcursionistalcoi.app.database.utils.list
-import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.datetime.timestamp
-import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import kotlin.uuid.Uuid
 
-object Memories : UuidTable("memories"), CustomTableSerializer<Uuid, MemoryEntity> {
+object Memories : UuidTable("memories") {
     val createdAt = timestamp("createdAt").defaultExpression(DatabaseNowExpression)
     val lastUpdate = timestamp("lastUpdate").defaultExpression(DatabaseNowExpression)
 
@@ -31,8 +23,7 @@ object Memories : UuidTable("memories"), CustomTableSerializer<Uuid, MemoryEntit
 
     // When the described activity took place. For lending memories this is filled in automatically from the
     // lending's from/to; for standalone memories the client must provide it. Stored as a plain instant plus the IANA
-    // zone id it was recorded in, and re-exposed as a combined "from"/"to" `ZonedDateTime` below (see
-    // [columnSerializers]/[extraColumns]) rather than as raw columns.
+    // zone id it was recorded in, and exposed as a combined "from"/"to" `ZonedDateTime` (see `MemoryEntity.from`).
     val fromInstant = timestamp("fromInstant")
     val fromZone = varchar("fromZone", 64)
     val toInstant = timestamp("toInstant")
@@ -47,19 +38,4 @@ object Memories : UuidTable("memories"), CustomTableSerializer<Uuid, MemoryEntit
 
         check("memories_from_is_before_to") { fromInstant lessEq toInstant }
     }
-
-    override fun columnSerializers(): Map<String, SerializationStrategy<*>> = mapOf(
-        "members" to UInt.serializer().list(),
-        "attachments" to Uuid.serializer().list(),
-        "from" to ZonedDateTime.serializer(),
-        "to" to ZonedDateTime.serializer(),
-    )
-
-    context(_: JdbcTransaction)
-    override fun extraColumns(entity: MemoryEntity, session: UserSession?): Map<String, Any?> = mapOf(
-        "members" to entity.members.map { it.memberNumber },
-        "attachments" to entity.files.map { it.id.value },
-        "from" to entity.from,
-        "to" to entity.to,
-    )
 }
