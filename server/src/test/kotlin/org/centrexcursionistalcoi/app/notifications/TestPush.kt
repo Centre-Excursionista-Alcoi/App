@@ -11,6 +11,7 @@ import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
+import org.centrexcursionistalcoi.app.SPACE_LENDINGS_MANAGER_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -72,6 +73,27 @@ class TestPush {
                 assertNotNull(noti)
                 assertEquals(noti.type, "LendingConfirmed")
             }
+        }
+    }
+
+    @Test
+    fun `test flow for group members`() = runTest {
+        val manager = UserSession(sub = "abc", fullName = "Manager", email = "m@example.com", groups = listOf(SPACE_LENDINGS_MANAGER_GROUP_NAME))
+        val other = UserSession(sub = "def", fullName = "Other", email = "o@example.com", groups = emptyList())
+        val admin = UserSession(sub = "ghi", fullName = "Admin", email = "a@example.com", groups = listOf(ADMIN_GROUP_NAME))
+        val notification = PushNotification.NewSpaceLending(Uuid.Zero, "xyz")
+
+        Push.flow(manager).test {
+            Push.sendPushNotificationToGroup(notification, SPACE_LENDINGS_MANAGER_GROUP_NAME)
+            assertEquals(PushNotification.NewSpaceLending.TYPE, awaitItem().type)
+        }
+        Push.flow(admin).test {
+            Push.sendPushNotificationToGroup(notification, SPACE_LENDINGS_MANAGER_GROUP_NAME)
+            assertEquals(PushNotification.NewSpaceLending.TYPE, awaitItem().type)
+        }
+        Push.flow(other).test {
+            Push.sendPushNotificationToGroup(notification, SPACE_LENDINGS_MANAGER_GROUP_NAME)
+            expectNoEvents()
         }
     }
 

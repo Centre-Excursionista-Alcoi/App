@@ -99,6 +99,10 @@ class PushNotifierListener(
                         ),
                     )
                 }
+                is PushNotification.NewSpaceLending -> {
+                    // Only shown: spaces are not synced by the app yet
+                    log.d { "Received a new space lending notification: ${notification.spaceLendingId}" }
+                }
                 is PushNotification.EntityDeleted -> {
                     log.d { "Received entity deleted notification for ${notification.entityClass}#${notification.entityId}" }
                     coordinator.scheduleAsync<SyncEntityBackgroundJob>(

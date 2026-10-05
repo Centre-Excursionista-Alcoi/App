@@ -13,3 +13,9 @@ const val USERS_MANAGER_GROUP_NAME = "users_manager"
 
 /** General (non-department-scoped) role: manages the federation member roster ([org.centrexcursionistalcoi.app.data.Member]). */
 const val MEMBERS_MANAGER_GROUP_NAME = "members_manager"
+
+/** General (non-department-scoped) role: manages spaces and their keys. Implied by [ADMIN_GROUP_NAME]. */
+const val SPACES_MANAGER_GROUP_NAME = "spaces_manager"
+
+/** General (non-department-scoped) role: manages space lendings (payments, key hand-over). Implied by [ADMIN_GROUP_NAME]. */
+const val SPACE_LENDINGS_MANAGER_GROUP_NAME = "space_lendings_manager"

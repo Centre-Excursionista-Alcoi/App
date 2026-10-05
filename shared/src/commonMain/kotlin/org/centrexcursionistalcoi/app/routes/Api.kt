@@ -226,6 +226,63 @@ object Api {
         }
     }
 
+    @Resource("/spaces")
+    class Spaces {
+        @Resource("{id}")
+        class Id(val id: String, val parent: Spaces = Spaces()) {
+            /** The nights of the space that are taken (no personal data). */
+            @Resource("occupancy")
+            class Occupancy(val parent: Id)
+        }
+
+        companion object {
+            val resources = EntityResources(serializer(), Id.serializer(), Spaces(), ::Id, Id::id)
+        }
+    }
+
+    @Resource("/space_keys")
+    class SpaceKeys {
+        @Resource("{id}")
+        class Id(val id: String, val parent: SpaceKeys = SpaceKeys())
+
+        companion object {
+            val resources = EntityResources(serializer(), Id.serializer(), SpaceKeys(), ::Id, Id::id)
+        }
+    }
+
+    @Resource("/space_lendings")
+    class SpaceLendings {
+        @Resource("{id}")
+        class Id(val id: String, val parent: SpaceLendings = SpaceLendings()) {
+            @Resource("cancel")
+            class Cancel(val parent: Id)
+
+            @Resource("attendees")
+            class Attendees(val parent: Id)
+
+            @Resource("report")
+            class Report(val parent: Id)
+
+            @Resource("payment_proof")
+            class PaymentProof(val parent: Id)
+
+            @Resource("payment")
+            class Payment(val parent: Id)
+
+            /** A manager hands the keys over: from then on the lending cannot be changed. */
+            @Resource("pickup")
+            class Pickup(val parent: Id)
+
+            /** A manager takes the keys back. */
+            @Resource("return")
+            class Return(val parent: Id)
+        }
+
+        companion object {
+            val resources = EntityResources(serializer(), Id.serializer(), SpaceLendings(), ::Id, Id::id)
+        }
+    }
+
     @Resource("/memories")
     class Memories {
         @Resource("{id}")

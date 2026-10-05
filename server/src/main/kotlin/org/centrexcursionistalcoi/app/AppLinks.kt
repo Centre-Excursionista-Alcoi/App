@@ -36,6 +36,12 @@ object AppLinks : ConfigProvider() {
     /** Opens a lending in the admin panel of the app. */
     fun adminLending(lendingId: Uuid): String = "$baseUrl/${AppLinkRoutes.ADMIN_LENDINGS}/$lendingId"
 
+    /** Opens a space lending in the app, for the user who made it. */
+    fun spaceLending(lendingId: Uuid): String = "$baseUrl/${AppLinkRoutes.SPACE_LENDINGS}/$lendingId"
+
+    /** Opens a space lending in the app, for the people who manage them. */
+    fun adminSpaceLending(lendingId: Uuid): String = "$baseUrl/${AppLinkRoutes.ADMIN_SPACE_LENDINGS}/$lendingId"
+
     /**
      * The link the "lost password" email sends. On this same host so it never exposes the server's own domain to a
      * user (issue #668) -- it's excluded from the app's own link-claiming (see `WEB_ONLY_PATHS` in

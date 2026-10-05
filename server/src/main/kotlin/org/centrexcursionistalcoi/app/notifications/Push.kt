@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.neq
@@ -49,6 +50,8 @@ object Push {
         val notification: PushNotification,
         val userSub: String? = null,
         val includeAdmins: Boolean = false,
+        /** Members of any of these groups also receive the notification. */
+        val groups: List<String> = emptyList(),
     )
 
     fun initFCM() {
@@ -82,7 +85,9 @@ object Push {
 
     fun flow(session: UserSession) = notificationFlow
         .filter { notification ->
-            if (notification.includeAdmins && session.isAdmin()) {
+            if (notification.groups.any { it in session.groups }) {
+                true
+            } else if (notification.includeAdmins && session.isAdmin()) {
                 // If the notification includes admins, and the session is an admin, send it
                 true
             } else if (notification.userSub != null) {
@@ -184,6 +189,29 @@ object Push {
                     *notification.toMap().toList().toTypedArray()
                 )
             )
+        }
+    }
+
+    /**
+     * Sends [notification] to the admins and to the members of [group].
+     */
+    suspend fun sendPushNotificationToGroup(notification: PushNotification, group: String) {
+        notificationFlow.emit(
+            LocalNotification(
+                notification = notification,
+                includeAdmins = true,
+                groups = listOf(group),
+            )
+        )
+        logger.info("Local push notification sent: type=${notification.type}, group=$group")
+
+        if (pushFCMConfigured) {
+            val tokens = Database {
+                fetchTokens {
+                    ValueInStringArrayOp(ADMIN_GROUP_NAME, UserReferences.groups) or ValueInStringArrayOp(group, UserReferences.groups)
+                }
+            }
+            sendFCMPushNotification(tokens, notification.toMap())
         }
     }
 

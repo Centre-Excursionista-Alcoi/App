@@ -9,6 +9,7 @@ import org.centrexcursionistalcoi.app.database.table.InventoryItemTypes
 import org.centrexcursionistalcoi.app.database.table.Memories
 import org.centrexcursionistalcoi.app.database.table.MemoriesFiles
 import org.centrexcursionistalcoi.app.database.table.PostFiles
+import org.centrexcursionistalcoi.app.database.table.SpaceLendingFiles
 import org.centrexcursionistalcoi.app.database.table.UserInsuranceDocuments
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Op
@@ -34,6 +35,7 @@ object FileReferences {
         Memories.pdf,
         MemoriesFiles.file,
         PostFiles.file,
+        SpaceLendingFiles.file,
         UserInsuranceDocuments.file,
     )
 

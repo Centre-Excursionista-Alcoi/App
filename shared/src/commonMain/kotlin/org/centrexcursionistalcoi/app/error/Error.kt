@@ -591,6 +591,60 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.Unauthorized
     }
 
+    @Serializable
+    @SerialName("SpaceConflict")
+    class SpaceConflict() : Error {
+        override val code: Int = ERROR_SPACE_CONFLICT
+        override val description: String = "The space is already lent for some of the requested nights."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
+    @Serializable
+    @SerialName("SpaceClosed")
+    class SpaceClosed() : Error {
+        override val code: Int = ERROR_SPACE_CLOSED
+        override val description: String = "The space is closed for some of the requested dates."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
+    @Serializable
+    @SerialName("ConditionsNotAccepted")
+    class ConditionsNotAccepted() : Error {
+        override val code: Int = ERROR_CONDITIONS_NOT_ACCEPTED
+        override val description: String = "The conditions of use must be accepted."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.BadRequest
+    }
+
+    @Serializable
+    @SerialName("PreviousSpaceLendingNotPaid")
+    class PreviousSpaceLendingNotPaid() : Error {
+        override val code: Int = ERROR_PREVIOUS_SPACE_LENDING_NOT_PAID
+        override val description: String = "You cannot make a new space lending until the previous one has been paid."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.PreconditionFailed
+    }
+
+    /**
+     * A space lending is a 3-step pipeline (created, keys picked up, keys returned and paid). The operation isn't
+     * allowed in the current step.
+     */
+    @Serializable
+    @SerialName("InvalidSpaceLendingState")
+    class InvalidSpaceLendingState(val reason: String) : Error {
+        override val code: Int = ERROR_INVALID_SPACE_LENDING_STATE
+        override val description: String = reason
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -645,6 +699,11 @@ sealed interface Error {
         const val ERROR_INVALID_VERIFICATION_CODE = 50
         const val ERROR_REAUTHENTICATION_FAILED = 51
         const val ERROR_PASSWORD_NOT_SET = 52
+        const val ERROR_SPACE_CONFLICT = 53
+        const val ERROR_SPACE_CLOSED = 54
+        const val ERROR_CONDITIONS_NOT_ACCEPTED = 55
+        const val ERROR_PREVIOUS_SPACE_LENDING_NOT_PAID = 56
+        const val ERROR_INVALID_SPACE_LENDING_STATE = 57
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -700,6 +759,11 @@ sealed interface Error {
             ERROR_INVALID_VERIFICATION_CODE -> InvalidVerificationCode.serializer()
             ERROR_REAUTHENTICATION_FAILED -> ReauthenticationFailed.serializer()
             ERROR_PASSWORD_NOT_SET -> PasswordNotSet.serializer()
+            ERROR_SPACE_CONFLICT -> SpaceConflict.serializer()
+            ERROR_SPACE_CLOSED -> SpaceClosed.serializer()
+            ERROR_CONDITIONS_NOT_ACCEPTED -> ConditionsNotAccepted.serializer()
+            ERROR_PREVIOUS_SPACE_LENDING_NOT_PAID -> PreviousSpaceLendingNotPaid.serializer()
+            ERROR_INVALID_SPACE_LENDING_STATE -> InvalidSpaceLendingState.serializer()
             else -> null
         }
     }

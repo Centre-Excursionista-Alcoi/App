@@ -8,6 +8,7 @@ import io.ktor.server.application.plugin
 import io.ktor.server.resources.Resources
 import io.ktor.server.resources.get
 import io.ktor.server.resources.handle as handleResource
+import io.ktor.server.resources.patch
 import io.ktor.server.resources.post
 import io.ktor.server.resources.resource
 import io.ktor.server.routing.Route
@@ -28,6 +29,18 @@ inline fun <reified T : Any> Route.postWithLock(
     mutex: Mutex,
     noinline body: suspend RoutingContext.(T) -> Unit
 ): Route = post<T> { resource ->
+    mutex.withLock {
+        body(resource)
+    }
+}
+
+/**
+ * Like [postWithLock], for PATCH.
+ */
+inline fun <reified T : Any> Route.patchWithLock(
+    mutex: Mutex,
+    noinline body: suspend RoutingContext.(T) -> Unit
+): Route = patch<T> { resource ->
     mutex.withLock {
         body(resource)
     }
