@@ -12,6 +12,7 @@ import cea_app.composeapp.generated.resources.sync_step_lendings
 import cea_app.composeapp.generated.resources.sync_step_members
 import cea_app.composeapp.generated.resources.sync_step_memories
 import cea_app.composeapp.generated.resources.sync_step_posts
+import cea_app.composeapp.generated.resources.sync_step_space_key_types
 import cea_app.composeapp.generated.resources.sync_step_space_keys
 import cea_app.composeapp.generated.resources.sync_step_space_lendings
 import cea_app.composeapp.generated.resources.sync_step_spaces
@@ -29,6 +30,7 @@ import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.MembersRepository
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
+import org.centrexcursionistalcoi.app.database.SpaceKeyTypesRepository
 import org.centrexcursionistalcoi.app.database.SpaceKeysRepository
 import org.centrexcursionistalcoi.app.database.SpaceLendingsRepository
 import org.centrexcursionistalcoi.app.database.SpacesRepository
@@ -45,6 +47,7 @@ import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.MembersRemoteRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
+import org.centrexcursionistalcoi.app.network.SpaceKeyTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpaceKeysRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpaceLendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpacesRemoteRepository
@@ -74,6 +77,7 @@ class SyncAllDataBackgroundJob(
     private val lendingsRemoteRepository: LendingsRemoteRepository,
     private val memoriesRemoteRepository: MemoriesRemoteRepository,
     private val spacesRemoteRepository: SpacesRemoteRepository,
+    private val spaceKeyTypesRemoteRepository: SpaceKeyTypesRemoteRepository,
     private val spaceKeysRemoteRepository: SpaceKeysRemoteRepository,
     private val spaceLendingsRemoteRepository: SpaceLendingsRemoteRepository,
 
@@ -87,6 +91,7 @@ class SyncAllDataBackgroundJob(
     private val lendingsRepository: LendingsRepository,
     private val memoriesRepository: MemoriesRepository,
     private val spacesRepository: SpacesRepository,
+    private val spaceKeyTypesRepository: SpaceKeyTypesRepository,
     private val spaceKeysRepository: SpaceKeysRepository,
     private val spaceLendingsRepository: SpaceLendingsRepository,
 
@@ -157,6 +162,7 @@ class SyncAllDataBackgroundJob(
                 // the sync order above, since Memories has a FK to Lendings).
                 spaceLendingsRepository.deleteAll()
                 spaceKeysRepository.deleteAll()
+                spaceKeyTypesRepository.deleteAll()
                 spacesRepository.deleteAll()
                 memoriesRepository.deleteAll()
                 lendingsRepository.deleteAll()
@@ -229,10 +235,13 @@ class SyncAllDataBackgroundJob(
         // Spaces do not depend on any other entity
         spacesRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_spaces), ignoreIfModifiedSince = force)
 
-        // Space keys require Spaces
+        // Key types refer to Spaces
+        spaceKeyTypesRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_space_key_types), ignoreIfModifiedSince = force)
+
+        // Space keys require their key types
         spaceKeysRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_space_keys), ignoreIfModifiedSince = force)
 
-        // Space lendings require Spaces
+        // Space lendings require Spaces and key types
         spaceLendingsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_space_lendings), ignoreIfModifiedSince = force)
     }
 

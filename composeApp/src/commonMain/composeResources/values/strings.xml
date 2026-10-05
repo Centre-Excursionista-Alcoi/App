@@ -24,6 +24,7 @@
     <string name="sync_step_all">Everything</string>
     <string name="sync_step_memories">Memories</string>
     <string name="sync_step_spaces">Spaces</string>
+    <string name="sync_step_space_key_types">Space key types</string>
     <string name="sync_step_space_keys">Space keys</string>
     <string name="sync_step_space_lendings">Space lendings</string>
     <string name="sync_step_posts">Posts</string>

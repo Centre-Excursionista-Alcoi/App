@@ -645,6 +645,20 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
     }
 
+    /**
+     * There aren't enough keys of a type for a space lending: the club has fewer than the ones the lendings of those
+     * dates ask for.
+     */
+    @Serializable
+    @SerialName("SpaceKeysUnavailable")
+    class SpaceKeysUnavailable(val keyType: String) : Error {
+        override val code: Int = ERROR_SPACE_KEYS_UNAVAILABLE
+        override val description: String = "There aren't enough keys of the type $keyType available for those dates."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
     companion object {
         const val ERROR_UNKNOWN = 0
         const val ERROR_NOT_LOGGED_IN = 1
@@ -704,6 +718,7 @@ sealed interface Error {
         const val ERROR_CONDITIONS_NOT_ACCEPTED = 55
         const val ERROR_PREVIOUS_SPACE_LENDING_NOT_PAID = 56
         const val ERROR_INVALID_SPACE_LENDING_STATE = 57
+        const val ERROR_SPACE_KEYS_UNAVAILABLE = 58
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -764,6 +779,7 @@ sealed interface Error {
             ERROR_CONDITIONS_NOT_ACCEPTED -> ConditionsNotAccepted.serializer()
             ERROR_PREVIOUS_SPACE_LENDING_NOT_PAID -> PreviousSpaceLendingNotPaid.serializer()
             ERROR_INVALID_SPACE_LENDING_STATE -> InvalidSpaceLendingState.serializer()
+            ERROR_SPACE_KEYS_UNAVAILABLE -> SpaceKeysUnavailable.serializer()
             else -> null
         }
     }

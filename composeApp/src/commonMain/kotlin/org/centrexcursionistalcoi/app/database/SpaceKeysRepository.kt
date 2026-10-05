@@ -30,5 +30,5 @@ class SpaceKeysRepository(db: AppDatabase) : Repository<SpaceKey, Uuid> {
 
     override suspend fun delete(id: Uuid) = dao.deleteById(id)
 
-    fun getBySpaceAsFlow(space: Uuid): Flow<List<SpaceKey>> = dao.getBySpaceAsFlow(space).map { list -> list.map { it.toSpaceKey() } }
+    fun getByTypeAsFlow(type: Uuid): Flow<List<SpaceKey>> = dao.getByTypeAsFlow(type).map { list -> list.map { it.toSpaceKey() } }
 }

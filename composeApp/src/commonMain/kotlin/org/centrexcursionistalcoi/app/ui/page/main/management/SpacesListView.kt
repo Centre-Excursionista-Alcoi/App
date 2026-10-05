@@ -24,7 +24,7 @@ import org.centrexcursionistalcoi.app.data.Category
 import org.centrexcursionistalcoi.app.data.CategoryPrice
 import org.centrexcursionistalcoi.app.data.PriceUnit
 import org.centrexcursionistalcoi.app.data.Space
-import org.centrexcursionistalcoi.app.data.SpaceKey
+import org.centrexcursionistalcoi.app.viewmodel.spaces.SpaceKeyOption
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.spaces.formatPrice
@@ -40,13 +40,13 @@ import kotlin.time.Clock
 @Composable
 fun SpacesListView(model: SpacesManagementViewModel = koinViewModel()) {
     val spaces by model.spaces.collectAsState()
-    val keys by model.keys.collectAsState()
+    val keyTypes by model.keyTypes.collectAsState()
 
     var editing by remember { mutableStateOf<Space?>(null) }
     var creating by remember { mutableStateOf(false) }
     var closing by remember { mutableStateOf<Space?>(null) }
     var deleting by remember { mutableStateOf<Space?>(null) }
-    var keyDialog by remember { mutableStateOf<Pair<Space, SpaceKey?>?>(null) }
+    var keyDialog by remember { mutableStateOf<Pair<Space, SpaceKeyOption?>?>(null) }
 
     val spacesValue = spaces
     if (spacesValue == null) {
@@ -64,7 +64,9 @@ fun SpacesListView(model: SpacesManagementViewModel = koinViewModel()) {
             item("empty") { Text(stringResource(Res.string.spaces_empty)) }
         }
         items(spacesValue, key = { it.id.toString() }) { space ->
-            val spaceKeys = keys.orEmpty().filter { it.space == space.id }
+            val spaceKeys = keyTypes.orEmpty().mapNotNull { type ->
+                type.spaces.find { it.space == space.id }?.let { SpaceKeyOption(type, it.maxPerLending) }
+            }
             OutlinedCard(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(space.name, style = MaterialTheme.typography.titleMedium)
@@ -95,11 +97,11 @@ fun SpacesListView(model: SpacesManagementViewModel = koinViewModel()) {
                     spaceKeys.forEach { key ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                stringResource(Res.string.spaces_key_line, key.name, key.maxQuantity),
+                                stringResource(Res.string.spaces_key_line, key.type.name, key.maxPerLending),
                                 modifier = Modifier.weight(1f),
                             )
                             TextButton(onClick = { keyDialog = space to key }) { Text(stringResource(Res.string.edit)) }
-                            TextButton(onClick = { model.deleteKey(key.id) }) { Text(stringResource(Res.string.delete)) }
+                            TextButton(onClick = { model.removeKeyType(key.type, space.id) }) { Text(stringResource(Res.string.delete)) }
                         }
                     }
                     TextButton(onClick = { keyDialog = space to null }) {
@@ -173,7 +175,7 @@ fun SpacesListView(model: SpacesManagementViewModel = koinViewModel()) {
             onDismiss = { keyDialog = null },
             onSave = { name, max ->
                 keyDialog = null
-                if (key == null) model.createKey(space.id, name, max) else model.updateKey(key.id, name, max)
+                if (key == null) model.createKeyType(space.id, name, max) else model.updateKeyType(key.type, space.id, name, max)
             },
         )
     }
@@ -298,9 +300,9 @@ private fun CloseSpaceDialog(onDismiss: () -> Unit, onClose: (reason: String) ->
 }
 
 @Composable
-private fun SpaceKeyDialog(key: SpaceKey?, onDismiss: () -> Unit, onSave: (name: String, maxQuantity: Int) -> Unit) {
-    var name by remember { mutableStateOf(key?.name.orEmpty()) }
-    var max by remember { mutableStateOf((key?.maxQuantity ?: 1).toString()) }
+private fun SpaceKeyDialog(key: SpaceKeyOption?, onDismiss: () -> Unit, onSave: (name: String, maxPerLending: Int) -> Unit) {
+    var name by remember { mutableStateOf(key?.type?.name.orEmpty()) }
+    var max by remember { mutableStateOf((key?.maxPerLending ?: 1).toString()) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(Res.string.management_spaces_key_add)) },

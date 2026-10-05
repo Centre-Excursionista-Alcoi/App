@@ -5,7 +5,7 @@ import com.diamondedge.logging.logging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.centrexcursionistalcoi.app.data.SpaceOccupancy
-import org.centrexcursionistalcoi.app.database.SpaceKeysRepository
+import org.centrexcursionistalcoi.app.database.SpaceKeyTypesRepository
 import org.centrexcursionistalcoi.app.database.SpacesRepository
 import org.centrexcursionistalcoi.app.network.SpaceLendingsRemoteRepository
 import org.centrexcursionistalcoi.app.viewmodel.launch
@@ -18,13 +18,13 @@ import kotlin.uuid.Uuid
 class SpaceDetailsViewModel(
     @InjectedParam private val spaceId: Uuid,
     spacesRepository: SpacesRepository,
-    spaceKeysRepository: SpaceKeysRepository,
+    spaceKeyTypesRepository: SpaceKeyTypesRepository,
     private val spaceLendingsRemoteRepository: SpaceLendingsRemoteRepository,
 ) : ViewModel() {
     private val log = logging()
 
     val space = spacesRepository.getAsFlow(spaceId).stateInViewModel()
-    val keys = spaceKeysRepository.getBySpaceAsFlow(spaceId).stateInViewModel()
+    val keys = spaceKeyTypesRepository.selectAllAsFlow().forSpace(spaceId).stateInViewModel()
 
     private val _occupancy = MutableStateFlow<List<SpaceOccupancy>?>(null)
     /** The nights that are taken, or `null` while loading. */

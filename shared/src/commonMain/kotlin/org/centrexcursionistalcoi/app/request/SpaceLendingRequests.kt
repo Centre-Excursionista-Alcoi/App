@@ -12,7 +12,7 @@ data class CreateSpaceLendingRequest(
     val checkIn: LocalDate,
     val checkOut: LocalDate,
     val attendees: Map<Category, Int>,
-    /** Quantity wanted of each key (by [org.centrexcursionistalcoi.app.data.SpaceKey] id). */
+    /** Quantity wanted of each type of key (by [org.centrexcursionistalcoi.app.data.SpaceKeyType] id). */
     val keys: Map<Uuid, Int> = emptyMap(),
     val acceptConditions: Boolean = false,
     val notes: String? = null,
@@ -59,4 +59,22 @@ data class UpdateSpaceLendingRequest(
 @Serializable
 data class SetSpaceLendingPaymentRequest(
     val status: org.centrexcursionistalcoi.app.data.PaymentStatus,
+)
+
+/**
+ * A manager hands the keys over: the exact keys they give (by [org.centrexcursionistalcoi.app.data.SpaceKey] id). No
+ * more of a type than the lending asked for.
+ */
+@Serializable
+data class PickupSpaceLendingRequest(
+    val keys: List<Uuid> = emptyList(),
+)
+
+/**
+ * A manager takes keys back: the keys that are back (by [org.centrexcursionistalcoi.app.data.SpaceKey] id), or, if
+ * `null`, all the ones that are out.
+ */
+@Serializable
+data class ReturnSpaceLendingRequest(
+    val keys: List<Uuid>? = null,
 )

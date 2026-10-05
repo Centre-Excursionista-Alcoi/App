@@ -5,34 +5,31 @@ import androidx.room3.ForeignKey
 import androidx.room3.Index
 import androidx.room3.PrimaryKey
 import org.centrexcursionistalcoi.app.data.SpaceKey
-import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 @Entity(
     tableName = "SpaceKeys",
     foreignKeys = [
         ForeignKey(
-            entity = SpaceEntity::class,
+            entity = SpaceKeyTypeEntity::class,
             parentColumns = ["id"],
-            childColumns = ["space"],
+            childColumns = ["type"],
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index(value = ["space"])],
+    indices = [Index(value = ["type"])],
 )
 data class SpaceKeyEntity(
     @PrimaryKey
     val id: Uuid,
-    val space: Uuid,
-    val name: String,
-    val maxQuantity: Int,
+    val type: Uuid,
+    val label: String?,
     val nfcId: ByteArray?,
 ) {
     fun toSpaceKey() = SpaceKey(
         id = id,
-        space = space,
-        name = name,
-        maxQuantity = maxQuantity,
+        type = type,
+        label = label,
         nfcId = nfcId,
     )
 
@@ -43,9 +40,8 @@ data class SpaceKeyEntity(
     companion object {
         fun SpaceKey.toEntity() = SpaceKeyEntity(
             id = id,
-                space = space,
-            name = name,
-            maxQuantity = maxQuantity,
+            type = type,
+            label = label,
             nfcId = nfcId,
         )
     }

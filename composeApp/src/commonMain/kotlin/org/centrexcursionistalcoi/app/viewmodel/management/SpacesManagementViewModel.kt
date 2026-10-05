@@ -2,10 +2,12 @@ package org.centrexcursionistalcoi.app.viewmodel.management
 
 import androidx.lifecycle.ViewModel
 import org.centrexcursionistalcoi.app.data.CategoryPrice
-import org.centrexcursionistalcoi.app.database.SpaceKeysRepository
+import org.centrexcursionistalcoi.app.database.SpaceKeyTypesRepository
 import org.centrexcursionistalcoi.app.database.SpaceLendingsRepository
+import org.centrexcursionistalcoi.app.data.SpaceKeyType
+import org.centrexcursionistalcoi.app.data.SpaceKeyTypeSpace
 import org.centrexcursionistalcoi.app.database.SpacesRepository
-import org.centrexcursionistalcoi.app.network.SpaceKeysRemoteRepository
+import org.centrexcursionistalcoi.app.network.SpaceKeyTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpaceLendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpacesRemoteRepository
 import org.centrexcursionistalcoi.app.request.UpdateSpaceRequest
@@ -21,12 +23,12 @@ import kotlin.uuid.Uuid
 @KoinViewModel
 class SpacesManagementViewModel(
     spacesRepository: SpacesRepository,
-    spaceKeysRepository: SpaceKeysRepository,
+    spaceKeyTypesRepository: SpaceKeyTypesRepository,
     private val spacesRemoteRepository: SpacesRemoteRepository,
-    private val spaceKeysRemoteRepository: SpaceKeysRemoteRepository,
+    private val spaceKeyTypesRemoteRepository: SpaceKeyTypesRemoteRepository,
 ) : ViewModel() {
     val spaces = spacesRepository.selectAllAsFlow().stateInViewModel()
-    val keys = spaceKeysRepository.selectAllAsFlow().stateInViewModel()
+    val keyTypes = spaceKeyTypesRepository.selectAllAsFlow().stateInViewModel()
 
     fun createSpace(
         name: String,
@@ -69,13 +71,18 @@ class SpacesManagementViewModel(
 
     fun deleteSpace(id: Uuid) = launch { spacesRemoteRepository.delete(id) }
 
-    fun createKey(space: Uuid, name: String, maxQuantity: Int) = launch {
-        spaceKeysRemoteRepository.create(space, name, maxQuantity, nfcId = null)
+    fun createKeyType(space: Uuid, name: String, maxPerLending: Int) = launch {
+        spaceKeyTypesRemoteRepository.create(name, null, listOf(SpaceKeyTypeSpace(space, maxPerLending)))
     }
 
-    fun updateKey(id: Uuid, name: String, maxQuantity: Int) = launch {
-        spaceKeysRemoteRepository.update(id, name, maxQuantity, nfcId = null)
+    /** Changes the name of [type], and how many of it a lending of [space] can take. */
+    fun updateKeyType(type: SpaceKeyType, space: Uuid, name: String, maxPerLending: Int) = launch {
+        val spaces = type.spaces.filterNot { it.space == space } + SpaceKeyTypeSpace(space, maxPerLending)
+        spaceKeyTypesRemoteRepository.update(type.id, name, null, spaces)
     }
 
-    fun deleteKey(id: Uuid) = launch { spaceKeysRemoteRepository.delete(id) }
+    /** Stops [type] being for [space]. The type stays for its other spaces. */
+    fun removeKeyType(type: SpaceKeyType, space: Uuid) = launch {
+        spaceKeyTypesRemoteRepository.update(type.id, null, null, type.spaces.filterNot { it.space == space })
+    }
 }

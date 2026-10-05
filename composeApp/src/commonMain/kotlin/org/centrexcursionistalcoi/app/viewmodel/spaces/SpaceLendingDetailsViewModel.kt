@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.flowOf
 import org.centrexcursionistalcoi.app.data.Category
 import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.database.ProfileRepository
-import org.centrexcursionistalcoi.app.database.SpaceKeysRepository
+import org.centrexcursionistalcoi.app.database.SpaceKeyTypesRepository
 import org.centrexcursionistalcoi.app.database.SpaceLendingsRepository
 import org.centrexcursionistalcoi.app.database.SpacesRepository
 import org.centrexcursionistalcoi.app.network.SpaceLendingsRemoteRepository
@@ -26,7 +26,7 @@ class SpaceLendingDetailsViewModel(
     @InjectedParam private val lendingId: Uuid,
     spaceLendingsRepository: SpaceLendingsRepository,
     spacesRepository: SpacesRepository,
-    private val spaceKeysRepository: SpaceKeysRepository,
+    spaceKeyTypesRepository: SpaceKeyTypesRepository,
     profileRepository: ProfileRepository,
     private val remote: SpaceLendingsRemoteRepository,
 ) : ViewModel() {
@@ -37,9 +37,8 @@ class SpaceLendingDetailsViewModel(
         if (lending == null) flowOf(null) else spacesRepository.getAsFlow(lending.space)
     }.stateInViewModel()
 
-    val keys = lending.flatMapLatest { lending ->
-        if (lending == null) flowOf(emptyList()) else spaceKeysRepository.getBySpaceAsFlow(lending.space)
-    }.stateInViewModel()
+    /** The types of keys, to tell the names of the ones the lending asks for. */
+    val keyTypes = spaceKeyTypesRepository.selectAllAsFlow().stateInViewModel()
 
     private val _isWorking = MutableStateFlow(false)
     val isWorking = _isWorking.asStateFlow()

@@ -100,7 +100,7 @@ fun SpaceLendingDetailsScreen(
 ) {
     val lending by model.lending.collectAsState()
     val space by model.space.collectAsState()
-    val keys by model.keys.collectAsState()
+    val keyTypes by model.keyTypes.collectAsState()
     val profile by model.profile.collectAsState()
     val isWorking by model.isWorking.collectAsState()
 
@@ -149,16 +149,16 @@ fun SpaceLendingDetailsScreen(
                     Text("${category.label()}: $count")
                 }
             }
-            if (lending.keys.isNotEmpty()) {
+            if (lending.requestedKeys.isNotEmpty()) {
                 item("keys") {
                     Text(
                         stringResource(Res.string.space_lending_keys),
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(top = 12.dp),
                     )
-                    lending.keys.forEach { key ->
-                        val name = keys?.find { it.id == key.key }?.name.orEmpty()
-                        Text(stringResource(Res.string.space_lending_keys_line, name, key.quantity))
+                    lending.requestedKeys.forEach { (typeId, quantity) ->
+                        val name = keyTypes?.find { it.id == typeId }?.name.orEmpty()
+                        Text(stringResource(Res.string.space_lending_keys_line, name, quantity))
                     }
                 }
             }

@@ -27,3 +27,19 @@ suspend fun <T> RoutingContext.receiveJson(serializer: KSerializer<T>): T? {
         null
     }
 }
+
+/**
+ * Receives a JSON request that may be left out: an empty body gives [serializer]'s request with all its defaults.
+ * @return The request, or `null` if it couldn't be received. An error has been responded then.
+ */
+suspend fun <T> RoutingContext.receiveOptionalJson(serializer: KSerializer<T>): T? {
+    val body = call.receiveText()
+    if (body.isBlank()) return json.decodeFromString(serializer, "{}")
+    return try {
+        json.decodeFromString(serializer, body)
+    } catch (e: IllegalArgumentException) {
+        logger.error("Failed to decode ${serializer.descriptor.serialName}", e)
+        respondError(Error.MalformedRequest())
+        null
+    }
+}

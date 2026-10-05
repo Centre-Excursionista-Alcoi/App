@@ -32,6 +32,7 @@ import org.centrexcursionistalcoi.app.database.entity.QualificationEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceKeyEntity
+import org.centrexcursionistalcoi.app.database.entity.SpaceKeyTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceLendingEntity
 import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.LendingItems
@@ -227,7 +228,8 @@ class TestListEncodingQueries {
         create = {
             val n = created++
             val space = SpaceEntity.new { name = "Space $n"; description = "Description"; prices = emptyList() }
-            val key = SpaceKeyEntity.new { this.space = space; name = "Key"; maxQuantity = 1 }
+            val keyType = SpaceKeyTypeEntity.new { name = "Door" }
+            val key = SpaceKeyEntity.new { this.type = keyType }
             SpaceLendingEntity.new {
                 userSub = FakeUser.provideEntity()
                 this.space = space
@@ -244,7 +246,7 @@ class TestListEncodingQueries {
                 SpaceLendingKeys.insert {
                     it[SpaceLendingKeys.lending] = lending.id
                     it[SpaceLendingKeys.key] = key.id
-                    it[quantity] = 1
+                    it[givenAt] = kotlin.time.Clock.System.now()
                 }
             }
         },

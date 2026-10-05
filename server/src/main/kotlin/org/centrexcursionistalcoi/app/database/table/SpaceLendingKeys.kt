@@ -5,12 +5,11 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.datetime.timestamp
 
 /**
- * The keys taken by a space lending, and who handed them out and took them back.
+ * The keys handed out to a space lending, and who handed them out and took them back.
  */
 object SpaceLendingKeys : Table("space_lending_keys") {
     val lending = reference("lending", SpaceLendings, onDelete = ReferenceOption.CASCADE)
-    val key = reference("key", SpaceKeys, onDelete = ReferenceOption.CASCADE)
-    val quantity = integer("quantity")
+    val key = reference("key", SpaceKeys, onDelete = ReferenceOption.RESTRICT)
 
     val givenBy = optReference("givenBy", UserReferences, onDelete = ReferenceOption.SET_NULL)
     val givenAt = timestamp("givenAt").nullable()

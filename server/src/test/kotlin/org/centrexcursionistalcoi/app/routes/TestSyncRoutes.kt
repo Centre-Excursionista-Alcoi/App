@@ -27,6 +27,7 @@ import org.centrexcursionistalcoi.app.data.CategoryPrice
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceKeyEntity
+import org.centrexcursionistalcoi.app.database.entity.SpaceKeyTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceLendingEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
@@ -47,6 +48,7 @@ class TestSyncRoutes : ApplicationTestBase() {
         "lendings" to "/inventory/lendings",
         "memories" to "/memories",
         "spaces" to "/spaces",
+        "space_key_types" to "/space_key_types",
         "space_keys" to "/space_keys",
         "space_lendings" to "/space_lendings",
     )
@@ -62,9 +64,7 @@ class TestSyncRoutes : ApplicationTestBase() {
             prices = listOf(CategoryPrice(Category.MEMBER, 3.0))
         }
         SpaceKeyEntity.new {
-            this.space = space
-            name = "Door"
-            maxQuantity = 1
+            this.type = SpaceKeyTypeEntity.new { name = "Door" }
         }
         SpaceLendingEntity.new {
             userSub = user

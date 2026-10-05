@@ -46,6 +46,7 @@ class SyncRemoteRepository(
     private val lendings: LendingsRemoteRepository,
     private val memories: MemoriesRemoteRepository,
     private val spaces: SpacesRemoteRepository,
+    private val spaceKeyTypes: SpaceKeyTypesRemoteRepository,
     private val spaceKeys: SpaceKeysRemoteRepository,
     private val spaceLendings: SpaceLendingsRemoteRepository,
 ) : KoinComponent {
@@ -71,6 +72,7 @@ class SyncRemoteRepository(
             Section("lendings", lendings),
             Section("memories", memories),
             Section("spaces", spaces),
+            Section("space_key_types", spaceKeyTypes),
             Section("space_keys", spaceKeys),
             Section("space_lendings", spaceLendings),
         )

@@ -234,9 +234,30 @@ class TestDatabaseMigrations {
         }
 
         BundledSQLiteDriver().open(path).use { connection ->
-            assertEquals(5L, connection.userVersion())
+            assertEquals(DATABASE_VERSION.toLong(), connection.userVersion())
             assertEquals("Department", connection.textColumn("Departments", "displayName", "11111111-1111-1111-1111-111111111111"))
-            assertTrue(setOf("Spaces", "SpaceKeys", "SpaceLendings").all { it in connection.tableNames() })
+            assertTrue(setOf("Spaces", "SpaceKeyTypes", "SpaceKeys", "SpaceLendings").all { it in connection.tableNames() })
+        }
+    }
+
+    @Test
+    fun migratingFromV5_recreatesSpaceKeysAndLendings_andKeepsSpaces() = runTest {
+        val path = buildDatabaseFile(version = 5, schemaSql = v4SchemaSql) {
+            execSQL("CREATE TABLE IF NOT EXISTS `Spaces` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `conditionsOfUse` TEXT, `requiresKeys` INTEGER NOT NULL, `prices` TEXT NOT NULL, `isClosed` INTEGER NOT NULL, `closedSince` INTEGER, `closedUntil` INTEGER, `closedReason` TEXT, PRIMARY KEY(`id`))")
+            execSQL("CREATE TABLE IF NOT EXISTS `SpaceKeys` (`id` TEXT NOT NULL, `space` TEXT NOT NULL, `name` TEXT NOT NULL, `maxQuantity` INTEGER NOT NULL, `nfcId` BLOB, PRIMARY KEY(`id`))")
+            execSQL("CREATE TABLE IF NOT EXISTS `SpaceLendings` (`id` TEXT NOT NULL, PRIMARY KEY(`id`))")
+            execSQL("INSERT INTO Spaces (id, name, description, conditionsOfUse, requiresKeys, prices, isClosed, closedSince, closedUntil, closedReason) VALUES ('22222222-2222-2222-2222-222222222222', 'Casa', 'A house', NULL, 1, '[]', 0, NULL, NULL, NULL)")
+            execSQL("INSERT INTO SpaceKeys (id, space, name, maxQuantity, nfcId) VALUES ('33333333-3333-3333-3333-333333333333', '22222222-2222-2222-2222-222222222222', 'Door', 1, NULL)")
+        }
+
+        val database = getRoomDatabase(Room.databaseBuilder<AppDatabase>(name = path), Dispatchers.IO)
+        try {
+            assertEquals(1, database.spaceDao().selectAll().size)
+            assertEquals(0, database.spaceKeyTypeDao().selectAll().size)
+            assertEquals(0, database.spaceKeyDao().selectAll().size)
+            assertEquals(0, database.spaceLendingDao().selectAll().size)
+        } finally {
+            database.close()
         }
     }
 }

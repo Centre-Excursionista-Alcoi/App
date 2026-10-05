@@ -40,6 +40,8 @@ import org.centrexcursionistalcoi.app.database.entity.QualificationEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceKeyEntity
+import org.centrexcursionistalcoi.app.database.entity.SpaceKeyTypeEntity
+import org.centrexcursionistalcoi.app.database.table.SpaceKeyTypeSpaces
 import org.centrexcursionistalcoi.app.database.entity.SpaceLendingEntity
 import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.LendingItems
@@ -240,10 +242,15 @@ class TestEntityToData {
                 requiresKeys = true
                 prices = listOf(CategoryPrice(Category.MEMBER, 3.0))
             }
+            val keyType = SpaceKeyTypeEntity.new { name = "Door" }
+            SpaceKeyTypeSpaces.insert {
+                it[SpaceKeyTypeSpaces.keyType] = keyType.id
+                it[SpaceKeyTypeSpaces.space] = space.id
+                it[maxPerLending] = 2
+            }
             SpaceKeyEntity.new {
-                this.space = space
-                name = "Key"
-                maxQuantity = 2
+                this.type = keyType
+                label = "1"
                 nfcId = byteArrayOf(9, 9)
             }
             SpaceLendingEntity.new {

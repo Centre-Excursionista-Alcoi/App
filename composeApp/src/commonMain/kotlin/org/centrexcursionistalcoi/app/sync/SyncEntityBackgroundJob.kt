@@ -8,12 +8,14 @@ import org.centrexcursionistalcoi.app.data.InventoryItemType
 import org.centrexcursionistalcoi.app.data.Post
 import org.centrexcursionistalcoi.app.data.Space
 import org.centrexcursionistalcoi.app.data.SpaceKey
+import org.centrexcursionistalcoi.app.data.SpaceKeyType
 import org.centrexcursionistalcoi.app.data.SpaceLending
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemTypesRepository
 import org.centrexcursionistalcoi.app.database.InventoryItemsRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
+import org.centrexcursionistalcoi.app.database.SpaceKeyTypesRepository
 import org.centrexcursionistalcoi.app.database.SpaceKeysRepository
 import org.centrexcursionistalcoi.app.database.SpaceLendingsRepository
 import org.centrexcursionistalcoi.app.database.SpacesRepository
@@ -22,6 +24,7 @@ import org.centrexcursionistalcoi.app.network.EventsRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.InventoryItemsRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
+import org.centrexcursionistalcoi.app.network.SpaceKeyTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpaceKeysRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpaceLendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpacesRemoteRepository
@@ -64,6 +67,9 @@ class SyncEntityBackgroundJob : BackgroundJob() {
                 in names<SpaceKey>() -> get<SpaceKeysRepository>().delete(
                     id = entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid space key ID: $entityId")
                 )
+                in names<SpaceKeyType>() -> get<SpaceKeyTypesRepository>().delete(
+                    id = entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid space key type ID: $entityId")
+                )
                 in names<SpaceLending>() -> get<SpaceLendingsRepository>().delete(
                     id = entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid space lending ID: $entityId")
                 )
@@ -98,6 +104,10 @@ class SyncEntityBackgroundJob : BackgroundJob() {
                 )
                 in names<SpaceKey>() -> get<SpaceKeysRemoteRepository>().update(
                     entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid space key ID: $entityId"),
+                    ignoreIfModifiedSince = true
+                )
+                in names<SpaceKeyType>() -> get<SpaceKeyTypesRemoteRepository>().update(
+                    entityId.toUuidOrNull() ?: return SyncResult.Failure("Invalid space key type ID: $entityId"),
                     ignoreIfModifiedSince = true
                 )
                 in names<SpaceLending>() -> get<SpaceLendingsRemoteRepository>().update(
