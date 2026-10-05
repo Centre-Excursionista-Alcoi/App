@@ -34,6 +34,10 @@ import org.centrexcursionistalcoi.app.nav.rememberNavigator
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
+import org.centrexcursionistalcoi.app.ui.screen.spaces.SpaceDetailsScreen
+import org.centrexcursionistalcoi.app.ui.screen.spaces.SpaceLendingCreationScreen
+import org.centrexcursionistalcoi.app.ui.screen.spaces.SpaceLendingDetailsScreen
+import org.centrexcursionistalcoi.app.ui.screen.spaces.SpacesScreen
 import org.centrexcursionistalcoi.app.ui.dialog.UpdateAvailableDialog
 import org.centrexcursionistalcoi.app.ui.dialog.UpdateProgressDialog
 import org.centrexcursionistalcoi.app.ui.dialog.UpdateRestartRequiredDialog
@@ -224,6 +228,8 @@ private fun App(
                         onEditMemoryRequest = {
                             navigator.navigate(Destination.MemoryEditor(it.id))
                         },
+                        onSpacesRequested = { navigator.navigate(Destination.Spaces) },
+                        onSpaceLendingClick = { navigator.navigate(Destination.SpaceLendingDetails(it)) },
                     )
                 }
                 destination<Destination.Security> {
@@ -297,6 +303,39 @@ private fun App(
                             navigator.navigatePoppingUpTo(Destination.Main(), Destination.Main::class)
                         }
                     ) { navigator.goBack() }
+                }
+                destination<Destination.Spaces> {
+                    SpacesScreen(
+                        onSpaceClick = { navigator.navigate(Destination.SpaceDetails(it)) },
+                        onLendingClick = { navigator.navigate(Destination.SpaceLendingDetails(it)) },
+                        onBack = { navigator.goBack() },
+                    )
+                }
+                destination<Destination.SpaceDetails> { route ->
+                    SpaceDetailsScreen(
+                        spaceId = route.spaceId,
+                        onBook = { navigator.navigate(Destination.SpaceLendingCreation(route.spaceId)) },
+                        onBack = { navigator.goBack() },
+                    )
+                }
+                destination<Destination.SpaceLendingCreation> { route ->
+                    SpaceLendingCreationScreen(
+                        spaceId = route.spaceId,
+                        lendingId = route.lendingId,
+                        onDone = { lendingId ->
+                            // Leave the booking form: show the lending in its place
+                            navigator.goBack()
+                            if (route.lendingId == null) navigator.navigate(Destination.SpaceLendingDetails(lendingId))
+                        },
+                        onBack = { navigator.goBack() },
+                    )
+                }
+                destination<Destination.SpaceLendingDetails> { route ->
+                    SpaceLendingDetailsScreen(
+                        lendingId = route.lendingId,
+                        onEdit = { lending -> navigator.navigate(Destination.SpaceLendingCreation(lending.space, lending.id)) },
+                        onBack = { navigator.goBack() },
+                    )
                 }
                 destination<Destination.LendingMemoryEditor> { route ->
                     val lendingId = route.lendingId
