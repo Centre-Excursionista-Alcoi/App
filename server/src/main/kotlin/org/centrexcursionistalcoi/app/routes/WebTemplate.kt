@@ -4,6 +4,10 @@ import io.ktor.http.ContentType
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respondText
 import java.util.Locale
+import kotlinx.html.BODY
+import kotlinx.html.body
+import kotlinx.html.head
+import kotlinx.html.title
 import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import org.centrexcursionistalcoi.app.translation.DocumentRedactor
 import org.centrexcursionistalcoi.app.translation.Template
@@ -15,6 +19,19 @@ abstract class WebTemplate(name: String): Template("web", name) {
     fun title(locale: Locale): String {
         val list = translationsBook[locale]
         return list["title"]
+    }
+
+    /**
+     * The document of a page, with its translated `title` and [content] as its body:
+     * ```
+     * override fun DocumentRedactor.render(args: Map<String, String?>) = page {
+     *     p { tr("message") }
+     * }
+     * ```
+     */
+    protected fun DocumentRedactor.page(content: BODY.() -> Unit): String = html {
+        head { title { +t("title") } }
+        body { content() }
     }
 
     abstract class ResourceWebTemplate(private val name: String): WebTemplate(name) {

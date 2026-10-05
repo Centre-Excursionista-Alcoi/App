@@ -1,6 +1,11 @@
 package org.centrexcursionistalcoi.app.notifications
 
 import java.util.Locale
+import kotlinx.html.BODY
+import kotlinx.html.a
+import kotlinx.html.body
+import kotlinx.html.p
+import kotlinx.html.style
 import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import org.centrexcursionistalcoi.app.translation.DocumentRedactor
 import org.centrexcursionistalcoi.app.translation.Template
@@ -13,6 +18,18 @@ abstract class EmailTemplate(name: String) : Template("email", name) {
     }
 
     /**
+     * The document of an email, with [content] as its body:
+     * ```
+     * override fun DocumentRedactor.render(args: Map<String, String?>) = email {
+     *     p { +t("line_1", args["userName"]) }
+     * }
+     * ```
+     */
+    protected fun DocumentRedactor.email(content: BODY.() -> Unit): String = html {
+        body { content() }
+    }
+
+    /**
      * Template for lost password email.
      *
      * Required arguments:
@@ -20,19 +37,13 @@ abstract class EmailTemplate(name: String) : Template("email", name) {
      * - `resetLink`: The link to reset the password.
      */
     object LostPassword : EmailTemplate("lost_password") {
-        override fun DocumentRedactor.render(args: Map<String, String?>): String {
-            return """
-            <html>
-                <body>
-                    <p>${t("line_1", args["userName"])}</p>
-                    <p>${t("line_2")}</p>
-                    <p>${t("line_3")}</p>
-                    <p><a href="${args["resetLink"]}">${t("line_4")}</a></p>
-                    <p>${t("line_5")}</p>
-                    <p>${t("line_6")}</p>
-                </body>
-            </html>
-            """.trimIndent()
+        override fun DocumentRedactor.render(args: Map<String, String?>): String = email {
+            p { +t("line_1", args["userName"]) }
+            p { +t("line_2") }
+            p { +t("line_3") }
+            p { a(href = args["resetLink"]) { +t("line_4") } }
+            p { +t("line_5") }
+            p { +t("line_6") }
         }
     }
 
@@ -44,33 +55,24 @@ abstract class EmailTemplate(name: String) : Template("email", name) {
      * - `code`: The code.
      */
     object RegistrationCode : EmailTemplate("registration_code") {
-        override fun DocumentRedactor.render(args: Map<String, String?>): String {
-            return """
-            <html>
-                <body>
-                    <p>${t("line_1", args["userName"])}</p>
-                    <p>${t("line_2")}</p>
-                    <p style="font-size: 28px; font-weight: bold; letter-spacing: 6px;">${args["code"]}</p>
-                    <p>${t("line_3")}</p>
-                    <p>${t("line_4")}</p>
-                </body>
-            </html>
-            """.trimIndent()
+        override fun DocumentRedactor.render(args: Map<String, String?>): String = email {
+            p { +t("line_1", args["userName"]) }
+            p { +t("line_2") }
+            p {
+                style = "font-size: 28px; font-weight: bold; letter-spacing: 6px;"
+                args["code"]?.let { +it }
+            }
+            p { +t("line_3") }
+            p { +t("line_4") }
         }
     }
 
     object PasswordChangedNotification : EmailTemplate("password_changed") {
-        override fun DocumentRedactor.render(args: Map<String, String?>): String {
-            return """
-            <html>
-                <body>
-                    <p>${t("line_1", args["userName"])}</p>
-                    <p>${t("line_2")}</p>
-                    <p>${t("line_3")}</p>
-                    <p>${t("line_4")}</p>
-                </body>
-            </html>
-            """.trimIndent()
+        override fun DocumentRedactor.render(args: Map<String, String?>): String = email {
+            p { +t("line_1", args["userName"]) }
+            p { +t("line_2") }
+            p { +t("line_3") }
+            p { +t("line_4") }
         }
     }
 }

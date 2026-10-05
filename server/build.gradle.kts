@@ -152,6 +152,9 @@ dependencies {
     // Email sending
     implementation(libs.jakarta.mail)
 
+    // HTML templating
+    implementation(libs.kotlinx.html)
+
     testImplementation(kotlin("test-junit5"))
     testImplementation(libs.ktor.server.testHost)
     testImplementation(libs.ktor.client.mock)
