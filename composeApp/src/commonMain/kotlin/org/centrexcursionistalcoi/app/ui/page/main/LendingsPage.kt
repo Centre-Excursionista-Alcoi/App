@@ -69,6 +69,7 @@ import cea_app.composeapp.generated.resources.lending_signup_required
 import cea_app.composeapp.generated.resources.spaces_tab
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.FeatureFlag
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
@@ -76,6 +77,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.rememberImageFile
 import org.centrexcursionistalcoi.app.response.ProfileResponse
+import org.centrexcursionistalcoi.app.hasFeature
 import org.centrexcursionistalcoi.app.ui.animation.sharedBounds
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarEndOutline
 import org.centrexcursionistalcoi.app.ui.icons.material.CalendarStartOutline
@@ -140,7 +142,7 @@ fun LendingsPage(
 
     val spaces by spacesModel.spaces.collectAsState()
     val myLendings by spacesModel.myLendings.collectAsState()
-    val hasSpaces = !spaces.isNullOrEmpty() || !myLendings.isNullOrEmpty()
+    val hasSpaces = profileValue.hasFeature(FeatureFlag.SPACES) && (!spaces.isNullOrEmpty() || !myLendings.isNullOrEmpty())
 
     val scope = rememberCoroutineScope()
     val itemPagesCount = departments.size + (if (itemsWithoutDepartmentExist) 1 else 0)

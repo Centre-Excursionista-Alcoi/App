@@ -135,6 +135,12 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
+import org.centrexcursionistalcoi.app.FeatureFlag
+import org.centrexcursionistalcoi.app.hasFeature
+
+/** Manages spaces or their lendings, and the spaces feature is enabled for them. */
+private fun ProfileResponse.isSpacesFeatureManager() =
+    hasFeature(FeatureFlag.SPACES) && (isSpacesManager || isSpaceLendingsManager)
 
 @Composable
 fun MainScreen(
@@ -305,7 +311,7 @@ private fun MainScreenContent(
 ) {
     var shoppingList by remember { mutableStateOf<ShoppingList>(emptyMap()) }
     val isManagerOfAnyDepartment = remember(profile, departments) {
-        profile.isUsersManager || profile.isMembersManager || profile.isSpacesManager || profile.isSpaceLendingsManager || departments.orEmpty().isManagerOfAny(profile)
+        profile.isUsersManager || profile.isMembersManager || profile.isSpacesFeatureManager() || departments.orEmpty().isManagerOfAny(profile)
     }
     val navigationItems = remember(profile, activeUserLending) {
         navigationItems(isAdmin = profile.isAdmin, isManagerOfAnyDepartment, anyActiveLending = activeUserLending != null)
@@ -685,7 +691,7 @@ private fun MainScreenPagerContent(
             Page.ACTIVITIES -> ActivitiesPage(onEditMemoryRequest)
 
             // Management page only for admins, global managers, or department managers
-            Page.MANAGEMENT if (profile.isAdmin || profile.isUsersManager || profile.isMembersManager || profile.isSpacesManager || profile.isSpaceLendingsManager || departments.orEmpty().isManagerOfAny(profile)) -> ManagementPage(
+            Page.MANAGEMENT if (profile.isAdmin || profile.isUsersManager || profile.isMembersManager || profile.isSpacesFeatureManager() || departments.orEmpty().isManagerOfAny(profile)) -> ManagementPage(
                 snackbarHostState = snackbarHostState,
                 selectedItem = selectedManagementItem,
                 onGiveRequested = onOtherUserLendingClick,

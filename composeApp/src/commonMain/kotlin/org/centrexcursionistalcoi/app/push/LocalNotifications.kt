@@ -39,7 +39,9 @@ import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.data.Post
 import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.EventsRepository
+import org.centrexcursionistalcoi.app.FeatureFlag
 import org.centrexcursionistalcoi.app.database.PostsRepository
+import org.centrexcursionistalcoi.app.hasFeature
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
@@ -303,6 +305,8 @@ class LocalNotifications(
             }
 
             is PushNotification.NewSpaceLending -> {
+                // Spaces are hidden for those who don't have the feature yet
+                if (profileRepository.getProfile()?.hasFeature(FeatureFlag.SPACES) != true) return
                 showNotification(
                     Res.string.notification_space_lending_created_title,
                     Res.string.notification_space_lending_created_message,

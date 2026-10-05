@@ -27,6 +27,7 @@ import cea_app.composeapp.generated.resources.management_spaces
 import cea_app.composeapp.generated.resources.management_users
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.FeatureFlag
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Department.Companion.hasAnyDepartmentRole
 import org.centrexcursionistalcoi.app.data.DepartmentRole
@@ -39,6 +40,7 @@ import org.centrexcursionistalcoi.app.data.ReferencedPost
 import org.centrexcursionistalcoi.app.data.Space
 import org.centrexcursionistalcoi.app.data.SpaceLending
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.hasFeature
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Article
@@ -220,7 +222,7 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
         }
     ) {
         override fun shouldShow(profile: ProfileResponse, items: List<Space>?, departments: List<Department>?): Boolean {
-            return profile.isSpacesManager
+            return profile.hasFeature(FeatureFlag.SPACES) && profile.isSpacesManager
         }
     }
 
@@ -236,7 +238,7 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
         }
     ) {
         override fun shouldShow(profile: ProfileResponse, items: List<SpaceLending>?, departments: List<Department>?): Boolean {
-            return profile.isSpaceLendingsManager
+            return profile.hasFeature(FeatureFlag.SPACES) && profile.isSpaceLendingsManager
         }
     }
 
