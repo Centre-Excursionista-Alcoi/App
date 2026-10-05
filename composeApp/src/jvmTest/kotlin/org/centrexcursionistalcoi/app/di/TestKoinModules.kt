@@ -29,6 +29,7 @@ import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpaceKeysRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpaceLendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpacesRemoteRepository
+import org.centrexcursionistalcoi.app.network.SyncRemoteRepository
 import org.centrexcursionistalcoi.app.network.QualificationsRemoteRepository
 import org.centrexcursionistalcoi.app.network.SecurityRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
@@ -120,6 +121,7 @@ class TestKoinModules {
         assertNotNull(koin.get<SpacesRemoteRepository>())
         assertNotNull(koin.get<SpaceKeysRemoteRepository>())
         assertNotNull(koin.get<SpaceLendingsRemoteRepository>())
+        assertNotNull(koin.get<SyncRemoteRepository>())
         assertNotNull(koin.get<QualificationsRemoteRepository>())
 
         assertNotNull(koin.get<AuthBackend>())
