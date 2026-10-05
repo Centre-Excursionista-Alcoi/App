@@ -20,6 +20,7 @@ sealed interface Destination : NavKey {
         fun backStackFor(destination: Destination): List<Destination> = when (destination) {
             is ItemTypeDetails -> listOf(Main(), destination)
             is Admin.LendingManagement -> listOf(Main(showingAdminLendingsScreen = true), destination)
+            is SpaceLendingDetails -> listOf(Main(), destination)
             else -> listOf(destination)
         }
     }
@@ -51,6 +52,15 @@ sealed interface Destination : NavKey {
             constructor(lending: ReferencedLending): this(lending.id)
         }
     }
+
+    @Serializable @SerialName("spaceDetails") data class SpaceDetails(val spaceId: Uuid) : Destination
+
+    /** Books a space, or, if [lendingId] is given, changes a lending that hasn't been picked up. */
+    @Serializable @SerialName("spaceLendingCreation") data class SpaceLendingCreation(
+        val spaceId: Uuid,
+        val lendingId: Uuid? = null,
+    ) : Destination
+    @Serializable @SerialName("spaceLendingDetails") data class SpaceLendingDetails(val lendingId: Uuid) : Destination
 
     @Serializable @SerialName("lendingSignUp") data object LendingSignUp : Destination
     @Serializable @SerialName("lendingCreation") data class LendingCreation(

@@ -11,6 +11,9 @@ import cea_app.composeapp.generated.resources.sync_step_lendings
 import cea_app.composeapp.generated.resources.sync_step_members
 import cea_app.composeapp.generated.resources.sync_step_memories
 import cea_app.composeapp.generated.resources.sync_step_posts
+import cea_app.composeapp.generated.resources.sync_step_space_keys
+import cea_app.composeapp.generated.resources.sync_step_space_lendings
+import cea_app.composeapp.generated.resources.sync_step_spaces
 import cea_app.composeapp.generated.resources.sync_step_profile
 import cea_app.composeapp.generated.resources.sync_step_users
 import com.diamondedge.logging.logging
@@ -25,6 +28,9 @@ import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.MembersRepository
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
+import org.centrexcursionistalcoi.app.database.SpaceKeysRepository
+import org.centrexcursionistalcoi.app.database.SpaceLendingsRepository
+import org.centrexcursionistalcoi.app.database.SpacesRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.exception.MissingCrossReferenceException
 import org.centrexcursionistalcoi.app.log.TraceOperation
@@ -38,6 +44,9 @@ import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.MembersRemoteRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
+import org.centrexcursionistalcoi.app.network.SpaceKeysRemoteRepository
+import org.centrexcursionistalcoi.app.network.SpaceLendingsRemoteRepository
+import org.centrexcursionistalcoi.app.network.SpacesRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.settings.SettingsStore
@@ -61,6 +70,9 @@ class SyncAllDataBackgroundJob(
     private val inventoryItemsRemoteRepository: InventoryItemsRemoteRepository,
     private val lendingsRemoteRepository: LendingsRemoteRepository,
     private val memoriesRemoteRepository: MemoriesRemoteRepository,
+    private val spacesRemoteRepository: SpacesRemoteRepository,
+    private val spaceKeysRemoteRepository: SpaceKeysRemoteRepository,
+    private val spaceLendingsRemoteRepository: SpaceLendingsRemoteRepository,
 
     private val departmentsRepository: DepartmentsRepository,
     private val usersRepository: UsersRepository,
@@ -71,6 +83,9 @@ class SyncAllDataBackgroundJob(
     private val inventoryItemsRepository: InventoryItemsRepository,
     private val lendingsRepository: LendingsRepository,
     private val memoriesRepository: MemoriesRepository,
+    private val spacesRepository: SpacesRepository,
+    private val spaceKeysRepository: SpaceKeysRepository,
+    private val spaceLendingsRepository: SpaceLendingsRepository,
 
     private val settings: SettingsStore,
 ) : BackgroundJob() {
@@ -158,6 +173,15 @@ class SyncAllDataBackgroundJob(
 
             // Memories requires Departments and (optionally) Lendings
             memoriesRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_memories), ignoreIfModifiedSince = force)
+
+            // Spaces do not depend on any other entity
+            spacesRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_spaces), ignoreIfModifiedSince = force)
+
+            // Space keys require Spaces
+            spaceKeysRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_space_keys), ignoreIfModifiedSince = force)
+
+            // Space lendings require Spaces
+            spaceLendingsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_space_lendings), ignoreIfModifiedSince = force)
         } catch (e: MissingCrossReferenceException) {
             if (isRetry) {
                 log.e(e) { "Could not find cross reference after clearing all local data. Something is wrong on the server side. Failing..." }
@@ -168,6 +192,9 @@ class SyncAllDataBackgroundJob(
                 log.d { "Removing all data..." }
                 // Order is important due to foreign key constraints: children before their parents (the reverse of
                 // the sync order above, since Memories has a FK to Lendings).
+                spaceLendingsRepository.deleteAll()
+                spaceKeysRepository.deleteAll()
+                spacesRepository.deleteAll()
                 memoriesRepository.deleteAll()
                 lendingsRepository.deleteAll()
                 inventoryItemsRepository.deleteAll()

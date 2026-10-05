@@ -21,13 +21,17 @@ import org.centrexcursionistalcoi.app.database.entity.MemoryEntity
 import org.centrexcursionistalcoi.app.database.entity.MemoryMemberCrossRef
 import org.centrexcursionistalcoi.app.database.entity.PostEntity
 import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
+import org.centrexcursionistalcoi.app.database.entity.SpaceEntity
+import org.centrexcursionistalcoi.app.database.entity.SpaceKeyEntity
+import org.centrexcursionistalcoi.app.database.entity.SpaceLendingEntity
 import org.centrexcursionistalcoi.app.database.entity.UserEntity
 
+// v5: added the Spaces, SpaceKeys and SpaceLendings tables (see MIGRATION_4_5).
 // v4: qualifications/grants moved from their own tables (Qualifications/QualificationGrants) to being embedded
 // on DepartmentEntity, synced along with everything else about a department (see Departments.extraColumns
 // server-side). See DatabaseMigrations.kt's MIGRATION_3_4 -- bumping this again must come with its own
 // Migration(4, 5) there too, not rely on the destructive fallback.
-const val DATABASE_VERSION = 4
+const val DATABASE_VERSION = 5
 const val DATABASE_FILE_NAME = "cea_app.db"
 
 @Database(
@@ -44,6 +48,9 @@ const val DATABASE_FILE_NAME = "cea_app.db"
         MemoryMemberCrossRef::class,
         PostEntity::class,
         ReceivedItemEntity::class,
+        SpaceEntity::class,
+        SpaceKeyEntity::class,
+        SpaceLendingEntity::class,
         UserEntity::class,
     ],
     version = DATABASE_VERSION,
@@ -63,6 +70,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun memoryMemberCrossRefDao(): org.centrexcursionistalcoi.app.database.dao.MemoryMemberCrossRefDao
     abstract fun postDao(): org.centrexcursionistalcoi.app.database.dao.PostDao
     abstract fun receivedItemDao(): org.centrexcursionistalcoi.app.database.dao.ReceivedItemDao
+    abstract fun spaceDao(): org.centrexcursionistalcoi.app.database.dao.SpaceDao
+    abstract fun spaceKeyDao(): org.centrexcursionistalcoi.app.database.dao.SpaceKeyDao
+    abstract fun spaceLendingDao(): org.centrexcursionistalcoi.app.database.dao.SpaceLendingDao
     abstract fun userDao(): org.centrexcursionistalcoi.app.database.dao.UserDao
 }
 
@@ -81,7 +91,7 @@ fun getRoomDatabase(
         .setQueryCoroutineContext(dispatcher)
         // Real, data-preserving migrations for the version jumps we can trust the on-disk schema for -- see
         // DatabaseMigrations.kt's file-level KDoc for why v1 -> v2 is deliberately not among them.
-        .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
         // Catch-all for any other transition (from v1, or anything unforeseen): the local database is a
         // disposable cache resynced from the server (see SyncAllDataBackgroundJob), so as a last resort it's
         // safe to just wipe and let the next sync repopulate it, rather than risk a migration we can't trust.

@@ -12,6 +12,9 @@ import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.MembersRepository
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
+import org.centrexcursionistalcoi.app.database.SpaceKeysRepository
+import org.centrexcursionistalcoi.app.database.SpaceLendingsRepository
+import org.centrexcursionistalcoi.app.database.SpacesRepository
 import org.centrexcursionistalcoi.app.database.UsersRepository
 import org.centrexcursionistalcoi.app.database.getDatabaseBuilder
 import org.centrexcursionistalcoi.app.database.getRoomDatabase
@@ -23,6 +26,9 @@ import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.MembersRemoteRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
+import org.centrexcursionistalcoi.app.network.SpaceKeysRemoteRepository
+import org.centrexcursionistalcoi.app.network.SpaceLendingsRemoteRepository
+import org.centrexcursionistalcoi.app.network.SpacesRemoteRepository
 import org.centrexcursionistalcoi.app.network.QualificationsRemoteRepository
 import org.centrexcursionistalcoi.app.network.SecurityRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
@@ -98,6 +104,9 @@ class TestKoinModules {
         assertNotNull(koin.get<EventsRepository>())
         assertNotNull(koin.get<MemoriesRepository>())
         assertNotNull(koin.get<LendingsRepository>())
+        assertNotNull(koin.get<SpacesRepository>())
+        assertNotNull(koin.get<SpaceKeysRepository>())
+        assertNotNull(koin.get<SpaceLendingsRepository>())
 
         assertNotNull(koin.get<DepartmentsRemoteRepository>())
         assertNotNull(koin.get<UsersRemoteRepository>())
@@ -108,6 +117,9 @@ class TestKoinModules {
         assertNotNull(koin.get<EventsRemoteRepository>())
         assertNotNull(koin.get<MemoriesRemoteRepository>())
         assertNotNull(koin.get<LendingsRemoteRepository>())
+        assertNotNull(koin.get<SpacesRemoteRepository>())
+        assertNotNull(koin.get<SpaceKeysRemoteRepository>())
+        assertNotNull(koin.get<SpaceLendingsRemoteRepository>())
         assertNotNull(koin.get<QualificationsRemoteRepository>())
 
         assertNotNull(koin.get<AuthBackend>())

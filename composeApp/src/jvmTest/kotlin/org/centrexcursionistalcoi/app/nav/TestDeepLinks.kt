@@ -176,4 +176,27 @@ class TestDeepLinks {
         val lending = Destination.Admin.LendingManagement(id)
         assertEquals(listOf(Destination.Main(showingAdminLendingsScreen = true), lending), Destination.backStackFor(lending))
     }
+
+    // ---- The links of the emails of space lendings, for the user and for the people who manage them ----
+
+    @Test
+    fun spaceLendingLinks_openTheLending_forTheUserAndForManagers() = kotlinx.coroutines.test.runTest {
+        val id = Uuid.parse("1f0e5c2a-0000-4000-8000-000000000002")
+
+        for (path in listOf("space_lendings", "admin/space_lendings")) {
+            assertEquals(
+                Destination.SpaceLendingDetails(id),
+                DeepLinks.fromUrl(Url("https://centrexcursionistalcoi.app/$path/$id")),
+            )
+        }
+        // Without an id, or with a malformed one, they point nowhere
+        assertNull(DeepLinks.fromUrl(Url("https://centrexcursionistalcoi.app/space_lendings")))
+        assertNull(DeepLinks.fromUrl(Url("https://centrexcursionistalcoi.app/space_lendings/not-an-id")))
+    }
+
+    @Test
+    fun aSpaceLendingLink_opensOverTheMainScreen() {
+        val destination = Destination.SpaceLendingDetails(Uuid.parse("1f0e5c2a-0000-4000-8000-000000000002"))
+        assertEquals(listOf(Destination.Main(), destination), Destination.backStackFor(destination))
+    }
 }

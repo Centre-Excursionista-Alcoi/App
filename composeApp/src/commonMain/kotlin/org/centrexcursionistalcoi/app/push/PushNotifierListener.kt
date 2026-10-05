@@ -7,6 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
+import org.centrexcursionistalcoi.app.data.SpaceLending
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
@@ -100,8 +101,14 @@ class PushNotifierListener(
                     )
                 }
                 is PushNotification.NewSpaceLending -> {
-                    // Only shown: spaces are not synced by the app yet
                     log.d { "Received a new space lending notification: ${notification.spaceLendingId}" }
+                    coordinator.scheduleAsync<SyncEntityBackgroundJob>(
+                        name = SyncEntityBackgroundJob.NAME,
+                        input = mapOf(
+                            SyncEntityBackgroundJob.EXTRA_ENTITY_CLASS to SpaceLending::class.simpleName.orEmpty(),
+                            SyncEntityBackgroundJob.EXTRA_ENTITY_ID to notification.spaceLendingId.toString(),
+                        ),
+                    )
                 }
                 is PushNotification.EntityDeleted -> {
                     log.d { "Received entity deleted notification for ${notification.entityClass}#${notification.entityId}" }

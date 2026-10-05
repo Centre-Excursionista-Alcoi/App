@@ -135,6 +135,12 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
+import org.centrexcursionistalcoi.app.FeatureFlag
+import org.centrexcursionistalcoi.app.hasFeature
+
+/** Manages spaces or their lendings, and the spaces feature is enabled for them. */
+private fun ProfileResponse.isSpacesFeatureManager() =
+    hasFeature(FeatureFlag.SPACES) && (isSpacesManager || isSpaceLendingsManager)
 
 @Composable
 fun MainScreen(
@@ -150,6 +156,9 @@ fun MainScreen(
     onLogoutRequested: () -> Unit,
     onSettingsRequested: () -> Unit,
     onEditMemoryRequest: (ReferencedMemory) -> Unit,
+    onSpaceDetailsRequested: (Uuid) -> Unit,
+    onSpaceBookRequested: (Uuid) -> Unit,
+    onSpaceLendingClick: (Uuid) -> Unit,
     model: MainScreenViewModel = koinViewModel(),
 ) {
     val profile by model.profile.collectAsState()
@@ -179,6 +188,9 @@ fun MainScreen(
             onItemTypeDetailsRequested = onItemTypeDetailsRequested,
             onShoppingListConfirmed = onShoppingListConfirmed,
             onEditMemoryRequest = onEditMemoryRequest,
+            onSpaceDetailsRequested = onSpaceDetailsRequested,
+            onSpaceBookRequested = onSpaceBookRequested,
+            onSpaceLendingClick = onSpaceLendingClick,
         )
         PasskeyReminderSheet()
     } ?: LoadingBox()
@@ -290,13 +302,16 @@ private fun MainScreenContent(
     onShoppingListConfirmed: (ShoppingList) -> Unit,
 
     onEditMemoryRequest: (ReferencedMemory) -> Unit,
+    onSpaceDetailsRequested: (Uuid) -> Unit,
+    onSpaceBookRequested: (Uuid) -> Unit,
+    onSpaceLendingClick: (Uuid) -> Unit,
 
     isSyncing: Boolean,
     onSyncRequested: () -> Unit
 ) {
     var shoppingList by remember { mutableStateOf<ShoppingList>(emptyMap()) }
     val isManagerOfAnyDepartment = remember(profile, departments) {
-        profile.isUsersManager || profile.isMembersManager || departments.orEmpty().isManagerOfAny(profile)
+        profile.isUsersManager || profile.isMembersManager || profile.isSpacesFeatureManager() || departments.orEmpty().isManagerOfAny(profile)
     }
     val navigationItems = remember(profile, activeUserLending) {
         navigationItems(isAdmin = profile.isAdmin, isManagerOfAnyDepartment, anyActiveLending = activeUserLending != null)
@@ -538,6 +553,9 @@ private fun MainScreenContent(
                     onShoppingListChanged = { shoppingList = it },
                     onMemoryEditorRequested = onMemoryEditorRequested,
                     onEditMemoryRequest = onEditMemoryRequest,
+                    onSpaceDetailsRequested = onSpaceDetailsRequested,
+            onSpaceBookRequested = onSpaceBookRequested,
+                    onSpaceLendingClick = onSpaceLendingClick,
                 )
             }
 
@@ -642,6 +660,9 @@ private fun MainScreenPagerContent(
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onShoppingListChanged: (ShoppingList) -> Unit,
     onEditMemoryRequest: (ReferencedMemory) -> Unit,
+    onSpaceDetailsRequested: (Uuid) -> Unit,
+    onSpaceBookRequested: (Uuid) -> Unit,
+    onSpaceLendingClick: (Uuid) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         when (page) {
@@ -653,6 +674,9 @@ private fun MainScreenPagerContent(
                 onLendingSignUpRequested,
                 onLendingHistoryRequest,
                 onShoppingListChanged = onShoppingListChanged,
+                onSpaceDetailsRequested = onSpaceDetailsRequested,
+                onSpaceBookRequested = onSpaceBookRequested,
+                onSpaceLendingClick = onSpaceLendingClick,
             )
 
             Page.LENDING if activeLending != null -> LendingPage(
@@ -667,11 +691,12 @@ private fun MainScreenPagerContent(
             Page.ACTIVITIES -> ActivitiesPage(onEditMemoryRequest)
 
             // Management page only for admins, global managers, or department managers
-            Page.MANAGEMENT if (profile.isAdmin || profile.isUsersManager || profile.isMembersManager || departments.orEmpty().isManagerOfAny(profile)) -> ManagementPage(
+            Page.MANAGEMENT if (profile.isAdmin || profile.isUsersManager || profile.isMembersManager || profile.isSpacesFeatureManager() || departments.orEmpty().isManagerOfAny(profile)) -> ManagementPage(
                 snackbarHostState = snackbarHostState,
                 selectedItem = selectedManagementItem,
                 onGiveRequested = onOtherUserLendingClick,
                 onReceiveRequested = onOtherUserLendingClick,
+                onSpaceLendingClick = onSpaceLendingClick,
             )
 
             Page.MANAGEMENT -> Text(stringResource(Res.string.error_access_denied))

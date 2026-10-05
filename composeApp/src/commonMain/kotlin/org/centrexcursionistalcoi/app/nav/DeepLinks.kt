@@ -72,6 +72,13 @@ object DeepLinks : KoinComponent {
                 Destination.Main(showingAdminLendingsScreen = true)
             }
         }
+        // Space lendings, for the user who made them and for the people who manage them: the same screen
+        for (base in listOf(AppLinkRoutes.SPACE_LENDINGS, AppLinkRoutes.ADMIN_SPACE_LENDINGS)) {
+            if (route.isRoute(base)) {
+                val lendingId = route.idFor(base) ?: return null
+                return Destination.SpaceLendingDetails(lendingId)
+            }
+        }
         if (route.equals(AppLinkRoutes.RESET_PASSWORD, ignoreCase = true)) {
             // Reset password request redirection from email
             val success = url.parameters["success"]?.toBoolean() ?: false

@@ -22,9 +22,12 @@ import cea_app.composeapp.generated.resources.management_inventory
 import cea_app.composeapp.generated.resources.management_lendings
 import cea_app.composeapp.generated.resources.management_memories
 import cea_app.composeapp.generated.resources.management_posts
+import cea_app.composeapp.generated.resources.management_space_lendings
+import cea_app.composeapp.generated.resources.management_spaces
 import cea_app.composeapp.generated.resources.management_users
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import org.centrexcursionistalcoi.app.FeatureFlag
 import org.centrexcursionistalcoi.app.data.Department
 import org.centrexcursionistalcoi.app.data.Department.Companion.hasAnyDepartmentRole
 import org.centrexcursionistalcoi.app.data.DepartmentRole
@@ -34,11 +37,18 @@ import org.centrexcursionistalcoi.app.data.ReferencedEvent
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedPost
+import org.centrexcursionistalcoi.app.data.Space
+import org.centrexcursionistalcoi.app.data.SpaceLending
 import org.centrexcursionistalcoi.app.data.UserData
+import org.centrexcursionistalcoi.app.hasFeature
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.composition.LocalNavigationBarVisibility
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Article
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ArticleFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CheckCircle
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CheckCircleFilled
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Home
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.HomeFilled
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Category
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.CategoryFilled
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Event
@@ -59,6 +69,8 @@ import org.centrexcursionistalcoi.app.ui.page.main.management.InventoryItemTypes
 import org.centrexcursionistalcoi.app.ui.page.main.management.LendingsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.MemoriesManagementListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.PostsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.SpaceLendingsListView
+import org.centrexcursionistalcoi.app.ui.page.main.management.SpacesListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.UsersListView
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
@@ -198,6 +210,37 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
         }
     }
 
+    object Spaces : ManagementPage<Uuid, Space>(
+        key = "spaces",
+        tabData = {
+            TabData.fromResources(
+                Res.string.management_spaces,
+                MaterialSymbols.Home,
+                MaterialSymbols.HomeFilled,
+                it
+            )
+        }
+    ) {
+        override fun shouldShow(profile: ProfileResponse, items: List<Space>?, departments: List<Department>?): Boolean {
+            return profile.hasFeature(FeatureFlag.SPACES) && profile.isSpacesManager
+        }
+    }
+
+    object SpaceLendings : ManagementPage<Uuid, SpaceLending>(
+        key = "space_lendings",
+        tabData = {
+            TabData.fromResources(
+                Res.string.management_space_lendings,
+                MaterialSymbols.CheckCircle,
+                MaterialSymbols.CheckCircleFilled,
+                it
+            )
+        }
+    ) {
+        override fun shouldShow(profile: ProfileResponse, items: List<SpaceLending>?, departments: List<Department>?): Boolean {
+            return profile.hasFeature(FeatureFlag.SPACES) && profile.isSpaceLendingsManager
+        }
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -227,6 +270,8 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
                 Posts.takeIf { Posts.shouldShow(profile, null, departments) },
                 Events.takeIf { Events.shouldShow(profile, null, departments) },
                 Inventory.takeIf { Inventory.shouldShow(profile, null, departments) },
+                Spaces.takeIf { Spaces.shouldShow(profile, null, departments) },
+                SpaceLendings.takeIf { SpaceLendings.shouldShow(profile, null, departments) },
             )
         }
 
@@ -248,6 +293,7 @@ fun ManagementPage(
     selectedItem: Pair<Int, Uuid?>?,
     onGiveRequested: (ReferencedLending) -> Unit,
     onReceiveRequested: (ReferencedLending) -> Unit,
+    onSpaceLendingClick: (Uuid) -> Unit,
     screenModel: ManagementPageScreenModel = koinViewModel(),
 ) {
     val profile by screenModel.profile.collectAsState()
@@ -267,6 +313,7 @@ fun ManagementPage(
         departments = departments,
         onGiveRequested = onGiveRequested,
         onReceiveRequested = onReceiveRequested,
+        onSpaceLendingClick = onSpaceLendingClick,
     )
 }
 
@@ -283,6 +330,7 @@ private fun ManagementPageContent(
 
     onGiveRequested: (ReferencedLending) -> Unit,
     onReceiveRequested: (ReferencedLending) -> Unit,
+    onSpaceLendingClick: (Uuid) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val pages = remember(profile, lendings, departments) {
@@ -340,6 +388,10 @@ private fun ManagementPageContent(
             ManagementPage.Events -> EventsListView()
 
             ManagementPage.Inventory -> InventoryItemTypesListView(selectedItemId)
+
+            ManagementPage.Spaces -> SpacesListView()
+
+            ManagementPage.SpaceLendings -> SpaceLendingsListView(onSpaceLendingClick)
         }
     }
 }
