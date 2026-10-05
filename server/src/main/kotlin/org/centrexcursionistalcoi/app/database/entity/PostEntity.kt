@@ -84,7 +84,7 @@ class PostEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, EntityD
         date = date,
         title = title,
         content = content,
-        department = department?.id?.value,
+        department = Posts.department.lookup()?.value,
         link = link,
         files = files.map { it.toData() },
     )

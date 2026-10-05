@@ -21,6 +21,10 @@ data class FileWithContext(
      * holding the contents of the file, sent there instead of in [bytes].
      */
     val part: String? = null,
+    /**
+     * The size of the contents in bytes. Set by the server in what it answers (where [bytes] is empty), never sent.
+     */
+    val size: Long? = null,
 ) {
     companion object {
         fun FileWithContext?.isNullOrEmpty(): Boolean {

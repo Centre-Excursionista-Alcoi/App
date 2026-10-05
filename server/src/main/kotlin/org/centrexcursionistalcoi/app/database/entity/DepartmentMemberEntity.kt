@@ -30,14 +30,20 @@ class DepartmentMemberEntity(id: EntityID<Uuid>) : UuidEntity(id) {
         get() = rolesRaw.mapNotNull { DepartmentRole.fromStorageName(it) }
         set(value) { rolesRaw = value.map { it.storageName } }
 
+    /** The sub of the user, without loading them. */
+    val rawUserSub: String get() = DepartmentMembers.userSub.lookup().value
+
+    /** The id of the department, without loading it. */
+    val rawDepartmentId: Uuid get() = DepartmentMembers.departmentId.lookup().value
+
     /** `true` if this member holds [role], or holds a role that [DepartmentRole.implies] it (e.g. [DepartmentRole.ADMIN]). */
     fun hasRole(role: DepartmentRole): Boolean = roles.any { it.implies(role) }
 
     context(_: JdbcTransaction)
     fun toData(): DepartmentMemberInfo = DepartmentMemberInfo(
         id = id.value,
-        userSub = userReference.id.value,
-        departmentId = department.id.value,
+        userSub = rawUserSub,
+        departmentId = rawDepartmentId,
         confirmed = confirmed,
         roles = roles,
     )

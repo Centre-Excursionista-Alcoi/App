@@ -261,5 +261,6 @@ class FileEntity(id: EntityID<Uuid>) : UuidEntity(id) {
         bytes = ByteArray(0),
         contentType = contentType,
         lastModified = lastModified,
+        size = size,
     )
 }

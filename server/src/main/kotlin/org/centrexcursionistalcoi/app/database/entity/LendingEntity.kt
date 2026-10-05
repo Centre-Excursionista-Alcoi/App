@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
+import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.Lendings
@@ -9,9 +10,10 @@ import org.centrexcursionistalcoi.app.push.PushNotification
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UuidEntity
 import org.jetbrains.exposed.v1.dao.UuidEntityClass
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import kotlin.uuid.Uuid
 
-class LendingEntity(id: EntityID<Uuid>): UuidEntity(id) {
+class LendingEntity(id: EntityID<Uuid>): UuidEntity(id), EntityDataConverter<Lending, Uuid> {
     companion object : UuidEntityClass<LendingEntity>(Lendings)
 
     var userSub by UserReferenceEntity referencedOn Lendings.userSub
@@ -37,6 +39,28 @@ class LendingEntity(id: EntityID<Uuid>): UuidEntity(id) {
     var notes by Lendings.notes
 
     val items by InventoryItemEntity via LendingItems
+
+    context(_: JdbcTransaction)
+    override fun toData(): Lending = Lending(
+        id = id.value,
+        userSub = Lendings.userSub.lookup().value,
+        timestamp = timestamp,
+        confirmed = confirmed,
+        taken = taken,
+        givenBy = Lendings.givenBy.lookup()?.value,
+        givenAt = givenAt,
+        returned = returned,
+        receivedItems = receivedItems.map { it.toReceivedItem() },
+        memorySubmitted = memorySubmitted,
+        memorySubmittedAt = memorySubmittedAt,
+        // Only the id of the linked memory: memories are their own resource, fetched separately
+        memory = memory?.id?.value,
+        memoryReviewed = memoryReviewed,
+        from = from,
+        to = to,
+        notes = notes,
+        items = items.map { it.toData() },
+    )
 
     /**
      * Create a new lending request push notification for this lending.

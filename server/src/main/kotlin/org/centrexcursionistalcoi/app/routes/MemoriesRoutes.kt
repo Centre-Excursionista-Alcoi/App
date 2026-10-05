@@ -17,6 +17,7 @@ import kotlinx.datetime.TimeZone
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.DepartmentRole
+import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -31,8 +32,8 @@ import org.centrexcursionistalcoi.app.database.table.Members
 import org.centrexcursionistalcoi.app.database.table.Memories
 import org.centrexcursionistalcoi.app.database.table.MemoriesFiles
 import org.centrexcursionistalcoi.app.database.table.MemoriesMembers
-import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
-import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
+import org.centrexcursionistalcoi.app.database.utils.encodeList
+import org.centrexcursionistalcoi.app.database.utils.encodeOne
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
@@ -146,7 +147,7 @@ fun Route.memoriesRoutes() {
     SyncSections.register(
         SyncSection(
             key = "memories",
-            snapshot = { session -> json.encodeEntityListToString(memoriesFor(session), MemoryEntity) },
+            snapshot = { session -> encodeList(Memory.serializer(), memoriesFor(session), session) },
         )
     )
     post<Api.Memories> {
@@ -339,7 +340,7 @@ fun Route.memoriesRoutes() {
     get<Api.Memories> {
         val session = getUserSessionOrFail() ?: return@get
         // In one transaction, so what the encoding needs (see memoriesFor) is loaded once for the whole list
-        val body = Database { json.encodeEntityListToString(memoriesFor(session), MemoryEntity) }
+        val body = Database { encodeList(Memory.serializer(), memoriesFor(session), session) }
 
         call.respondText(body, ContentType.Application.Json)
     }
@@ -348,7 +349,7 @@ fun Route.memoriesRoutes() {
         val memory = memoryRequest(session, requireOwnerOrAdmin = false) ?: return@get
 
         call.respondText(ContentType.Application.Json) {
-            json.encodeEntityToString(memory, MemoryEntity)
+            encodeOne(Memory.serializer(), memory, session)
         }
     }
     patch<Api.Memories.Id> {

@@ -33,6 +33,7 @@ import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSess
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.validatedQualificationRequirements
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
@@ -72,7 +73,7 @@ fun Route.eventsRoutes() {
         entityClass = EventEntity,
         syncKey = "events",
         idTypeConverter = { it.toUuidOrNull() },
-        listProvider = { session -> EventEntity.forSession(session) },
+        listProvider = { session -> SizedCollection(EventEntity.withDataPreloaded(EventEntity.forSession(session).toList())) },
         visibleTo = { event, session -> event.isVisibleTo(session) },
         afterCreate = { eventEntity ->
             Telegram.launch {

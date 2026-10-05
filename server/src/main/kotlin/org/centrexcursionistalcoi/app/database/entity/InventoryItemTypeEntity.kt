@@ -52,8 +52,8 @@ class InventoryItemTypeEntity(id: EntityID<Uuid>): UuidEntity(id), LastUpdateEnt
         description = description,
         categories = categories,
         weight = weight,
-        department = department?.id?.value,
-        image = image?.id?.value
+        department = InventoryItemTypes.department.lookup()?.value,
+        image = InventoryItemTypes.image.lookup()?.value,
     )
 
     context(_: JdbcTransaction)

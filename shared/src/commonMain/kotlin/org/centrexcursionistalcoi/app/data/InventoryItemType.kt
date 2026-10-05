@@ -23,7 +23,7 @@ data class InventoryItemType(
         fun List<InventoryItemType>.getType(id: Uuid): InventoryItemType = this.firstOrNull { it.id == id } ?: throw InventoryItemTypeNotFoundException(id)
     }
 
-    override val files: Map<String, Uuid?> = mapOf("image" to image)
+    override val files: Map<String, Uuid?> get() = mapOf("image" to image)
 
     override fun toString(): String = displayName
 }

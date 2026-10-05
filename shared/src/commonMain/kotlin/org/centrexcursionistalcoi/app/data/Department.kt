@@ -62,7 +62,7 @@ data class Department(
     }
 
     @Transient
-    override val files: Map<String, Uuid?> = mapOf("image" to image)
+    override val files: Map<String, Uuid?> get() = mapOf("image" to image)
 
     override fun toString(): String {
         return displayName

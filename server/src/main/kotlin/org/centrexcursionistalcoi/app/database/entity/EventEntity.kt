@@ -19,6 +19,7 @@ import org.centrexcursionistalcoi.app.security.InvalidQualificationRequirementsE
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.validatedQualificationRequirements
 import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
@@ -27,6 +28,7 @@ import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.dao.UuidEntity
+import org.jetbrains.exposed.v1.dao.with
 import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -41,6 +43,28 @@ import kotlin.uuid.Uuid
 
 class EventEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, EntityDataConverter<Event, Uuid>, EntityPatcher<UpdateEventRequest> {
     companion object : UuidEntityClass<EventEntity>(Events) {
+        private fun groupedRequirements(rows: List<ResultRow>): List<List<Uuid>> = rows
+            .groupBy({ it[EventQualificationRequirements.groupIndex] }, { it[EventQualificationRequirements.qualification].value })
+            .toSortedMap()
+            .values
+            .map { it.sortedBy(Uuid::toString) }
+
+        /**
+         * Loads, for all of [events] at once, what converting them needs: who confirmed assistance and the
+         * requirements. Instead, each would run its own queries. Only holds while the caller stays in the current
+         * transaction.
+         */
+        context(_: JdbcTransaction)
+        fun withDataPreloaded(events: List<EventEntity>): List<EventEntity> {
+            if (events.isEmpty()) return events
+            events.with(EventEntity::userReferences)
+            val rows = EventQualificationRequirements.selectAll()
+                .where { EventQualificationRequirements.event inList events.map { it.id } }
+                .groupBy { it[EventQualificationRequirements.event].value }
+            for (event in events) event.preloadedRequirements = groupedRequirements(rows[event.id.value].orEmpty())
+            return events
+        }
+
         private val logger = LoggerFactory.getLogger("EventEntity")
 
         /**
@@ -134,13 +158,12 @@ class EventEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Entity
      * (see [Event.qualificationRequirements]).
      */
     context(_: JdbcTransaction)
-    fun qualificationRequirements(): List<List<Uuid>> =
-        EventQualificationRequirements.selectAll()
-            .where { EventQualificationRequirements.event eq id }
-            .groupBy({ it[EventQualificationRequirements.groupIndex] }, { it[EventQualificationRequirements.qualification].value })
-            .toSortedMap()
-            .values
-            .map { it.sortedBy(Uuid::toString) }
+    fun qualificationRequirements(): List<List<Uuid>> = preloadedRequirements ?: groupedRequirements(
+        EventQualificationRequirements.selectAll().where { EventQualificationRequirements.event eq id }.toList()
+    )
+
+    /** The requirements, loaded ahead for a whole list, see [withDataPreloaded]. */
+    private var preloadedRequirements: List<List<Uuid>>? = null
 
     /**
      * Replaces this event's qualification requirements with [groups], which must have already been checked with
@@ -148,6 +171,7 @@ class EventEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Entity
      */
     context(_: JdbcTransaction)
     fun setQualificationRequirements(groups: List<List<Uuid>>) {
+        preloadedRequirements = null
         EventQualificationRequirements.deleteWhere { EventQualificationRequirements.event eq this@EventEntity.id }
         groups.forEachIndexed { index, group ->
             for (qualificationId in group) {
@@ -171,8 +195,8 @@ class EventEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Entity
         maxPeople = maxPeople,
         requiresConfirmation = requiresConfirmation,
         requiresInsurance = requiresInsurance,
-        department = department?.id?.value,
-        image = image?.id?.value,
+        department = Events.department.lookup()?.value,
+        image = Events.image.lookup()?.value,
         userSubList = userReferences.map { it.sub.value },
         qualificationRequirements = qualificationRequirements(),
     )

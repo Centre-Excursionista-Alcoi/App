@@ -19,6 +19,7 @@ import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.DepartmentRole
+import org.centrexcursionistalcoi.app.data.Lending
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentMemberEntity
 import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
@@ -33,11 +34,12 @@ import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.Lendings
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
-import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
-import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
+import org.centrexcursionistalcoi.app.database.utils.encodeList
+import org.centrexcursionistalcoi.app.database.utils.encodeOne
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
+import org.jetbrains.exposed.v1.dao.with
 import org.centrexcursionistalcoi.app.routes.sync.SyncSection
 import org.centrexcursionistalcoi.app.routes.sync.SyncSections
 import org.centrexcursionistalcoi.app.notifications.Email
@@ -146,7 +148,12 @@ private suspend fun RoutingContext.lendingRequest(session: UserSession): Lending
  * If all the items from a lending are from the same department, it's considered that the lending is from that
  * department, and as such, the manager of the department (if any) can see and act upon the lending just like an admin.
  */
-internal fun lendingsFor(session: UserSession): List<LendingEntity> {
+internal fun lendingsFor(session: UserSession): List<LendingEntity> = Database {
+    // Their items, received items and memory loaded for all at once. Holds while the caller stays in this transaction
+    lendingsVisibleTo(session).also { it.with(LendingEntity::items, LendingEntity::receivedItems, LendingEntity::memory) }
+}
+
+private fun lendingsVisibleTo(session: UserSession): List<LendingEntity> {
     if (session.isAdmin()) return Database { LendingEntity.all().toList() }
 
     val lendings = Database {
@@ -178,7 +185,7 @@ fun Route.lendingsRoutes() {
     SyncSections.register(
         SyncSection(
             key = "lendings",
-            snapshot = { session -> json.encodeEntityListToString(lendingsFor(session), LendingEntity) },
+            snapshot = { session -> encodeList(Lending.serializer(), lendingsFor(session), session) },
         )
     )
     postWithLock<Api.Inventory.Lendings>(lendingsMutex) {
@@ -319,7 +326,7 @@ fun Route.lendingsRoutes() {
         val lendings = lendingsFor(session)
 
         call.respondText(ContentType.Application.Json) {
-            Database { json.encodeEntityListToString(lendings, LendingEntity) }
+            encodeList(Lending.serializer(), lendings, session)
         }
     }
     get<Api.Inventory.Lendings.Id> {
@@ -327,7 +334,7 @@ fun Route.lendingsRoutes() {
         val lending = lendingRequest(session) ?: return@get
 
         call.respondText(ContentType.Application.Json) {
-            json.encodeEntityToString(lending, LendingEntity)
+            encodeOne(Lending.serializer(), lending, session)
         }
     }
     delete<Api.Inventory.Lendings.Id> {

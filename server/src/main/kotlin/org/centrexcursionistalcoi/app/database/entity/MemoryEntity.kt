@@ -85,13 +85,13 @@ class MemoryEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Entit
         externalUsers = externalPeople,
         text = text,
         sport = sport,
-        department = department?.id?.value,
+        department = Memories.department.lookup()?.value,
         attachments = files.map { it.id.value },
-        submittedBy = submittedBy.id.value,
+        submittedBy = Memories.submittedBy.lookup().value,
         from = from,
         to = to,
-        pdf = pdf?.id?.value,
-        lending = lending?.id?.value,
+        pdf = Memories.pdf.lookup()?.value,
+        lending = Memories.lending.lookup()?.value,
     )
 
     context(_: JdbcTransaction)

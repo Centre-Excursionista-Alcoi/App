@@ -12,13 +12,14 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.serializer
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
 import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
-import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
-import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
+import org.centrexcursionistalcoi.app.database.entity.EntityDataConverter
+import org.centrexcursionistalcoi.app.database.utils.encodeList
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
@@ -106,7 +107,7 @@ suspend fun RoutingContext.assertIdParameter(): Uuid? {
 }
 
 @Suppress("USELESS_CAST")
-inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any, C : Any, I : Any> Route.provideEntityRoutes(
+inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, reified E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any, C : Any, I : Any> Route.provideEntityRoutes(
     resources: EntityResources<C, I>,
     entityClass: EntityClass<EID, EE>,
     noinline idTypeConverter: (String) -> EID?,
@@ -121,7 +122,9 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>,
     noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
     writeGroup: String? = null,
     syncKey: String? = null,
-) = provideEntityRoutes(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, createRequestSerializer, creator, updater, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected, writeGroup, syncKey)
+    /** How the entities are answered: the data class they convert to. */
+    dataSerializer: KSerializer<E> = serializer<E>(),
+) where EE : EntityDataConverter<E, ID> = provideEntityRoutes(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, createRequestSerializer, creator, updater, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected, writeGroup, syncKey, dataSerializer)
 
 @OptIn(InternalSerializationApi::class)
 fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any, C : Any, I : Any> Route.provideEntityRoutes(
@@ -182,13 +185,15 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      * If set, the list of this entity is also a section of `GET /sync` with this key (see `SyncSections`).
      */
     syncKey: String? = null,
-) {
+    /** How the entities are answered: the data class they convert to. */
+    dataSerializer: KSerializer<E>,
+) where EE : EntityDataConverter<E, ID> {
     if (syncKey != null) {
         SyncSections.register(
             SyncSection(
                 key = syncKey,
                 lastUpdate = { lastUpdateForType(entityClass) },
-                snapshot = { session -> Database { json.encodeEntityListToString(listProvider(session).toList(), entityClass, session) } },
+                snapshot = { session -> encodeList(dataSerializer, session) { listProvider(session).toList() } },
             )
         )
     }
@@ -265,7 +270,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         val session = getUserSession()
         handleIfModifiedForType(entityClass) ?: return@handle
         // Read and encoded in the same transaction, so what the encoding needs is loaded once for the whole list
-        val body = Database { json.encodeEntityListToString(listProvider(session).toList(), entityClass, session) }
+        val body = encodeList(dataSerializer, session) { listProvider(session).toList() }
 
         call.respondText(body, ContentType.Application.Json)
     }
@@ -280,7 +285,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
         handleIfModified(entityClass, id) ?: return@handle
 
         call.respondText(ContentType.Application.Json) {
-            json.encodeEntityToString(item, entityClass, session)
+            Database { json.encodeToString(dataSerializer, item.toData(session)) }
         }
     }
 

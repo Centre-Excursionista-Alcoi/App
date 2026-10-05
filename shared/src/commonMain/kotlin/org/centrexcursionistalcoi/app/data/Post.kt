@@ -18,5 +18,5 @@ data class Post(
     val link: String?,
     val files: List<FileWithContext>,
 ): Entity<Uuid>, ImageFileListContainer {
-    override val images: List<Uuid> = files.mapNotNull { it.id }
+    override val images: List<Uuid> get() = files.mapNotNull { it.id }
 }
