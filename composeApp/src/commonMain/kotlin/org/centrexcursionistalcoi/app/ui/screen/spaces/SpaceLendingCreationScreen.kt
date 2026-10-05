@@ -9,11 +9,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,14 +52,11 @@ fun SpaceLendingCreationScreen(
 ) {
     val space by model.space.collectAsState()
     val keys by model.keys.collectAsState()
-    val checkIn by model.checkIn.collectAsState()
-    val checkOut by model.checkOut.collectAsState()
     val attendees by model.attendees.collectAsState()
     val keyQuantities by model.keyQuantities.collectAsState()
     val notes by model.notes.collectAsState()
     val acceptedConditions by model.acceptedConditions.collectAsState()
     val occupancy by model.occupancy.collectAsState()
-    val price by model.price.collectAsState()
     val isWorking by model.isWorking.collectAsState()
     val isLoaded by model.isLoaded.collectAsState()
 
@@ -86,6 +81,21 @@ fun SpaceLendingCreationScreen(
             LoadingBox()
             return@Scaffold
         }
+        // The date picker is the only owner of the chosen dates: everything else reads them from it
+        val pickerState = rememberDateRangePickerState(
+            initialSelectedStartDateMillis = model.initialDates?.first?.toEpochMillis(),
+            initialSelectedEndDateMillis = model.initialDates?.second?.toEpochMillis(),
+            selectableDates = FutureSelectableDates(from = today, inclusive = true),
+        )
+        val checkIn = pickerState.selectedStartDateMillis?.let(LocalDate::fromEpochMillis)
+        // Picking a single day is a stay with no nights
+        val checkOut = pickerState.selectedEndDateMillis?.let(LocalDate::fromEpochMillis) ?: checkIn
+        val price = if (checkIn != null && checkOut != null) {
+            SpacePricing.compute(space.prices, attendees, checkIn, checkOut)
+        } else {
+            null
+        }
+
         val hasConditions = space.conditionsOfUse != null
         val canSubmit = !isWorking &&
             checkIn != null &&
@@ -98,32 +108,16 @@ fun SpaceLendingCreationScreen(
                 Text(stringResource(Res.string.space_lending_dates_hint), style = MaterialTheme.typography.bodySmall)
             }
             item("dates") {
-                val state = rememberDateRangePickerState(
-                    initialSelectedStartDateMillis = checkIn?.toEpochMillis(),
-                    initialSelectedEndDateMillis = checkOut?.toEpochMillis(),
-                    selectableDates = FutureSelectableDates(from = today, inclusive = true),
-                )
-                LaunchedEffect(state) {
-                    snapshotFlow { state.selectedStartDateMillis to state.selectedEndDateMillis }
-                        .collect { (start, end) ->
-                            // Nothing selected is the initial state, not a choice: it must not clear the dates
-                            if (start != null) {
-                                model.setDates(LocalDate.fromEpochMillis(start), end?.let(LocalDate::fromEpochMillis))
-                            }
-                        }
-                }
                 DateRangePicker(
-                    state = state,
+                    state = pickerState,
                     title = {},
                     modifier = Modifier.fillMaxWidth().height(400.dp),
                     colors = DatePickerDefaults.colors(containerColor = Color.Transparent),
                 )
             }
             item("nights") {
-                val start = checkIn
-                val end = checkOut
-                if (start != null && end != null) {
-                    Text(stringResource(Res.string.space_lending_nights, SpacePricing.nights(start, end)))
+                if (checkIn != null && checkOut != null) {
+                    Text(stringResource(Res.string.space_lending_nights, SpacePricing.nights(checkIn, checkOut)))
                 }
             }
             if (!occupancy.isNullOrEmpty()) {
@@ -223,7 +217,9 @@ fun SpaceLendingCreationScreen(
                     )
                 }
                 Button(
-                    onClick = { model.submit(onDone) },
+                    onClick = {
+                        if (checkIn != null && checkOut != null) model.submit(checkIn, checkOut, onDone)
+                    },
                     enabled = canSubmit,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
                 ) {
