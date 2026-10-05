@@ -30,6 +30,7 @@ fun Route.inventoryRoutes() {
     provideEntityRoutes(
         resources = Api.Inventory.Types.resources,
         entityClass = InventoryItemTypeEntity,
+        syncKey = "inventory_types",
         idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session ->
             if (session == null) EmptySizedIterable()
@@ -72,6 +73,7 @@ fun Route.inventoryRoutes() {
     provideEntityRoutes(
         resources = Api.Inventory.Items.resources,
         entityClass = InventoryItemEntity,
+        syncKey = "inventory_items",
         idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session ->
             if (session == null) EmptySizedIterable()

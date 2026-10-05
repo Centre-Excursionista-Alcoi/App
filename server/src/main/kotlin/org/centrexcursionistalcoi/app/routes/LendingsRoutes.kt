@@ -38,6 +38,8 @@ import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.routes.sync.SyncSection
+import org.centrexcursionistalcoi.app.routes.sync.SyncSections
 import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
@@ -137,7 +139,48 @@ private suspend fun RoutingContext.lendingRequest(session: UserSession): Lending
     return lending
 }
 
+/**
+ * The lendings [session] can see: all for admins; for everyone else their own, plus those of the departments they
+ * hold LENDING_MANAGER in.
+ *
+ * If all the items from a lending are from the same department, it's considered that the lending is from that
+ * department, and as such, the manager of the department (if any) can see and act upon the lending just like an admin.
+ */
+internal fun lendingsFor(session: UserSession): List<LendingEntity> {
+    if (session.isAdmin()) return Database { LendingEntity.all().toList() }
+
+    val lendings = Database {
+        val userRef = UserReferenceEntity.findById(session.sub)!!
+        LendingEntity.find { Lendings.userSub eq userRef.id }.toMutableList()
+    }
+    val managedDepartmentsIds = Database {
+        DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true)
+            .filter { it.hasRole(DepartmentRole.LENDING_MANAGER) }
+            .map { it.department.id.value }
+    }
+    if (managedDepartmentsIds.isNotEmpty()) {
+        lendings += Database {
+            LendingEntity.find { Lendings.id notInList lendings.map { it.id } }.filter { lending ->
+                val departments = lending.items.mapNotNull { it.type.department }.distinctBy { it.id.value }
+                val departmentId = if (departments.size == 1) {
+                    departments.first().id.value
+                } else {
+                    return@filter false
+                }
+                managedDepartmentsIds.contains(departmentId)
+            }
+        }
+    }
+    return lendings
+}
+
 fun Route.lendingsRoutes() {
+    SyncSections.register(
+        SyncSection(
+            key = "lendings",
+            snapshot = { session -> json.encodeEntityListToString(lendingsFor(session), LendingEntity) },
+        )
+    )
     postWithLock<Api.Inventory.Lendings>(lendingsMutex) {
         val session = getUserSessionOrFail() ?: return@postWithLock
 
@@ -273,43 +316,10 @@ fun Route.lendingsRoutes() {
     }
     getWithLock<Api.Inventory.Lendings>(lendingsMutex) {
         val session = getUserSessionOrFail() ?: return@getWithLock
+        val lendings = lendingsFor(session)
 
-        if (session.isAdmin()) {
-            val allLendings = Database { LendingEntity.all().toList() }
-            call.respondText(ContentType.Application.Json) {
-                json.encodeEntityListToString(allLendings, LendingEntity)
-            }
-        } else {
-            val lendings = Database {
-                val userRef = UserReferenceEntity.findById(session.sub)!!
-                LendingEntity.find { Lendings.userSub eq userRef.id }.toMutableList()
-            }
-
-            // If all the items from a lending are from the same department, it's considered that the lending is from that department, and as such,
-            // the manager of the department (if any) can see and act upon the lending just like an admin.
-            val managedDepartmentsIds = Database {
-                DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true)
-                    .filter { it.hasRole(DepartmentRole.LENDING_MANAGER) }
-                    .map { it.department.id.value }
-            }
-            if (managedDepartmentsIds.isNotEmpty()) {
-                val managedDepartmentLendings = Database {
-                    LendingEntity.find { Lendings.id notInList lendings.map { it.id } }.filter { lending ->
-                        val departments = lending.items.mapNotNull { it.type.department }.distinctBy { it.id.value }
-                        val departmentId = if (departments.size == 1) {
-                            departments.first().id.value
-                        } else {
-                            return@filter false
-                        }
-                        managedDepartmentsIds.contains(departmentId)
-                    }
-                }
-                lendings.addAll(managedDepartmentLendings)
-            }
-
-            call.respondText(ContentType.Application.Json) {
-                json.encodeEntityListToString(lendings, LendingEntity)
-            }
+        call.respondText(ContentType.Application.Json) {
+            Database { json.encodeEntityListToString(lendings, LendingEntity) }
         }
     }
     get<Api.Inventory.Lendings.Id> {

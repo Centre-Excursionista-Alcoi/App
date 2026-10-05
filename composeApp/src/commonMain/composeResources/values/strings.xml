@@ -21,6 +21,7 @@
     <string name="sync_step_item_types">Item Types</string>
     <string name="sync_step_items">Items</string>
     <string name="sync_step_lendings">Lendings</string>
+    <string name="sync_step_all">Everything</string>
     <string name="sync_step_memories">Memories</string>
     <string name="sync_step_spaces">Spaces</string>
     <string name="sync_step_space_keys">Space keys</string>

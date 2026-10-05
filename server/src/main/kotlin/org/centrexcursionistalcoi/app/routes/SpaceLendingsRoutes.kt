@@ -46,6 +46,8 @@ import org.centrexcursionistalcoi.app.request.UpdateSpaceLendingAttendeesRequest
 import org.centrexcursionistalcoi.app.request.UpdateSpaceLendingRequest
 import org.centrexcursionistalcoi.app.request.receiveJson
 import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
+import org.centrexcursionistalcoi.app.routes.sync.SyncSection
+import org.centrexcursionistalcoi.app.routes.sync.SyncSections
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
@@ -211,15 +213,24 @@ private fun sendNewSpaceLendingEmails(lending: SpaceLendingEntity, user: UserRef
     )
 }
 
+/** The space lendings [session] can see: all for those who manage them, and only their own for everyone else. */
+internal fun spaceLendingsFor(session: UserSession): List<SpaceLendingEntity> = Database {
+    if (session.isSpaceLendingsManager()) SpaceLendingEntity.all().toList()
+    else SpaceLendingEntity.find { SpaceLendings.userSub eq session.sub }.toList()
+}
+
 fun Route.spaceLendingsRoutes() {
+    SyncSections.register(
+        SyncSection(
+            key = "space_lendings",
+            snapshot = { session -> json.encodeEntityListToString(spaceLendingsFor(session), SpaceLendingEntity, session) },
+        )
+    )
     get<Api.SpaceLendings> {
         val session = getUserSessionOrFail() ?: return@get
-        val lendings = Database {
-            if (session.isSpaceLendingsManager()) SpaceLendingEntity.all().toList()
-            else SpaceLendingEntity.find { SpaceLendings.userSub eq session.sub }.toList()
-        }
+        val lendings = spaceLendingsFor(session)
         call.respondText(ContentType.Application.Json) {
-            json.encodeEntityListToString(lendings, SpaceLendingEntity, session)
+            Database { json.encodeEntityListToString(lendings, SpaceLendingEntity, session) }
         }
     }
     get<Api.SpaceLendings.Id> { resource ->

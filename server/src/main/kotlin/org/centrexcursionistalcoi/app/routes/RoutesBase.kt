@@ -29,6 +29,9 @@ import org.centrexcursionistalcoi.app.request.RequestWithFiles
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
 import org.centrexcursionistalcoi.app.request.assertRequestWithFilesContentType
 import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
+import org.centrexcursionistalcoi.app.routes.helper.lastUpdateForType
+import org.centrexcursionistalcoi.app.routes.sync.SyncSection
+import org.centrexcursionistalcoi.app.routes.sync.SyncSections
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModifiedForType
 import org.centrexcursionistalcoi.app.security.UserSession
@@ -117,7 +120,8 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>,
     noinline afterCreate: suspend (EE) -> Unit = {},
     noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
     writeGroup: String? = null,
-) = provideEntityRoutes(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, createRequestSerializer, creator, updater, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected, writeGroup)
+    syncKey: String? = null,
+) = provideEntityRoutes(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, createRequestSerializer, creator, updater, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected, writeGroup, syncKey)
 
 @OptIn(InternalSerializationApi::class)
 fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any, C : Any, I : Any> Route.provideEntityRoutes(
@@ -174,7 +178,20 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      * A global group (besides admins) whose members may write any entity, e.g. a "spaces manager".
      */
     writeGroup: String? = null,
+    /**
+     * If set, the list of this entity is also a section of `GET /sync` with this key (see `SyncSections`).
+     */
+    syncKey: String? = null,
 ) {
+    if (syncKey != null) {
+        SyncSections.register(
+            SyncSection(
+                key = syncKey,
+                lastUpdate = { lastUpdateForType(entityClass) },
+                snapshot = { session -> Database { json.encodeEntityListToString(listProvider(session).toList(), entityClass, session) } },
+            )
+        )
+    }
     fun UserSession.isWriteGroupMember() = writeGroup != null && writeGroup in groups
 
     val base = ResourcesFormat().encodeToPathPattern(resources.collectionSerializer).trim('/')

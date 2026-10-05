@@ -31,6 +31,7 @@ fun Route.spacesRoutes() {
     provideEntityRoutes(
         resources = Api.Spaces.resources,
         entityClass = SpaceEntity,
+        syncKey = "spaces",
         idTypeConverter = { it.toUuidOrNull() },
         writeGroup = SPACES_MANAGER_GROUP_NAME,
         createRequestSerializer = CreateSpaceRequest.serializer(),
@@ -52,6 +53,7 @@ fun Route.spacesRoutes() {
     provideEntityRoutes(
         resources = Api.SpaceKeys.resources,
         entityClass = SpaceKeyEntity,
+        syncKey = "space_keys",
         idTypeConverter = { it.toUuidOrNull() },
         writeGroup = SPACES_MANAGER_GROUP_NAME,
         createRequestSerializer = CreateSpaceKeyRequest.serializer(),

@@ -47,6 +47,8 @@ import org.centrexcursionistalcoi.app.request.MissingPartException
 import org.centrexcursionistalcoi.app.request.UpdateMemoryRequest
 import org.centrexcursionistalcoi.app.request.assertRequestWithFilesContentType
 import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
+import org.centrexcursionistalcoi.app.routes.sync.SyncSection
+import org.centrexcursionistalcoi.app.routes.sync.SyncSections
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
@@ -108,7 +110,41 @@ private class StoredAttachment(val objectKey: String, val size: Long, val name: 
 
 private val logger = LoggerFactory.getLogger("MemoriesRoutes")
 
+/**
+ * The memories [session] can see: all for admins; for everyone else those they submitted, those they're tagged as a
+ * participant on, and those of the departments they're a MEMORY_MANAGER of.
+ */
+internal fun memoriesFor(session: UserSession): List<MemoryEntity> {
+    return Database {
+        if (session.isAdmin()) {
+            MemoryEntity.all().toList()
+        } else {
+            // Regular users see memories they submitted, memories they're tagged as a participant on, plus
+            // memories of departments they're a MEMORY_MANAGER of (mirroring how lendings extend list
+            // visibility to managed departments).
+            val userMemberNumber = UserReferenceEntity.findById(session.sub)?.memberNumber
+            val taggedMemoryIds = userMemberNumber?.let { memberNumber ->
+                MemoriesMembers.selectAll().where { MemoriesMembers.member eq memberNumber }.map { it[MemoriesMembers.memory] }
+            }.orEmpty()
+            val managedDepartmentIds = DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true)
+                .filter { it.hasRole(DepartmentRole.MEMORY_MANAGER) }
+                .map { it.department.id.value }
+            MemoryEntity.find {
+                (Memories.submittedBy eq session.sub) or
+                    (Memories.id inList taggedMemoryIds) or
+                    (Memories.department inList managedDepartmentIds)
+            }.toList()
+        }
+    }
+}
+
 fun Route.memoriesRoutes() {
+    SyncSections.register(
+        SyncSection(
+            key = "memories",
+            snapshot = { session -> json.encodeEntityListToString(memoriesFor(session), MemoryEntity) },
+        )
+    )
     post<Api.Memories> {
         val session = getUserSessionOrFail() ?: return@post
 
@@ -298,28 +334,7 @@ fun Route.memoriesRoutes() {
     }
     get<Api.Memories> {
         val session = getUserSessionOrFail() ?: return@get
-
-        val memories = Database {
-            if (session.isAdmin()) {
-                MemoryEntity.all().toList()
-            } else {
-                // Regular users see memories they submitted, memories they're tagged as a participant on, plus
-                // memories of departments they're a MEMORY_MANAGER of (mirroring how lendings extend list
-                // visibility to managed departments).
-                val userMemberNumber = UserReferenceEntity.findById(session.sub)?.memberNumber
-                val taggedMemoryIds = userMemberNumber?.let { memberNumber ->
-                    MemoriesMembers.selectAll().where { MemoriesMembers.member eq memberNumber }.map { it[MemoriesMembers.memory] }
-                }.orEmpty()
-                val managedDepartmentIds = DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true)
-                    .filter { it.hasRole(DepartmentRole.MEMORY_MANAGER) }
-                    .map { it.department.id.value }
-                MemoryEntity.find {
-                    (Memories.submittedBy eq session.sub) or
-                        (Memories.id inList taggedMemoryIds) or
-                        (Memories.department inList managedDepartmentIds)
-                }.toList()
-            }
-        }
+        val memories = memoriesFor(session)
 
         call.respondText(ContentType.Application.Json) {
             json.encodeEntityListToString(memories, MemoryEntity)

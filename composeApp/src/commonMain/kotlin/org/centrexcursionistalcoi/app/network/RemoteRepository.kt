@@ -22,6 +22,9 @@ import io.ktor.http.isSuccess
 import io.ktor.resources.serialization.ResourcesFormat
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.jsonPrimitive
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.data.DocumentFileContainer
 import org.centrexcursionistalcoi.app.data.Entity
@@ -36,6 +39,7 @@ import org.centrexcursionistalcoi.app.exception.ResourceNotModifiedException
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.log.TraceOperation
+import org.centrexcursionistalcoi.app.log.TraceSpan
 import org.centrexcursionistalcoi.app.log.traceSpan
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownloadProgress
@@ -218,6 +222,93 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
     }
 
     /**
+     * Brings the local database to what the server has: inserts and updates [remoteList], and deletes what isn't in it.
+     * @param localList What the local database has.
+     */
+    private suspend fun storeRemoteList(
+        localList: List<LocalEntity>,
+        remoteList: List<RemoteEntity>,
+        progress: ProgressNotifier?,
+        span: TraceSpan?,
+    ) {
+        progress?.invoke(Progress.DataProcessing)
+        val (toInsert, toUpdate, toDelete) = traceSpan(TraceOperation.SYNC_PROCESS, "Compare $name") {
+            val toUpdate = mutableListOf<RemoteEntity>()
+            val toInsert = mutableListOf<RemoteEntity>()
+            for (item in remoteList) {
+                if (localList.find { it.id == item.id } != null) {
+                    toUpdate += item
+                } else {
+                    toInsert += item
+                }
+            }
+            // IDs of items that should remain in the database
+            val existingIds = toUpdate.map { remoteToLocalIdConverter(it.id) } + toInsert.map { remoteToLocalIdConverter(it.id) }
+
+            // Delete items that are not in the server response
+            val toDelete = localList.filter { it.id !in existingIds }.map { it.id }
+
+            Triple(toInsert, toUpdate, toDelete)
+        }
+        span?.setData("sync.inserted", toInsert.size.toLong())
+        span?.setData("sync.updated", toUpdate.size.toLong())
+        span?.setData("sync.deleted", toDelete.size.toLong())
+
+        log.d {
+            "Inserting ${toInsert.size} new $name. Updating ${toUpdate.size} $name. Deleting ${toDelete.size} $name"
+        }
+
+        progress?.invoke(Progress.LocalDBWrite)
+        traceSpan(TraceOperation.DB_WRITE, "Store $name") {
+            // Insert new items, and update existing ones: both as upserts, since another sync (e.g. of a single
+            // entity, after a push notification) may store the same rows meanwhile
+            toInsert.forEach { upsertRemoteEntity(it) }
+            toUpdate.forEach { upsertRemoteEntity(it) }
+            // Delete removed items
+            repository.deleteByIdList(toDelete)
+        }
+
+        progress?.invoke(Progress.LocalDBRead)
+        val all = repository.selectAll()
+        log.i { "There are ${all.size} $name" }
+    }
+
+    /**
+     * The time this repository was last synced, to send in `GET /sync`, or `null` if its section has to be sent in
+     * full: [force]d, or when there's nothing stored locally (the stored time can't be trusted then, see
+     * [synchronizeWithDatabase]).
+     */
+    suspend fun lastSyncForBulkSync(force: Boolean): Long? {
+        if (force || repository.selectAll().isEmpty()) return null
+        return settings.get(lastSyncSettingsKey)
+    }
+
+    /**
+     * Stores a section of the response of `GET /sync`: what [getAll] would have fetched.
+     * @param section `{"modified":false}`, or `{"modified":true,"items":[...]}`.
+     * @param serverTime When the server answered: the next sync is only for what changed after.
+     */
+    suspend fun synchronizeFromBulkSync(
+        section: JsonObject,
+        serverTime: Long,
+        progress: ProgressNotifier? = null,
+    ) = traceSpan(TraceOperation.SYNC_ENTITY, name) { span ->
+        if (section["modified"]?.jsonPrimitive?.boolean != true) {
+            span?.setData("sync.not_modified", true)
+            log.i { "$name not modified. No need to refresh." }
+            return@traceSpan
+        }
+        progress?.invoke(Progress.LocalDBRead)
+        val localList = traceSpan(TraceOperation.DB_READ, "Select all $name") { repository.selectAll() }
+        val remoteList = traceSpan(TraceOperation.SERIALIZE, "Decode $name") {
+            val raw = section.getValue("items").toString().cleanNullFields()
+            json.decodeFromString(ListSerializer(serializer), raw)
+        }
+        storeRemoteList(localList, remoteList, progress, span)
+        settings.set(lastSyncSettingsKey, serverTime)
+    }
+
+    /**
      * Synchronizes the local database with the remote server.
      * @param progress An optional progress notifier to report progress.
      * @param ignoreIfModifiedSince If `true`, ignores the `If-Modified-Since` header and always fetches data.
@@ -241,46 +332,7 @@ abstract class RemoteRepository<LocalIdType : Any, LocalEntity : Entity<LocalIdT
             span?.setData("sync.forced", forceFetch)
             val remoteList = getAll(progress, forceFetch) // all entries from the remote server
 
-            progress?.invoke(Progress.DataProcessing)
-            val (toInsert, toUpdate, toDelete) = traceSpan(TraceOperation.SYNC_PROCESS, "Compare $name") {
-                val toUpdate = mutableListOf<RemoteEntity>()
-                val toInsert = mutableListOf<RemoteEntity>()
-                for (item in remoteList) {
-                    if (localList.find { it.id == item.id } != null) {
-                        toUpdate += item
-                    } else {
-                        toInsert += item
-                    }
-                }
-                // IDs of items that should remain in the database
-                val existingIds = toUpdate.map { remoteToLocalIdConverter(it.id) } + toInsert.map { remoteToLocalIdConverter(it.id) }
-
-                // Delete items that are not in the server response
-                val toDelete = localList.filter { it.id !in existingIds }.map { it.id }
-
-                Triple(toInsert, toUpdate, toDelete)
-            }
-            span?.setData("sync.inserted", toInsert.size.toLong())
-            span?.setData("sync.updated", toUpdate.size.toLong())
-            span?.setData("sync.deleted", toDelete.size.toLong())
-
-            log.d {
-                "Inserting ${toInsert.size} new $name. Updating ${toUpdate.size} $name. Deleting ${toDelete.size} $name"
-            }
-
-            progress?.invoke(Progress.LocalDBWrite)
-            traceSpan(TraceOperation.DB_WRITE, "Store $name") {
-                // Insert new items, and update existing ones: both as upserts, since another sync (e.g. of a single
-                // entity, after a push notification) may store the same rows meanwhile
-                toInsert.forEach { upsertRemoteEntity(it) }
-                toUpdate.forEach { upsertRemoteEntity(it) }
-                // Delete removed items
-                repository.deleteByIdList(toDelete)
-            }
-
-            progress?.invoke(Progress.LocalDBRead)
-            val all = repository.selectAll()
-            log.i { "There are ${all.size} $name" }
+            storeRemoteList(localList, remoteList, progress, span)
         } catch (_: ResourceNotModifiedException) {
             span?.setData("sync.not_modified", true)
             log.i { "Resource not modified. No need to refresh." }

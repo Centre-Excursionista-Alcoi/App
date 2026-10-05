@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.sync
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.sync_step_all
 import cea_app.composeapp.generated.resources.sync_step_departments
 import cea_app.composeapp.generated.resources.sync_step_events
 import cea_app.composeapp.generated.resources.sync_step_item_types
@@ -47,6 +48,7 @@ import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpaceKeysRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpaceLendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpacesRemoteRepository
+import org.centrexcursionistalcoi.app.network.SyncRemoteRepository
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.network.UsersRemoteRepository
 import org.centrexcursionistalcoi.app.settings.SettingsStore
@@ -60,6 +62,7 @@ import kotlin.time.Instant
 @Singleton
 @Named(SyncAllDataBackgroundJob.UNIQUE_NAME)
 class SyncAllDataBackgroundJob(
+    private val syncRemoteRepository: SyncRemoteRepository,
     private val profileRemoteRepository: ProfileRemoteRepository,
     private val departmentsRemoteRepository: DepartmentsRemoteRepository,
     private val usersRemoteRepository: UsersRemoteRepository,
@@ -139,49 +142,9 @@ class SyncAllDataBackgroundJob(
         isRetry: Boolean = false,
     ) {
         try {
-            // First, synchronize the user profile
-            traceSpan(TraceOperation.SYNC_ENTITY, "profile") {
-                profileRemoteRepository.synchronize(progressNotifier.withContext(Res.string.sync_step_profile), ignoreIfModifiedSince = force)
-            }
-
-            // Departments does not depend on any other entity, so we sync it first
-            departmentsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_departments), ignoreIfModifiedSince = force)
-
-            // Users does not depend on any other entity
-            usersRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_users), ignoreIfModifiedSince = force)
-
-            // Members do not depend on any other entity
-            membersRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_members), ignoreIfModifiedSince = force)
-
-            // Posts requires Departments
-            postsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_posts), ignoreIfModifiedSince = force)
-
-            // Events requires Departments and Users
-            // Since users can only be listed by admins, assistance will not be valid for non-admins, StubUser will be filled on all cases
-            eventsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_events), ignoreIfModifiedSince = force)
-
-            // Inventory Item Types requires Departments
-            inventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_item_types), ignoreIfModifiedSince = force)
-
-            // Inventory Items requires Inventory Item Types
-            inventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_items), ignoreIfModifiedSince = force)
-
-            // Lendings requires Users, Inventory Item Types and Inventory Items
-            // Since the users list will be filtered for non-admins (only include themselves, and the members of departments they manage, if any),
-            // lending user info will not be valid for non-admins, StubUser will be filled on those cases
-            lendingsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_lendings), ignoreIfModifiedSince = force)
-
-            // Memories requires Departments and (optionally) Lendings
-            memoriesRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_memories), ignoreIfModifiedSince = force)
-
-            // Spaces do not depend on any other entity
-            spacesRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_spaces), ignoreIfModifiedSince = force)
-
-            // Space keys require Spaces
-            spaceKeysRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_space_keys), ignoreIfModifiedSince = force)
-
-            // Space lendings require Spaces
-            spaceLendingsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_space_lendings), ignoreIfModifiedSince = force)
+            // Everything in a single request, if the server can
+            val syncedAtOnce = syncRemoteRepository.synchronize(progressNotifier.withContext(Res.string.sync_step_all), ignoreIfModifiedSince = force)
+            if (!syncedAtOnce) synchronizeEachRepository(force)
         } catch (e: MissingCrossReferenceException) {
             if (isRetry) {
                 log.e(e) { "Could not find cross reference after clearing all local data. Something is wrong on the server side. Failing..." }
@@ -222,6 +185,55 @@ class SyncAllDataBackgroundJob(
         // (which awaits this job) treated a session that just gave up as if it had synced cleanly, sometimes
         // navigating to the Main screen with a wiped, empty database while the user was never actually
         // re-authenticated.
+    }
+
+    /**
+     * Synchronizes each repository with a request of its own, for servers that can't answer them all at once.
+     */
+    private suspend fun BackgroundSyncContext.synchronizeEachRepository(force: Boolean) {
+        // First, synchronize the user profile
+        traceSpan(TraceOperation.SYNC_ENTITY, "profile") {
+            profileRemoteRepository.synchronize(progressNotifier.withContext(Res.string.sync_step_profile), ignoreIfModifiedSince = force)
+        }
+
+        // Departments does not depend on any other entity, so we sync it first
+        departmentsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_departments), ignoreIfModifiedSince = force)
+
+        // Users does not depend on any other entity
+        usersRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_users), ignoreIfModifiedSince = force)
+
+        // Members do not depend on any other entity
+        membersRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_members), ignoreIfModifiedSince = force)
+
+        // Posts requires Departments
+        postsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_posts), ignoreIfModifiedSince = force)
+
+        // Events requires Departments and Users
+        // Since users can only be listed by admins, assistance will not be valid for non-admins, StubUser will be filled on all cases
+        eventsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_events), ignoreIfModifiedSince = force)
+
+        // Inventory Item Types requires Departments
+        inventoryItemTypesRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_item_types), ignoreIfModifiedSince = force)
+
+        // Inventory Items requires Inventory Item Types
+        inventoryItemsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_items), ignoreIfModifiedSince = force)
+
+        // Lendings requires Users, Inventory Item Types and Inventory Items
+        // Since the users list will be filtered for non-admins (only include themselves, and the members of departments they manage, if any),
+        // lending user info will not be valid for non-admins, StubUser will be filled on those cases
+        lendingsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_lendings), ignoreIfModifiedSince = force)
+
+        // Memories requires Departments and (optionally) Lendings
+        memoriesRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_memories), ignoreIfModifiedSince = force)
+
+        // Spaces do not depend on any other entity
+        spacesRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_spaces), ignoreIfModifiedSince = force)
+
+        // Space keys require Spaces
+        spaceKeysRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_space_keys), ignoreIfModifiedSince = force)
+
+        // Space lendings require Spaces
+        spaceLendingsRemoteRepository.synchronizeWithDatabase(progressNotifier.withContext(Res.string.sync_step_space_lendings), ignoreIfModifiedSince = force)
     }
 
     companion object {

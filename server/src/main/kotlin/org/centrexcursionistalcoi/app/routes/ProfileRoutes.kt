@@ -39,7 +39,12 @@ import org.centrexcursionistalcoi.app.request.RevokeFCMTokenRequest
 import org.centrexcursionistalcoi.app.request.receiveJson
 import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
 import org.centrexcursionistalcoi.app.response.ProfileResponse
+import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
+import org.centrexcursionistalcoi.app.routes.helper.lastUpdateFor
+import org.centrexcursionistalcoi.app.routes.sync.SyncSection
+import org.centrexcursionistalcoi.app.routes.sync.SyncSections
+import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.jetbrains.exposed.v1.core.and
@@ -50,49 +55,67 @@ import kotlin.time.toKotlinInstant
 
 private val logger = LoggerFactory.getLogger("ProfileRoutes")
 
+/**
+ * Refreshes the FEMECV data of the user of [session] if they use it and it hasn't been refreshed in a while.
+ * @param onError Called with the message if it couldn't be refreshed.
+ */
+internal suspend fun refreshFemecvIfNeeded(session: UserSession, onError: (String) -> Unit) {
+    val reference = Database { UserReferenceEntity[session.sub] }
+    try {
+        if (reference.femecvUsername != null && reference.femecvPassword != null) {
+            val lastSync = reference.femecvLastSync
+            if (lastSync == null || (now() - lastSync).inWholeDays >= FEMECV.REFRESH_EVERY_DAYS) {
+                reference.refreshFEMECVData()
+            }
+        }
+    } catch (e: FEMECVException) {
+        onError(e.message ?: "Unknown")
+    }
+}
+
+/** The profile of the user of [session]. */
+internal fun profileFor(session: UserSession): ProfileResponse {
+    val reference = Database { UserReferenceEntity[session.sub] }
+    val departments = Database {
+        DepartmentMemberEntity.find {
+            (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.confirmed eq true)
+        }.map { it.department.id.value }
+    }
+    val lendingUser = Database {
+        LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull()?.toData()
+    }
+    val insurances = Database { UserInsuranceEntity.find { UserInsurances.userSub eq session.sub }.map { it.toData() } }
+
+    return ProfileResponse(
+        sub = session.sub,
+        fullName = session.fullName,
+        memberNumber = reference.memberNumber,
+        email = session.email,
+        groups = session.groups,
+        departments = departments,
+        lendingUser = lendingUser,
+        insurances = insurances,
+        femecvSyncEnabled = reference.femecvUsername != null && reference.femecvPassword != null,
+        femecvLastSync = reference.femecvLastSync,
+    )
+}
+
 fun Route.profileRoutes() {
+    SyncSections.register(
+        SyncSection(
+            key = "profile",
+            prepare = { session -> refreshFemecvIfNeeded(session) { logger.warn("Could not refresh the FEMECV data: $it") } },
+            lastUpdate = { session -> lastUpdateFor(UserReferenceEntity, session.sub) },
+            snapshot = { session -> json.encodeToString(ProfileResponse.serializer(), profileFor(session)) },
+        )
+    )
     get<Api.Profile> {
         val session = getUserSessionOrFail() ?: return@get
 
         handleIfModified(UserReferenceEntity, session.sub) ?: return@get
 
-        val reference = Database { UserReferenceEntity[session.sub] }
-        try {
-            if (reference.femecvUsername != null && reference.femecvPassword != null) {
-                val lastSync = reference.femecvLastSync
-                if (lastSync == null || (now() - lastSync).inWholeDays >= FEMECV.REFRESH_EVERY_DAYS) {
-                    reference.refreshFEMECVData()
-                }
-            }
-        } catch (e: FEMECVException) {
-            call.response.header("CEA-FEMECV-Error", e.message ?: "Unknown")
-        }
-
-        val departments = Database {
-            DepartmentMemberEntity.find {
-                (DepartmentMembers.userSub eq session.sub) and (DepartmentMembers.confirmed eq true)
-            }.map { it.department.id.value }
-        }
-        val lendingUser = Database {
-            LendingUserEntity.find { LendingUsers.userSub eq session.sub }.firstOrNull()?.toData()
-        }
-
-        val insurances = Database { UserInsuranceEntity.find { UserInsurances.userSub eq session.sub }.map { it.toData() } }
-
-        call.respond(
-            ProfileResponse(
-                sub = session.sub,
-                fullName = session.fullName,
-                memberNumber = reference.memberNumber,
-                email = session.email,
-                groups = session.groups,
-                departments = departments,
-                lendingUser = lendingUser,
-                insurances = insurances,
-                femecvSyncEnabled = reference.femecvUsername != null && reference.femecvPassword != null,
-                femecvLastSync = reference.femecvLastSync,
-            )
-        )
+        refreshFemecvIfNeeded(session) { error -> call.response.header("CEA-FEMECV-Error", error) }
+        call.respond(profileFor(session))
     }
     post<Api.Profile.LendingSignUp> {
         val session = getUserSessionOrFail() ?: return@post

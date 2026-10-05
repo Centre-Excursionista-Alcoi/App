@@ -283,6 +283,13 @@ object Api {
         }
     }
 
+    /**
+     * Everything the app keeps a copy of, in a single request. For each section, the time (in milliseconds) it was
+     * last synced can be sent as a query parameter named by its key (see `SyncRoutes` in the server).
+     */
+    @Resource("/sync")
+    class Sync
+
     @Resource("/memories")
     class Memories {
         @Resource("{id}")

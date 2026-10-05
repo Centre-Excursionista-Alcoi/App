@@ -58,6 +58,20 @@ suspend fun <ID: Any, T: Entity<ID>> notifyUpdateForEntity(
 ) = notifyUpdateForEntity(entity, id.value)
 
 /**
+ * When the entity with the given [id] was last updated, from Redis or, if it isn't there, from the database.
+ */
+suspend fun <ID: Any, T: Entity<ID>> lastUpdateFor(
+    entity: EntityClass<ID, T>,
+    id: ID,
+): Instant? = RedisStoreMap.fromEnv.get(lastUpdateKeyFor(entity, id))
+    ?.toLongOrNull()
+    ?.toInstant()
+    ?: Database {
+        // Fallback to database lastUpdate if not found in Redis
+        entity.findById(id)?.let { it as? LastUpdateEntity }?.lastUpdate
+    }
+
+/**
  * Handles the `If-Modified-Since` header for the given entity and ID.
  *
  * If the entity has not been modified since the date provided in the header, responds with a 304 Not Modified status code.
@@ -71,13 +85,7 @@ suspend fun <ID: Any, T: Entity<ID>> RoutingContext.handleIfModified(
     entity: EntityClass<ID, T>,
     id: ID,
 ): Unit? {
-    val lastUpdate = RedisStoreMap.fromEnv.get(lastUpdateKeyFor(entity, id))
-        ?.toLongOrNull()
-        ?.toInstant()
-        ?: Database {
-            // Fallback to database lastUpdate if not found in Redis
-            entity.findById(id)?.let { it as? LastUpdateEntity }?.lastUpdate
-        }
+    val lastUpdate = lastUpdateFor(entity, id)
     if (lastUpdate != null) {
         call.response.header("CEA-Last-Update", lastUpdate.toEpochMilliseconds())
 
@@ -94,6 +102,38 @@ suspend fun <ID: Any, T: Entity<ID>> RoutingContext.handleIfModified(
 }
 
 /**
+ * When any entity of the given type was last updated, from Redis or, if it isn't there, from the database.
+ */
+suspend fun <ID: Any, T: Entity<ID>> lastUpdateForType(entity: EntityClass<ID, T>): Instant? {
+    val fromRedis = RedisStoreMap.fromEnv.get(lastUpdateKeyForType(entity))
+        ?.toLongOrNull()
+        ?.toInstant()
+    if (fromRedis != null) return fromRedis
+
+    return Database {
+        // Fallback to database lastUpdate if not found in Redis
+        val lastUpdateColumn: Expression<*>? = entity.table.columns.find { it.name == "lastUpdate" }
+        if (lastUpdateColumn == null) {
+            logger.warn("Could not find lastUpdate entity type ${entity.table.tableName}")
+            return@Database null
+        }
+        // Query the maximum lastUpdate value from the table
+        entity.table.select(lastUpdateColumn)
+            .toList()
+            .mapNotNull { row ->
+                when (val value = row[lastUpdateColumn]) {
+                    is Timestamp -> value.toInstant().toKotlinInstant()
+                    is Instant -> value
+                    is Long -> value.toInstant()
+                    is String -> value.toLongOrNull()?.toInstant()
+                    else -> null
+                }
+            }
+            .maxOrNull()
+    }
+}
+
+/**
  * Handles the `If-Modified-Since` header for the given entity type.
  *
  * If any entity of the given type has not been modified since the date provided in the header, responds with a 304 Not Modified status code.
@@ -101,30 +141,7 @@ suspend fun <ID: Any, T: Entity<ID>> RoutingContext.handleIfModified(
  * @return `Unit` if the entity type has not been modified, or `null` if a `304` response has been sent.
  */
 suspend fun <ID: Any, T: Entity<ID>> RoutingContext.handleIfModifiedForType(entity: EntityClass<ID, T>): Unit? {
-    val lastUpdate = RedisStoreMap.fromEnv.get(lastUpdateKeyForType(entity))
-        ?.toLongOrNull()
-        ?.toInstant()
-        ?: Database {
-            // Fallback to database lastUpdate if not found in Redis
-            val lastUpdateColumn: Expression<*>? = entity.table.columns.find { it.name == "lastUpdate" }
-            if (lastUpdateColumn == null) {
-                logger.warn("Could not find lastUpdate entity type ${entity.table.tableName}")
-                return@Database null
-            }
-            // Query the maximum lastUpdate value from the table
-            entity.table.select(lastUpdateColumn)
-                .toList()
-                .mapNotNull { row ->
-                    when (val value = row[lastUpdateColumn]) {
-                        is Timestamp -> value.toInstant().toKotlinInstant()
-                        is Instant -> value
-                        is Long -> value.toInstant()
-                        is String -> value.toLongOrNull()?.toInstant()
-                        else -> null
-                    }
-                }
-                .maxOrNull()
-        }
+    val lastUpdate = lastUpdateForType(entity)
     if (lastUpdate != null) {
         call.response.header("CEA-Last-Update", lastUpdate.toEpochMilliseconds())
 

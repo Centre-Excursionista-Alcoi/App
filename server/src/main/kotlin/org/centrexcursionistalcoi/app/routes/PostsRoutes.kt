@@ -17,6 +17,7 @@ fun Route.postsRoutes() {
     provideEntityRoutes(
         resources = Api.Posts.resources,
         entityClass = PostEntity,
+        syncKey = "posts",
         idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session -> PostEntity.forSession(session) },
         visibleTo = { post, session -> post.isVisibleTo(session) },

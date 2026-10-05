@@ -70,6 +70,7 @@ fun Route.eventsRoutes() {
     provideEntityRoutes(
         resources = Api.Events.resources,
         entityClass = EventEntity,
+        syncKey = "events",
         idTypeConverter = { it.toUuidOrNull() },
         listProvider = { session -> EventEntity.forSession(session) },
         visibleTo = { event, session -> event.isVisibleTo(session) },
