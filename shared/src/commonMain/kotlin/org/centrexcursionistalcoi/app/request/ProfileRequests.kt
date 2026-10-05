@@ -15,6 +15,17 @@ data class LendingSignUpRequest(
 )
 
 /**
+ * `PATCH /profile/preferences` request body. The preferences that are `null` stay as they are.
+ */
+@Serializable
+data class UpdatePreferencesRequest(
+    /** The language of the user, as a BCP 47 tag (e.g. `ca` or `es-ES`). */
+    val language: String? = null,
+) {
+    fun isEmpty() = language == null
+}
+
+/**
  * `POST /profile/insurances` request body.
  */
 @Serializable

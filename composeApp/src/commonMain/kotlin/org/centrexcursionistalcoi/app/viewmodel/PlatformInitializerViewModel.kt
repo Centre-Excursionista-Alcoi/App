@@ -17,6 +17,7 @@ import org.centrexcursionistalcoi.app.platform.PlatformLoadLogic
 import org.centrexcursionistalcoi.app.push.LocalNotifications
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
+import org.centrexcursionistalcoi.app.settings.LanguagePreference
 import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
 import org.koin.core.annotation.InjectedParam
@@ -30,6 +31,7 @@ class PlatformInitializerViewModel(
     private val sseNotificationsListener: SSENotificationsListener,
     private val localNotifications: LocalNotifications,
     private val settings: SettingsStore,
+    private val languagePreference: LanguagePreference,
 ) : ViewModel() {
     private val log = logging()
 
@@ -64,6 +66,9 @@ class PlatformInitializerViewModel(
 
             log.d { "Platform is ready." }
             _isReady.emit(true)
+
+            // Not waited for: the app is ready without it, and it only matters if the app has no language of its own
+            launch { languagePreference.restoreFromServerIfUnset() }
         }
     }
 

@@ -89,6 +89,10 @@ object Api {
         @Resource("lendingSignUp")
         class LendingSignUp(val parent: Profile = Profile())
 
+        /** The preferences of the user, like their language. */
+        @Resource("preferences")
+        class Preferences(val parent: Profile = Profile())
+
         @Resource("insurances")
         class Insurances(val parent: Profile = Profile())
 

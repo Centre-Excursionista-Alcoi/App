@@ -5,6 +5,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.resources.delete
 import io.ktor.server.resources.get
 import io.ktor.server.resources.post
+import io.ktor.server.resources.patch
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytesWriter
@@ -27,6 +28,10 @@ import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
+import org.centrexcursionistalcoi.app.response.PreferencesResponse
+import org.centrexcursionistalcoi.app.request.UpdatePreferencesRequest
+import org.centrexcursionistalcoi.app.database.UserPreferenceStore
+import org.centrexcursionistalcoi.app.database.UserPreferenceKey
 import org.centrexcursionistalcoi.app.integration.FEMECV
 import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
 import org.centrexcursionistalcoi.app.now
@@ -116,6 +121,27 @@ fun Route.profileRoutes() {
 
         refreshFemecvIfNeeded(session) { error -> call.response.header("CEA-FEMECV-Error", error) }
         call.respond(profileFor(session))
+    }
+    get<Api.Profile.Preferences> {
+        val session = getUserSessionOrFail() ?: return@get
+        val language = Database { UserPreferenceStore[session.sub, UserPreferenceKey.Language] }
+        call.respond(PreferencesResponse(language = language?.toLanguageTag()))
+    }
+    patch<Api.Profile.Preferences> {
+        val session = getUserSessionOrFail() ?: return@patch
+        val request = receiveJson(UpdatePreferencesRequest.serializer()) ?: return@patch
+        if (request.isEmpty()) return@patch respondError(Error.NothingToUpdate())
+
+        // Checked all before storing any
+        val language = request.language?.let { tag ->
+            UserPreferenceKey.Language.decode(tag) ?: return@patch respondError(Error.InvalidArgument("language"))
+        }
+
+        Database {
+            // What the user chooses replaces what was stored, unlike the language the server remembers by itself
+            language?.let { UserPreferenceStore[session.sub, UserPreferenceKey.Language] = it }
+        }
+        call.respond(HttpStatusCode.NoContent)
     }
     post<Api.Profile.LendingSignUp> {
         val session = getUserSessionOrFail() ?: return@post

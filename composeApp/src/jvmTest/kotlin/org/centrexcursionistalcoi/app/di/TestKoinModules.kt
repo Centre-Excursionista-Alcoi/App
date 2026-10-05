@@ -26,6 +26,7 @@ import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.MembersRemoteRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
+import org.centrexcursionistalcoi.app.network.PreferencesRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpaceKeysRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpaceLendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpacesRemoteRepository
@@ -53,6 +54,7 @@ import org.centrexcursionistalcoi.app.viewmodel.LendingDetailsModel
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.centrexcursionistalcoi.app.viewmodel.management.DepartmentsManagementViewModel
 import org.centrexcursionistalcoi.app.viewmodel.management.EventsManagementViewModel
+import org.centrexcursionistalcoi.app.settings.LanguagePreference
 import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
@@ -122,6 +124,8 @@ class TestKoinModules {
         assertNotNull(koin.get<SpaceKeysRemoteRepository>())
         assertNotNull(koin.get<SpaceLendingsRemoteRepository>())
         assertNotNull(koin.get<SyncRemoteRepository>())
+        assertNotNull(koin.get<PreferencesRemoteRepository>())
+        assertNotNull(koin.get<LanguagePreference>())
         assertNotNull(koin.get<QualificationsRemoteRepository>())
 
         assertNotNull(koin.get<AuthBackend>())
