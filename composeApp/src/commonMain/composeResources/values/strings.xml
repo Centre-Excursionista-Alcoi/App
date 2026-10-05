@@ -704,9 +704,12 @@
     <string name="event_requires_confirmation_forced">Always on while the event requires qualifications</string>
     <string name="event_assistance_closed">This event has already started, so your assistance can no longer be changed</string>
     <string name="spaces_title">Spaces</string>
-    <string name="spaces_home_card_title">Spaces</string>
-    <string name="spaces_home_card_message">Book a space of the club for your stay.</string>
-    <string name="spaces_home_card_action">See spaces</string>
+    <string name="spaces_tab">Spaces</string>
+    <string name="spaces_select">Select</string>
+    <string name="spaces_deselect">Deselect</string>
+    <string name="spaces_details">Details</string>
+    <string name="spaces_selected_hint">Spaces can't be mixed with items. Book this space, or deselect it to go back to the items.</string>
+    <string name="spaces_blocked_by_items">You have items selected. Spaces can't be mixed with items: finish or empty your selection first.</string>
     <string name="spaces_empty">There are no spaces yet.</string>
     <string name="spaces_my_lendings">My space lendings</string>
     <string name="spaces_closed">Closed</string>

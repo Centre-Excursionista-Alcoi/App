@@ -53,8 +53,6 @@ sealed interface Destination : NavKey {
         }
     }
 
-    /** The spaces anyone can book, and the user's own space lendings. */
-    @Serializable @SerialName("spaces") data object Spaces : Destination
     @Serializable @SerialName("spaceDetails") data class SpaceDetails(val spaceId: Uuid) : Destination
 
     /** Books a space, or, if [lendingId] is given, changes a lending that hasn't been picked up. */

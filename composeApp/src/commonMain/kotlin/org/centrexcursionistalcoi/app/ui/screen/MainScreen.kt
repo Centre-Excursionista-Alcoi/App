@@ -150,7 +150,8 @@ fun MainScreen(
     onLogoutRequested: () -> Unit,
     onSettingsRequested: () -> Unit,
     onEditMemoryRequest: (ReferencedMemory) -> Unit,
-    onSpacesRequested: () -> Unit,
+    onSpaceDetailsRequested: (Uuid) -> Unit,
+    onSpaceBookRequested: (Uuid) -> Unit,
     onSpaceLendingClick: (Uuid) -> Unit,
     model: MainScreenViewModel = koinViewModel(),
 ) {
@@ -181,7 +182,8 @@ fun MainScreen(
             onItemTypeDetailsRequested = onItemTypeDetailsRequested,
             onShoppingListConfirmed = onShoppingListConfirmed,
             onEditMemoryRequest = onEditMemoryRequest,
-            onSpacesRequested = onSpacesRequested,
+            onSpaceDetailsRequested = onSpaceDetailsRequested,
+            onSpaceBookRequested = onSpaceBookRequested,
             onSpaceLendingClick = onSpaceLendingClick,
         )
         PasskeyReminderSheet()
@@ -294,7 +296,8 @@ private fun MainScreenContent(
     onShoppingListConfirmed: (ShoppingList) -> Unit,
 
     onEditMemoryRequest: (ReferencedMemory) -> Unit,
-    onSpacesRequested: () -> Unit,
+    onSpaceDetailsRequested: (Uuid) -> Unit,
+    onSpaceBookRequested: (Uuid) -> Unit,
     onSpaceLendingClick: (Uuid) -> Unit,
 
     isSyncing: Boolean,
@@ -544,7 +547,8 @@ private fun MainScreenContent(
                     onShoppingListChanged = { shoppingList = it },
                     onMemoryEditorRequested = onMemoryEditorRequested,
                     onEditMemoryRequest = onEditMemoryRequest,
-                    onSpacesRequested = onSpacesRequested,
+                    onSpaceDetailsRequested = onSpaceDetailsRequested,
+            onSpaceBookRequested = onSpaceBookRequested,
                     onSpaceLendingClick = onSpaceLendingClick,
                 )
             }
@@ -650,12 +654,13 @@ private fun MainScreenPagerContent(
     onItemTypeDetailsRequested: (ReferencedInventoryItemType) -> Unit,
     onShoppingListChanged: (ShoppingList) -> Unit,
     onEditMemoryRequest: (ReferencedMemory) -> Unit,
-    onSpacesRequested: () -> Unit,
+    onSpaceDetailsRequested: (Uuid) -> Unit,
+    onSpaceBookRequested: (Uuid) -> Unit,
     onSpaceLendingClick: (Uuid) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         when (page) {
-            Page.HOME -> HomePage(onSpacesRequested = onSpacesRequested)
+            Page.HOME -> HomePage()
 
             Page.LENDINGS -> LendingsPage(
                 onAddInsuranceRequested = { onPageRequested(Page.PROFILE) },
@@ -663,6 +668,9 @@ private fun MainScreenPagerContent(
                 onLendingSignUpRequested,
                 onLendingHistoryRequest,
                 onShoppingListChanged = onShoppingListChanged,
+                onSpaceDetailsRequested = onSpaceDetailsRequested,
+                onSpaceBookRequested = onSpaceBookRequested,
+                onSpaceLendingClick = onSpaceLendingClick,
             )
 
             Page.LENDING if activeLending != null -> LendingPage(

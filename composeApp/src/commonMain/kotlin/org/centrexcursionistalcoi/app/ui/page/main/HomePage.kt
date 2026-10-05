@@ -25,9 +25,6 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.permission_deny
 import cea_app.composeapp.generated.resources.permission_grant
-import cea_app.composeapp.generated.resources.spaces_home_card_action
-import cea_app.composeapp.generated.resources.spaces_home_card_message
-import cea_app.composeapp.generated.resources.spaces_home_card_title
 import cea_app.composeapp.generated.resources.permission_notification_message
 import cea_app.composeapp.generated.resources.permission_notification_title
 import cea_app.composeapp.generated.resources.permission_settings
@@ -43,7 +40,6 @@ import org.centrexcursionistalcoi.app.permission.HelperHolder
 import org.centrexcursionistalcoi.app.permission.result.NotificationPermissionResult
 import org.centrexcursionistalcoi.app.response.ProfileResponse
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Close
-import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Home
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Notifications
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Security
@@ -63,7 +59,6 @@ import kotlin.time.Clock
 @Composable
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 fun HomePage(
-    onSpacesRequested: () -> Unit = {},
     model: HomePageModel = koinViewModel()
 ) {
     val windowSizeClass = calculateWindowSizeClass()
@@ -101,7 +96,6 @@ fun HomePage(
         myQualificationGrants = myQualificationGrants.orEmpty(),
         onConfirmAssistanceRequest = { event -> model.confirmEventAssistance(event) },
         onRejectAssistanceRequest = { event -> model.rejectEventAssistance(event) },
-        onSpacesRequested = onSpacesRequested,
     )
 }
 
@@ -122,7 +116,6 @@ fun HomePage(
     myQualificationGrants: List<QualificationGrant> = emptyList(),
     onConfirmAssistanceRequest: (ReferencedEvent) -> Job,
     onRejectAssistanceRequest: (ReferencedEvent) -> Job,
-    onSpacesRequested: () -> Unit = {},
 ) {
     val permissionHelper = HelperHolder.getPermissionHelperInstance()
     val isRegisteredForLendings = remember(profile) { profile.lendingUser != null }
@@ -144,19 +137,6 @@ fun HomePage(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp, top = 12.dp)
                 )
-            }
-        }
-
-        item("spaces", contentType = "spaces", span = { GridItemSpan(maxLineSpan) }) {
-            CardWithIcon(
-                title = stringResource(Res.string.spaces_home_card_title),
-                message = stringResource(Res.string.spaces_home_card_message),
-                icon = MaterialSymbols.Home,
-                modifier = Modifier.padding(bottom = 12.dp),
-            ) {
-                OutlinedButton(onClick = onSpacesRequested) {
-                    Text(stringResource(Res.string.spaces_home_card_action))
-                }
             }
         }
 

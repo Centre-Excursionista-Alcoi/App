@@ -37,7 +37,6 @@ import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
 import org.centrexcursionistalcoi.app.ui.screen.spaces.SpaceDetailsScreen
 import org.centrexcursionistalcoi.app.ui.screen.spaces.SpaceLendingCreationScreen
 import org.centrexcursionistalcoi.app.ui.screen.spaces.SpaceLendingDetailsScreen
-import org.centrexcursionistalcoi.app.ui.screen.spaces.SpacesScreen
 import org.centrexcursionistalcoi.app.ui.dialog.UpdateAvailableDialog
 import org.centrexcursionistalcoi.app.ui.dialog.UpdateProgressDialog
 import org.centrexcursionistalcoi.app.ui.dialog.UpdateRestartRequiredDialog
@@ -228,7 +227,8 @@ private fun App(
                         onEditMemoryRequest = {
                             navigator.navigate(Destination.MemoryEditor(it.id))
                         },
-                        onSpacesRequested = { navigator.navigate(Destination.Spaces) },
+                        onSpaceDetailsRequested = { navigator.navigate(Destination.SpaceDetails(it)) },
+                        onSpaceBookRequested = { navigator.navigate(Destination.SpaceLendingCreation(it)) },
                         onSpaceLendingClick = { navigator.navigate(Destination.SpaceLendingDetails(it)) },
                     )
                 }
@@ -303,13 +303,6 @@ private fun App(
                             navigator.navigatePoppingUpTo(Destination.Main(), Destination.Main::class)
                         }
                     ) { navigator.goBack() }
-                }
-                destination<Destination.Spaces> {
-                    SpacesScreen(
-                        onSpaceClick = { navigator.navigate(Destination.SpaceDetails(it)) },
-                        onLendingClick = { navigator.navigate(Destination.SpaceLendingDetails(it)) },
-                        onBack = { navigator.goBack() },
-                    )
                 }
                 destination<Destination.SpaceDetails> { route ->
                     SpaceDetailsScreen(

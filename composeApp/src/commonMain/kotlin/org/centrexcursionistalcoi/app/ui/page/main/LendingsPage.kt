@@ -43,6 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,6 +67,7 @@ import cea_app.composeapp.generated.resources.lending_pending_return
 import cea_app.composeapp.generated.resources.lending_pending_return_partial
 import cea_app.composeapp.generated.resources.lending_signup_action
 import cea_app.composeapp.generated.resources.lending_signup_required
+import cea_app.composeapp.generated.resources.spaces_tab
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
@@ -83,6 +85,8 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.AssignmentReturn
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Badge
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.HealthAndSafety
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.History
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Home
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.HomeFilled
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Inventory2
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.NoteAdd
@@ -96,6 +100,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.viewmodel.LendingsPageModel
+import org.centrexcursionistalcoi.app.viewmodel.spaces.SpacesViewModel
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -109,7 +114,11 @@ fun LendingsPage(
     onLendingSignUpRequested: () -> Unit,
     onLendingHistoryRequest: () -> Unit,
     onShoppingListChanged: (Map<Uuid, Int>) -> Unit,
+    onSpaceDetailsRequested: (Uuid) -> Unit,
+    onSpaceBookRequested: (Uuid) -> Unit,
+    onSpaceLendingClick: (Uuid) -> Unit,
     model: LendingsPageModel = koinViewModel(),
+    spacesModel: SpacesViewModel = koinViewModel(),
 ) {
     val windowSizeClass = calculateWindowSizeClass()
 
@@ -130,25 +139,49 @@ fun LendingsPage(
     val departments = remember(inventoryItems) { inventoryItems?.mapNotNull { it.type.department }?.toSet().orEmpty().toList() }
     val itemsWithoutDepartmentExist = remember(inventoryItems) { inventoryItems?.any { it.type.department == null } == true }
 
+    val spaces by spacesModel.spaces.collectAsState()
+    val myLendings by spacesModel.myLendings.collectAsState()
+    val hasSpaces = !spaces.isNullOrEmpty() || !myLendings.isNullOrEmpty()
+
     val scope = rememberCoroutineScope()
-    val pagerState = rememberPagerState { departments.size + (if (itemsWithoutDepartmentExist) 1 else 0) }
+    val itemPagesCount = departments.size + (if (itemsWithoutDepartmentExist) 1 else 0)
+    val pagerState = rememberPagerState { itemPagesCount + (if (hasSpaces) 1 else 0) }
+    // The tab with the spaces is the last one
+    val spacesPage = if (hasSpaces) itemPagesCount else -1
+
+    // Items and spaces can't be mixed: once a space is selected, the tabs are hidden and the pager can't be slid, so
+    // the selection stays in the spaces
+    var selectedSpaceId by rememberSaveable { mutableStateOf<String?>(null) }
+    val selectedSpace = selectedSpaceId?.let { id -> spaces?.find { it.id.toString() == id } }
+    val isSpaceSelected = selectedSpace != null
+    LaunchedEffect(isSpaceSelected, spacesPage) {
+        if (isSpaceSelected && spacesPage >= 0 && pagerState.currentPage != spacesPage) {
+            pagerState.animateScrollToPage(spacesPage)
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            AdaptiveTabRow(
-                selectedTabIndex = pagerState.currentPage,
-                tabs = departments.map { TabData(it.displayName) } +
-                        if (itemsWithoutDepartmentExist)
-                            listOf(TabData(stringResource(Res.string.lending_category_without_department)))
-                        else
-                            emptyList(),
-                modifier = Modifier.weight(1f),
-                onTabSelected = { index ->
-                    scope.launch { pagerState.animateScrollToPage(index) }
-                },
-            )
+            val spacesTab = TabData.fromResources(Res.string.spaces_tab, MaterialSymbols.Home, MaterialSymbols.HomeFilled)
+            if (isSpaceSelected) {
+                Spacer(Modifier.weight(1f))
+            } else {
+                AdaptiveTabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    tabs = departments.map { TabData(it.displayName) } +
+                            (if (itemsWithoutDepartmentExist)
+                                listOf(TabData(stringResource(Res.string.lending_category_without_department)))
+                            else
+                                emptyList()) +
+                            (if (hasSpaces) listOf(spacesTab) else emptyList()),
+                    modifier = Modifier.weight(1f),
+                    onTabSelected = { index ->
+                        scope.launch { pagerState.animateScrollToPage(index) }
+                    },
+                )
+            }
             if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded) {
                 TooltipIconButton(
                     MaterialSymbols.History,
@@ -159,8 +192,22 @@ fun LendingsPage(
         }
         HorizontalPager(
             state = pagerState,
+            userScrollEnabled = !isSpaceSelected,
             modifier = Modifier.fillMaxWidth().weight(1f)
         ) { page ->
+            if (page == spacesPage) {
+                SpacesTab(
+                    spaces = spaces.orEmpty(),
+                    lendings = myLendings.orEmpty(),
+                    selectedSpace = selectedSpace,
+                    hasItemsSelected = shoppingList.isNotEmpty(),
+                    onSelect = { selectedSpaceId = it?.toString() },
+                    onDetailsRequested = onSpaceDetailsRequested,
+                    onBookRequested = onSpaceBookRequested,
+                    onLendingClick = onSpaceLendingClick,
+                )
+                return@HorizontalPager
+            }
             // if null, show items without department
             val department: Department? = departments.getOrNull(page)
 
