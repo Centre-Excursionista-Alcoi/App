@@ -1,12 +1,12 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml version='1.0' encoding='UTF-8'?>
 <translations>
-    <item name="subject">Nou lloguer d'espai (#%1$s)</item>
-    <item name="line_1">%1$s ha reservat un espai.</item>
-    <item name="label_space">Espai</item>
-    <item name="label_check_in">Entrada</item>
-    <item name="label_check_out">Eixida</item>
-    <item name="label_price">Preu</item>
-    <item name="label_notes">Notes</item>
-    <item name="none">Cap</item>
-    <item name="open_in_app">Obrir a l'aplicació</item>
+  <item name="subject">Nou lloguer d'espai (#%1$s)</item>
+  <item name="line_1">%1$s ha reservat un espai.</item>
+  <item name="label_space">Espai</item>
+  <item name="label_check_in">Entrada</item>
+  <item name="label_check_out">Eixida</item>
+  <item name="label_price">Preu</item>
+  <item name="label_notes">Notes</item>
+  <item name="none">Cap</item>
+  <item name="open_in_app">Obrir a l'aplicació</item>
 </translations>
