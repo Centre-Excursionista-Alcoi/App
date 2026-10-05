@@ -18,10 +18,12 @@ import io.ktor.http.parameters
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.PeriodicWorker
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
 import org.centrexcursionistalcoi.app.integration.femecv.LicenseData
+import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.storage.RedisStoreMap
 import org.centrexcursionistalcoi.app.tracing.SentryHttpClientTracing
 import org.jetbrains.annotations.VisibleForTesting
@@ -186,6 +188,7 @@ object FEMECV : PeriodicWorker(
                 (UserReferences.femecvUsername neq null) and (UserReferences.femecvPassword neq null)
             }.toList()
         }
+
         logger.debug("Found ${users.count()} users with FEMECV credentials.")
         for (user in users) {
             try {
@@ -196,5 +199,8 @@ object FEMECV : PeriodicWorker(
                 logger.error("Unexpected error syncing FEMECV data for user ${user.id.value} (${user.sub}): ${e.message}", e)
             }
         }
+
+        logger.info("Updating last synchronization time...")
+        Database { ConfigEntity[ConfigEntity.LastFEMECVSync] = now() }
     }
 }
