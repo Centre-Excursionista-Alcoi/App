@@ -77,6 +77,7 @@ fun Route.departmentsRoutes() {
     provideEntityRoutes(
         resources = Api.Departments.resources,
         entityClass = DepartmentEntity,
+        syncKey = "departments",
         idTypeConverter = { it.toUuidOrNull() },
         // The default listProvider (entityClass.all()) is unrestricted for every session, including anonymous --
         // a department's own displayName/image is public (its member roster is not, see Departments.extraColumns

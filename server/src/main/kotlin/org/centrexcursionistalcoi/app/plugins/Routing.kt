@@ -20,6 +20,7 @@ import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.routes.appLinkFallbackRoutes
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
 import org.centrexcursionistalcoi.app.routes.spaceLendingsRoutes
+import org.centrexcursionistalcoi.app.routes.syncRoutes
 import org.centrexcursionistalcoi.app.routes.spacesRoutes
 import org.centrexcursionistalcoi.app.routes.eventsRoutes
 import org.centrexcursionistalcoi.app.routes.inventoryRoutes
@@ -96,6 +97,7 @@ fun Application.configureRouting() {
         inventoryRoutes()
         lendingsRoutes()
         memoriesRoutes()
+        syncRoutes()
         spacesRoutes()
         spaceLendingsRoutes()
 
