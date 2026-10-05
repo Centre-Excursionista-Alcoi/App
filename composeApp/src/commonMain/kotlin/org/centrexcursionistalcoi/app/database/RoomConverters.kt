@@ -3,13 +3,18 @@ package org.centrexcursionistalcoi.app.database
 import androidx.room3.ColumnTypeConverter
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+import org.centrexcursionistalcoi.app.data.Category
+import org.centrexcursionistalcoi.app.data.CategoryPrice
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.LendingUser
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.Qualification
 import org.centrexcursionistalcoi.app.data.QualificationGrant
+import org.centrexcursionistalcoi.app.data.PaymentStatus
+import org.centrexcursionistalcoi.app.data.SpaceLendingKey
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.UserInsurance
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
@@ -133,4 +138,34 @@ class RoomConverters {
     @ColumnTypeConverter
     fun stringToFileWithContextList(value: String?): List<FileWithContext>? =
         value?.let { json.decodeFromString(ListSerializer(FileWithContext.Companion.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun categoryPriceListToString(value: List<CategoryPrice>?): String? =
+        value?.let { json.encodeToString(ListSerializer(CategoryPrice.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun stringToCategoryPriceList(value: String?): List<CategoryPrice>? =
+        value?.let { json.decodeFromString(ListSerializer(CategoryPrice.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun attendeesToString(value: Map<Category, Int>?): String? =
+        value?.let { json.encodeToString(MapSerializer(Category.serializer(), Int.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun stringToAttendees(value: String?): Map<Category, Int>? =
+        value?.let { json.decodeFromString(MapSerializer(Category.serializer(), Int.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun spaceLendingKeyListToString(value: List<SpaceLendingKey>?): String? =
+        value?.let { json.encodeToString(ListSerializer(SpaceLendingKey.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun stringToSpaceLendingKeyList(value: String?): List<SpaceLendingKey>? =
+        value?.let { json.decodeFromString(ListSerializer(SpaceLendingKey.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun paymentStatusToString(value: PaymentStatus?): String? = value?.name
+
+    @ColumnTypeConverter
+    fun stringToPaymentStatus(value: String?): PaymentStatus? = value?.let { PaymentStatus.valueOf(it) }
 }

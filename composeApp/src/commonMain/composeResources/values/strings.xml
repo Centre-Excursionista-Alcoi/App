@@ -22,6 +22,9 @@
     <string name="sync_step_items">Items</string>
     <string name="sync_step_lendings">Lendings</string>
     <string name="sync_step_memories">Memories</string>
+    <string name="sync_step_spaces">Spaces</string>
+    <string name="sync_step_space_keys">Space keys</string>
+    <string name="sync_step_space_lendings">Space lendings</string>
     <string name="sync_step_posts">Posts</string>
     <string name="sync_step_events">Events</string>
 

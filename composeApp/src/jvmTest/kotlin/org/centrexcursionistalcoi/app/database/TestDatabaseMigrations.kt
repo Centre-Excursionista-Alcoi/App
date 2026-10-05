@@ -105,6 +105,17 @@ class TestDatabaseMigrations {
         "CREATE TABLE IF NOT EXISTS `QualificationGrants` (`qualificationId` TEXT NOT NULL, `userSub` TEXT NOT NULL, `grantedBy` TEXT, `grantedAt` INTEGER NOT NULL, `expiresAt` INTEGER, PRIMARY KEY(`qualificationId`))",
     )
 
+    /** v4's shape: v3 without the qualification tables, which moved into columns of `Departments`. */
+    private val v4SchemaSql = v3SchemaSql
+        .filterNot { it.startsWith("CREATE TABLE IF NOT EXISTS `Qualifications`") || it.startsWith("CREATE TABLE IF NOT EXISTS `QualificationGrants`") }
+        .map { sql ->
+            if (sql.startsWith("CREATE TABLE IF NOT EXISTS `Departments`")) {
+                sql.replace("`members` TEXT, PRIMARY KEY", "`members` TEXT, `qualifications` TEXT, `qualificationGrants` TEXT, PRIMARY KEY")
+            } else {
+                sql
+            }
+        }
+
     /** Builds a real on-disk database matching [schemaSql] at [version], seeded by [seed], and returns its path. */
     private fun buildDatabaseFile(version: Int, schemaSql: List<String>, seed: SQLiteConnection.() -> Unit): String {
         val dbFile = File.createTempFile("cea_app_migration_test_v$version", ".db")
@@ -136,7 +147,7 @@ class TestDatabaseMigrations {
         }
 
         BundledSQLiteDriver().open(path).use { connection ->
-            assertEquals(4L, connection.userVersion())
+            assertEquals(DATABASE_VERSION.toLong(), connection.userVersion())
             // The destructive fallback really did wipe the pre-existing row -- proves this went through the
             // fallback path, not some accidental no-op.
             assertNull(connection.textColumn("Departments", "displayName", "11111111-1111-1111-1111-111111111111"))
@@ -161,7 +172,7 @@ class TestDatabaseMigrations {
         }
 
         BundledSQLiteDriver().open(path).use { connection ->
-            assertEquals(4L, connection.userVersion())
+            assertEquals(DATABASE_VERSION.toLong(), connection.userVersion())
 
             // MIGRATION_2_3 + MIGRATION_3_4 ran in sequence: no destructive wipe, the original rows survived.
             assertEquals("Old Department", connection.textColumn("Departments", "displayName", "11111111-1111-1111-1111-111111111111"))
@@ -200,9 +211,32 @@ class TestDatabaseMigrations {
         }
 
         BundledSQLiteDriver().open(path).use { connection ->
-            assertEquals(4L, connection.userVersion())
+            assertEquals(DATABASE_VERSION.toLong(), connection.userVersion())
             assertEquals("Old Department", connection.textColumn("Departments", "displayName", "11111111-1111-1111-1111-111111111111"))
             assertFalse("Qualifications" in connection.tableNames())
+        }
+    }
+
+    @Test
+    fun migratingFromV4_addsSpaceTables_andKeepsExistingRows() = runTest {
+        val path = buildDatabaseFile(version = 4, schemaSql = v4SchemaSql) {
+            execSQL("INSERT INTO Departments (id, displayName, imageFile, members, qualifications, qualificationGrants) VALUES ('11111111-1111-1111-1111-111111111111', 'Department', NULL, NULL, NULL, NULL)")
+        }
+
+        val database = getRoomDatabase(Room.databaseBuilder<AppDatabase>(name = path), Dispatchers.IO)
+        try {
+            assertEquals(1, database.departmentDao().selectAll().size)
+            assertEquals(0, database.spaceDao().selectAll().size)
+            assertEquals(0, database.spaceKeyDao().selectAll().size)
+            assertEquals(0, database.spaceLendingDao().selectAll().size)
+        } finally {
+            database.close()
+        }
+
+        BundledSQLiteDriver().open(path).use { connection ->
+            assertEquals(5L, connection.userVersion())
+            assertEquals("Department", connection.textColumn("Departments", "displayName", "11111111-1111-1111-1111-111111111111"))
+            assertTrue(setOf("Spaces", "SpaceKeys", "SpaceLendings").all { it in connection.tableNames() })
         }
     }
 }

@@ -43,3 +43,21 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
         connection.execSQL("DROP TABLE IF EXISTS `QualificationGrants`")
     }
 }
+
+/** v5 added the `Spaces`, `SpaceKeys` and `SpaceLendings` tables. */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        // Nothing to backfill: the new tables are filled by the next sync.
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `Spaces` (`id` TEXT NOT NULL, `lastUpdate` INTEGER NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `conditionsOfUse` TEXT, `requiresKeys` INTEGER NOT NULL, `prices` TEXT NOT NULL, `isClosed` INTEGER NOT NULL, `closedSince` INTEGER, `closedUntil` INTEGER, `closedReason` TEXT, PRIMARY KEY(`id`))"
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `SpaceKeys` (`id` TEXT NOT NULL, `lastUpdate` INTEGER NOT NULL, `space` TEXT NOT NULL, `name` TEXT NOT NULL, `maxQuantity` INTEGER NOT NULL, `nfcId` BLOB, PRIMARY KEY(`id`), FOREIGN KEY(`space`) REFERENCES `Spaces`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )"
+        )
+        connection.execSQL("CREATE INDEX IF NOT EXISTS `index_SpaceKeys_space` ON `SpaceKeys` (`space`)")
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `SpaceLendings` (`id` TEXT NOT NULL, `lastUpdate` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `space` TEXT NOT NULL, `userSub` TEXT, `checkIn` TEXT NOT NULL, `checkOut` TEXT NOT NULL, `attendees` TEXT NOT NULL, `acceptedConditionsAt` INTEGER, `cancelled` INTEGER NOT NULL, `notes` TEXT, `pickedUpAt` INTEGER, `pickedUpBy` TEXT, `returnedAt` INTEGER, `returnedBy` TEXT, `keys` TEXT NOT NULL, `totalPrice` REAL NOT NULL, `paymentStatus` TEXT NOT NULL, `reportNotes` TEXT, `reportIssues` TEXT, `reportSubmittedAt` INTEGER, `reportNotesFiles` TEXT NOT NULL, `reportIssuesFiles` TEXT NOT NULL, `paymentProofs` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`space`) REFERENCES `Spaces`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )"
+        )
+        connection.execSQL("CREATE INDEX IF NOT EXISTS `index_SpaceLendings_space` ON `SpaceLendings` (`space`)")
+    }
+}
