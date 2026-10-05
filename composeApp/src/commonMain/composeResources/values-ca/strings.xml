@@ -780,4 +780,5 @@
     </plurals>
     <string name="space_lending_attendees_hint">Canvia les persones que finalment han acudit abans de pagar.</string>
     <string name="sync_step_space_keys">Claus d'Espais</string>
+    <string name="memory_editor_upload_image_content_description"></string>
 </resources>
