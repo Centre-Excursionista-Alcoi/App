@@ -17,6 +17,7 @@ import kotlinx.datetime.TimeZone
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.DepartmentRole
+import org.centrexcursionistalcoi.app.data.Memory
 import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
@@ -31,8 +32,8 @@ import org.centrexcursionistalcoi.app.database.table.Members
 import org.centrexcursionistalcoi.app.database.table.Memories
 import org.centrexcursionistalcoi.app.database.table.MemoriesFiles
 import org.centrexcursionistalcoi.app.database.table.MemoriesMembers
-import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
-import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
+import org.centrexcursionistalcoi.app.database.utils.encodeList
+import org.centrexcursionistalcoi.app.database.utils.encodeOne
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
@@ -61,6 +62,7 @@ import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.dao.with
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -116,7 +118,7 @@ private val logger = LoggerFactory.getLogger("MemoriesRoutes")
  */
 internal fun memoriesFor(session: UserSession): List<MemoryEntity> {
     return Database {
-        if (session.isAdmin()) {
+        val memories = if (session.isAdmin()) {
             MemoryEntity.all().toList()
         } else {
             // Regular users see memories they submitted, memories they're tagged as a participant on, plus
@@ -135,6 +137,9 @@ internal fun memoriesFor(session: UserSession): List<MemoryEntity> {
                     (Memories.department inList managedDepartmentIds)
             }.toList()
         }
+        // What encoding a memory needs besides its own row (its participants and its files), loaded for all of them at
+        // once instead of for each. Only holds while the caller stays in this transaction.
+        memories.also { it.with(MemoryEntity::members, MemoryEntity::files) }
     }
 }
 
@@ -142,7 +147,7 @@ fun Route.memoriesRoutes() {
     SyncSections.register(
         SyncSection(
             key = "memories",
-            snapshot = { session -> json.encodeEntityListToString(memoriesFor(session), MemoryEntity) },
+            snapshot = { session -> encodeList(Memory.serializer(), memoriesFor(session), session) },
         )
     )
     post<Api.Memories> {
@@ -334,18 +339,17 @@ fun Route.memoriesRoutes() {
     }
     get<Api.Memories> {
         val session = getUserSessionOrFail() ?: return@get
-        val memories = memoriesFor(session)
+        // In one transaction, so what the encoding needs (see memoriesFor) is loaded once for the whole list
+        val body = Database { encodeList(Memory.serializer(), memoriesFor(session), session) }
 
-        call.respondText(ContentType.Application.Json) {
-            json.encodeEntityListToString(memories, MemoryEntity)
-        }
+        call.respondText(body, ContentType.Application.Json)
     }
     get<Api.Memories.Id> {
         val session = getUserSessionOrFail() ?: return@get
         val memory = memoryRequest(session, requireOwnerOrAdmin = false) ?: return@get
 
         call.respondText(ContentType.Application.Json) {
-            json.encodeEntityToString(memory, MemoryEntity)
+            encodeOne(Memory.serializer(), memory, session)
         }
     }
     patch<Api.Memories.Id> {

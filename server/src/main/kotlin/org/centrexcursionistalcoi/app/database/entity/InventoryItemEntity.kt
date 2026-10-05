@@ -37,7 +37,7 @@ class InventoryItemEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity
     override fun toData(): InventoryItem = InventoryItem(
         id = id.value,
         variation = variation,
-        type = type.id.value,
+        type = InventoryItems.type.lookup().value,
         nfcId = nfcId,
         manufacturerTraceabilityCode = manufacturerTraceabilityCode,
     )

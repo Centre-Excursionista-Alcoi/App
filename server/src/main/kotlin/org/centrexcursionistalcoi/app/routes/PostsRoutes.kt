@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.server.routing.Route
 import org.centrexcursionistalcoi.app.data.DepartmentRole
+import org.jetbrains.exposed.v1.dao.with
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
@@ -19,7 +20,7 @@ fun Route.postsRoutes() {
         entityClass = PostEntity,
         syncKey = "posts",
         idTypeConverter = { it.toUuidOrNull() },
-        listProvider = { session -> PostEntity.forSession(session) },
+        listProvider = { session -> PostEntity.forSession(session).with(PostEntity::files) },
         visibleTo = { post, session -> post.isVisibleTo(session) },
         afterCreate = { postEntity ->
             Telegram.launch {

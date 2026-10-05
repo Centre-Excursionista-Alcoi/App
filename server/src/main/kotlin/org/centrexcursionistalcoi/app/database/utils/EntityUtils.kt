@@ -25,6 +25,7 @@ import org.centrexcursionistalcoi.app.serializer.Base64Serializer
 import org.jetbrains.exposed.v1.core.ArrayColumnType
 import org.jetbrains.exposed.v1.core.BasicBinaryColumnType
 import org.jetbrains.exposed.v1.core.BooleanColumnType
+import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.DoubleColumnType
 import org.jetbrains.exposed.v1.core.EntityIDColumnType
 import org.jetbrains.exposed.v1.core.EnumerationNameColumnType
@@ -35,6 +36,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.UIntegerColumnType
 import org.jetbrains.exposed.v1.core.datetime.InstantColumnType
 import org.jetbrains.exposed.v1.core.UuidColumnType
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.crypt.EncryptedBinaryColumnType
 import org.jetbrains.exposed.v1.crypt.EncryptedVarCharColumnType
 import org.jetbrains.exposed.v1.dao.DaoEntityID
@@ -171,7 +173,10 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String, sess
                         // Skip missing members
                         continue
                     }
-                    val typeValue = member.call(value)
+                    // A reference is encoded by its id, which the row already has: reading the property would load
+                    // the referenced entity, one query for each entity of a list (an N+1)
+                    val typeValue = (column.columnType as? EntityIDColumnType<*>)?.let { value.rawEntityId(column) }
+                        ?: member.call(value)
                     if (typeValue == null) {
                         if (!column.columnType.nullable) {
                             error("Could not find property or function named \"$columnName\" in ${className}.\nMembers: ${members.joinToString { it.name }}")
@@ -285,6 +290,17 @@ private fun <ID : Any, E : Entity<ID>> Table.serializer(serialName: String, sess
             throw UnsupportedOperationException("Deserialization of entities is not supported. Data must be fetched from the database")
         }
     }
+}
+
+/**
+ * The id the row of this entity has in [column], without loading what it references. `null` if it has none, or the row
+ * isn't available (for an entity that hasn't been read yet).
+ */
+private fun Entity<*>.rawEntityId(column: Column<*>): EntityID<*>? = try {
+    @Suppress("UNCHECKED_CAST")
+    readValues.getOrNull(column as Column<Any?>) as? EntityID<*>
+} catch (_: Exception) {
+    null
 }
 
 fun <T> SerializationStrategy<T>.list(): SerializationStrategy<List<T>> {

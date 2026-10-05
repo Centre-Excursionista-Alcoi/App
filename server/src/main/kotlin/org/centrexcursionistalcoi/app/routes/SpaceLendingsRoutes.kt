@@ -17,6 +17,7 @@ import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.SPACE_LENDINGS_MANAGER_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.Category
 import org.centrexcursionistalcoi.app.data.PaymentStatus
+import org.centrexcursionistalcoi.app.data.SpaceLending
 import org.centrexcursionistalcoi.app.data.SpaceLendingFileKind
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
@@ -27,8 +28,8 @@ import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.SpaceLendingFiles
 import org.centrexcursionistalcoi.app.database.table.SpaceLendingKeys
 import org.centrexcursionistalcoi.app.database.table.SpaceLendings
-import org.centrexcursionistalcoi.app.database.utils.encodeEntityListToString
-import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
+import org.centrexcursionistalcoi.app.database.utils.encodeList
+import org.centrexcursionistalcoi.app.database.utils.encodeOne
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
@@ -215,29 +216,32 @@ private fun sendNewSpaceLendingEmails(lending: SpaceLendingEntity, user: UserRef
 
 /** The space lendings [session] can see: all for those who manage them, and only their own for everyone else. */
 internal fun spaceLendingsFor(session: UserSession): List<SpaceLendingEntity> = Database {
-    if (session.isSpaceLendingsManager()) SpaceLendingEntity.all().toList()
-    else SpaceLendingEntity.find { SpaceLendings.userSub eq session.sub }.toList()
+    val lendings =
+        if (session.isSpaceLendingsManager()) SpaceLendingEntity.all().toList()
+        else SpaceLendingEntity.find { SpaceLendings.userSub eq session.sub }.toList()
+    // Their keys and files loaded for all at once. Holds while the caller stays in this transaction
+    SpaceLendingEntity.withDataPreloaded(lendings)
 }
 
 fun Route.spaceLendingsRoutes() {
     SyncSections.register(
         SyncSection(
             key = "space_lendings",
-            snapshot = { session -> json.encodeEntityListToString(spaceLendingsFor(session), SpaceLendingEntity, session) },
+            snapshot = { session -> encodeList(SpaceLending.serializer(), spaceLendingsFor(session), session) },
         )
     )
     get<Api.SpaceLendings> {
         val session = getUserSessionOrFail() ?: return@get
         val lendings = spaceLendingsFor(session)
         call.respondText(ContentType.Application.Json) {
-            Database { json.encodeEntityListToString(lendings, SpaceLendingEntity, session) }
+            encodeList(SpaceLending.serializer(), lendings, session)
         }
     }
     get<Api.SpaceLendings.Id> { resource ->
         val session = getUserSessionOrFail() ?: return@get
         val lending = spaceLendingFor(session, resource.id) ?: return@get
         call.respondText(ContentType.Application.Json) {
-            json.encodeEntityToString(lending, SpaceLendingEntity, session)
+            encodeOne(SpaceLending.serializer(), lending, session)
         }
     }
 

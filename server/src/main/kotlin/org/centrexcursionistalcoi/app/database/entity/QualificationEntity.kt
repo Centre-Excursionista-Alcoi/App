@@ -16,7 +16,7 @@ class QualificationEntity(id: EntityID<Uuid>) : UuidEntity(id) {
 
     fun toData() = Qualification(
         id = id.value,
-        departmentId = department.id.value,
+        departmentId = Qualifications.department.lookup().value,
         name = name,
         description = description,
     )

@@ -18,6 +18,8 @@ import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.dao.with
 import org.jetbrains.exposed.v1.dao.UuidEntity
 import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -26,7 +28,45 @@ import kotlin.uuid.Uuid
 import kotlin.time.toKotlinInstant
 
 class DepartmentEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, EntityDataConverter<Department, Uuid>, EntityPatcher<UpdateDepartmentRequest>, ImageContainerEntity {
-    companion object : UuidEntityClass<DepartmentEntity>(Departments)
+    companion object : UuidEntityClass<DepartmentEntity>(Departments) {
+        /**
+         * Loads, for all of [departments] at once, what converting them for [session] needs: their members and
+         * qualifications, and the grants of those the user can see. Instead, each would run its own queries.
+         * Only holds while the caller stays in the current transaction.
+         */
+        context(_: JdbcTransaction)
+        fun withDataPreloaded(departments: List<DepartmentEntity>, session: UserSession?): List<DepartmentEntity> {
+            if (departments.isEmpty() || session == null) return departments
+            departments.with(DepartmentEntity::members, DepartmentEntity::qualifications)
+
+            val qualificationIds = departments.flatMap { department -> department.qualifications.map { it.id.value } }
+            if (qualificationIds.isEmpty()) {
+                departments.forEach { it.preloadedGrants = session.sub to emptyList() }
+                return departments
+            }
+            val grants = (Qualifications innerJoin UserQualifications)
+                .selectAll()
+                .where { Qualifications.id inList qualificationIds }
+                .groupBy({ it[Qualifications.department].value }) {
+                    QualificationGrant(
+                        qualificationId = it[UserQualifications.qualification].value,
+                        userSub = it[UserQualifications.userSub].value,
+                        grantedBy = it[UserQualifications.grantedBy]?.value,
+                        grantedAt = it[UserQualifications.grantedAt],
+                        expiresAt = it[UserQualifications.expiresAt],
+                    )
+                }
+            for (department in departments) {
+                val ownMembership = department.members.find { it.rawUserSub == session.sub }
+                val isPrivileged = ownMembership?.confirmed == true &&
+                    (ownMembership.hasRole(DepartmentRole.EXAMINER) || ownMembership.hasRole(DepartmentRole.PEOPLE_MANAGER))
+                val all = grants[department.id.value].orEmpty()
+                department.preloadedGrants = session.sub to
+                    if (session.isAdmin() || isPrivileged) all else all.filter { it.userSub == session.sub }
+            }
+            return departments
+        }
+    }
 
     override var lastUpdate by Departments.lastUpdate
 
@@ -37,6 +77,9 @@ class DepartmentEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, E
     val qualifications by QualificationEntity referrersOn Qualifications.department
 
     val confirmedMembers get() = members.filter { it.confirmed }
+
+    /** The grants visible to a user, loaded ahead for a whole list, see [withDataPreloaded]. */
+    private var preloadedGrants: Pair<String, List<QualificationGrant>>? = null
 
     /**
      * The subset of [members] visible to [session]: everyone (including pending/unconfirmed requests) for an
@@ -53,7 +96,7 @@ class DepartmentEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, E
     fun visibleMembersFor(session: UserSession?): List<DepartmentMemberEntity> {
         if (session == null) return emptyList()
         val allMembers = members.toList()
-        val ownMembership = allMembers.find { it.userReference.sub.value == session.sub }
+        val ownMembership = allMembers.find { it.rawUserSub == session.sub }
         val isPeopleManager = ownMembership?.confirmed == true && ownMembership.hasRole(DepartmentRole.PEOPLE_MANAGER)
         return if (session.isAdmin() || isPeopleManager) allMembers else listOfNotNull(ownMembership)
     }
@@ -67,10 +110,11 @@ class DepartmentEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, E
     context(_: JdbcTransaction)
     fun visibleQualificationGrantsFor(session: UserSession?): List<QualificationGrant> {
         if (session == null) return emptyList()
+        preloadedGrants?.let { (sub, grants) -> if (sub == session.sub) return grants }
         val qualificationIds = qualifications.map { it.id.value }
         if (qualificationIds.isEmpty()) return emptyList()
 
-        val ownMembership = members.find { it.userReference.sub.value == session.sub }
+        val ownMembership = members.find { it.rawUserSub == session.sub }
         val isPrivileged = ownMembership?.confirmed == true &&
             (ownMembership.hasRole(DepartmentRole.EXAMINER) || ownMembership.hasRole(DepartmentRole.PEOPLE_MANAGER))
 
@@ -95,8 +139,22 @@ class DepartmentEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, E
     override fun toData(): Department = Department(
         id = id.value,
         displayName = displayName,
-        image = image?.id?.value,
+        image = Departments.image.lookup()?.value,
         members = members.map { it.toData() },
+    )
+
+    /**
+     * The department as [session] can see it: its member roster and the grants of its qualifications are filtered (see
+     * [visibleMembersFor] and [visibleQualificationGrantsFor]), and the qualifications are public.
+     */
+    context(_: JdbcTransaction)
+    override fun toData(session: UserSession?): Department = Department(
+        id = id.value,
+        displayName = displayName,
+        image = Departments.image.lookup()?.value,
+        members = visibleMembersFor(session).map { it.toData() },
+        qualifications = qualifications.map { it.toData() },
+        qualificationGrants = visibleQualificationGrantsFor(session),
     )
 
     context(_: JdbcTransaction)

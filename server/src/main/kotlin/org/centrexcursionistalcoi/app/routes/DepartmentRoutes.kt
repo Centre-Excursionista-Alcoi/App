@@ -33,6 +33,7 @@ import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSess
 import org.centrexcursionistalcoi.app.security.hasDepartmentRole
 import org.centrexcursionistalcoi.app.serialization.list
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 
@@ -84,6 +85,7 @@ fun Route.departmentsRoutes() {
         // / DepartmentEntity.visibleMembersFor). Stated explicitly rather than falling through to the default
         // listProvider-scanning visibleTo, which would otherwise scan every department to confirm what's already
         // known to always be true.
+        listProvider = { session -> SizedCollection(DepartmentEntity.withDataPreloaded(DepartmentEntity.all().toList(), session)) },
         visibleTo = { _, _ -> true },
         updater = UpdateDepartmentRequest.serializer(),
         createRequestSerializer = CreateDepartmentRequest.serializer(),

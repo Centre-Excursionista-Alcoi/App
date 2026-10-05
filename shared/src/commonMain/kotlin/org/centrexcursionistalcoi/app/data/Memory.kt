@@ -27,10 +27,10 @@ data class Memory(
     val lending: Uuid?,
 ): JsonSerializable, Entity<Uuid>, DocumentFileContainer, ImageFileListContainer {
     /** The generated summary PDF, exposed as a [DocumentFileContainer] so it's downloaded like any other document. */
-    override val documentFile: Uuid? = pdf
+    override val documentFile: Uuid? get() = pdf
 
     /** The user-attached photos, exposed as an [ImageFileListContainer] (fetched on demand, like [Post.images]). */
-    override val images: List<Uuid> = attachments
+    override val images: List<Uuid> get() = attachments
 
     @OptIn(ExperimentalSerializationApi::class)
     override fun toJsonObject(): JsonObject = buildJsonObject {

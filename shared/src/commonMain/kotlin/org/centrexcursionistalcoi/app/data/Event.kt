@@ -35,5 +35,5 @@ data class Event(
      */
     val qualificationRequirements: List<List<Uuid>> = emptyList(),
 ): Entity<Uuid>, ImageFileContainer {
-    override val files: Map<String, Uuid?> = mapOf("image" to image)
+    override val files: Map<String, Uuid?> get() = mapOf("image" to image)
 }

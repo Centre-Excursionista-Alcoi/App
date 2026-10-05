@@ -32,7 +32,7 @@ class SpaceKeyEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Ent
     context(_: JdbcTransaction)
     override fun toData(): SpaceKey = SpaceKey(
         id = id.value,
-        space = space.id.value,
+        space = SpaceKeys.space.lookup().value,
         name = name,
         maxQuantity = maxQuantity,
         nfcId = nfcId,

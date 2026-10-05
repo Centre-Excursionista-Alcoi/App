@@ -23,10 +23,10 @@ class ReceivedItemEntity(id: EntityID<Uuid>): UuidEntity(id) {
     context(_: JdbcTransaction)
     fun toReceivedItem(): ReceivedItem = ReceivedItem(
         id = this.id.value,
-        lendingId = lending.id.value,
-        itemId = item.id.value,
+        lendingId = ReceivedItems.lending.lookup().value,
+        itemId = ReceivedItems.item.lookup().value,
         notes = notes,
-        receivedBy = receivedBy.sub.value,
+        receivedBy = ReceivedItems.receivedBy.lookup().value,
         receivedAt = receivedAt,
     )
 }
