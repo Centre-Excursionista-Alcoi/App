@@ -1,6 +1,5 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
-import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.auth.AuthBackend
@@ -10,6 +9,7 @@ import org.centrexcursionistalcoi.app.di.GenderInflectionProvider
 import org.centrexcursionistalcoi.app.di.globalGenderInflectionProvider
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
+import org.centrexcursionistalcoi.app.settings.LanguagePreference
 import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.centrexcursionistalcoi.app.storage.SETTINGS_LANGUAGE
 import org.centrexcursionistalcoi.app.storage.SETTINGS_PRIVACY_ANALYTICS
@@ -28,6 +28,7 @@ class SettingsViewModel(
     genderInflectionProvider: GenderInflectionProvider?,
     fcmTokenManager: FCMTokenManager,
     private val settings: SettingsStore,
+    private val languagePreference: LanguagePreference,
     @InjectedParam private val onDeleteAccount: () -> Unit,
 ) : ErrorViewModel() {
     val gender = genderInflectionProvider?.observableGender?.stateInViewModel()
@@ -55,8 +56,7 @@ class SettingsViewModel(
 
     fun onLanguageChange(language: Language) = launch {
         val (lang) = language
-        settings.set(SETTINGS_LANGUAGE, lang)
-        LocaleUpdater.updateLocale(lang)
+        languagePreference.change(lang)
     }
 
     fun onPrivacyErrorsChange(state: Boolean) = launch {
