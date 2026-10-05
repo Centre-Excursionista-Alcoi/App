@@ -19,6 +19,9 @@ enum class TraceOperation(val value: String) {
     /** A SQL statement, see `SentryStatementInterceptor`. */
     DB_SQL_QUERY("db.sql.query"),
 
+    /** A section of the answer of `GET /sync`, see `SyncRoutes`. */
+    SYNC_SECTION("sync.section"),
+
     /** A run of a background task, see `PeriodicWorker`. */
     TASK("task"),
 }
