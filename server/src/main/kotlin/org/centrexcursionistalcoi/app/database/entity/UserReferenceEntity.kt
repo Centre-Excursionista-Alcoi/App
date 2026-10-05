@@ -1,7 +1,6 @@
 package org.centrexcursionistalcoi.app.database.entity
 
 import io.ktor.http.ContentType
-import kotlinx.datetime.toJavaLocalDate
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.DepartmentMemberInfo
 import org.centrexcursionistalcoi.app.data.LendingUser
@@ -137,6 +136,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
                 }
             }
         }
+        femecvLastSync = now()
         updated()
     }
 
