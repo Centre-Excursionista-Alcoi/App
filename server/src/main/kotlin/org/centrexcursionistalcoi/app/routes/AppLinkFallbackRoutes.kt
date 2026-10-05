@@ -94,6 +94,8 @@ private suspend fun ApplicationCall.respondAppLinkFallback() {
 private fun previewFor(path: String): Pair<String, String> {
     val route = path.trim('/')
     return when {
+        route.startsWith(AppLinkRoutes.SPACE_LENDINGS) || route.startsWith(AppLinkRoutes.ADMIN_SPACE_LENDINGS) ->
+            "Space lending" to "Open this space lending in the CEA App."
         route.startsWith(AppLinkRoutes.ADMIN_LENDINGS) -> "Lending" to "Open this lending in the CEA App."
         route.startsWith(AppLinkRoutes.ADMIN_ITEMS) -> "Inventory item" to "Open this item in the CEA App."
         route.startsWith(AppLinkRoutes.ITEM_TYPE) -> "Item" to "Open this item in the CEA App."

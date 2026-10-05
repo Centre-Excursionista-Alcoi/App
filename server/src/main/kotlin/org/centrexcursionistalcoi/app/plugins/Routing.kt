@@ -19,6 +19,8 @@ import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.routes.appLinkFallbackRoutes
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
+import org.centrexcursionistalcoi.app.routes.spaceLendingsRoutes
+import org.centrexcursionistalcoi.app.routes.spacesRoutes
 import org.centrexcursionistalcoi.app.routes.eventsRoutes
 import org.centrexcursionistalcoi.app.routes.inventoryRoutes
 import org.centrexcursionistalcoi.app.routes.lendingsRoutes
@@ -94,6 +96,8 @@ fun Application.configureRouting() {
         inventoryRoutes()
         lendingsRoutes()
         memoriesRoutes()
+        spacesRoutes()
+        spaceLendingsRoutes()
 
         route("/webdav") {
             webDavRoutes()

@@ -537,6 +537,8 @@
     <string name="notification_lending_deleted_message">Your lending has been deleted by an administrator.</string>
     <string name="notification_lending_deleted_reason_message">Your lending has been deleted by an administrator. Reason: %1$s</string>
     <string name="notification_lending_created_title">Lending Request</string>
+    <string name="notification_space_lending_created_title">Space Lending</string>
+    <string name="notification_space_lending_created_message">A new space lending has been made.</string>
     <string name="notification_lending_created_message">A new lending request has been created. Please review and confirm it.</string>
     <string name="notification_lending_taken_title">Lending Taken</string>
     <string name="notification_lending_taken_message">You have been given the items of your request.</string>

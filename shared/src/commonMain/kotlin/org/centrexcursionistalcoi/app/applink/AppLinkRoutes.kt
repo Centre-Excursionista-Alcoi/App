@@ -10,6 +10,10 @@ object AppLinkRoutes {
     const val ADMIN_ITEMS = "admin/items"
     const val ADMIN_LENDINGS = "admin/lendings"
 
+    /** A space lending, for the user who made it. */
+    const val SPACE_LENDINGS = "space_lendings"
+    const val ADMIN_SPACE_LENDINGS = "admin/space_lendings"
+
     /** Handled by a real, server-rendered page even without the app. */
     const val RESET_PASSWORD = "reset_password"
 }

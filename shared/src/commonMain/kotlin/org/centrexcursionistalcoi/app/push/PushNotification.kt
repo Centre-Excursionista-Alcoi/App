@@ -25,12 +25,18 @@ sealed interface PushNotification {
             val entityId = data["entityId"] as? String?
             val isCreate = (data["isCreate"] as? String?)?.toBoolean()
             val message = data["message"] as? String?
+            val spaceLendingId = (data["spaceLendingId"] as? String?)?.toUuidOrNull()
 
             return when (type) {
                 NewLendingRequest.TYPE -> {
                     lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in NewLendingRequest push notification data")
                     userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in NewLendingRequest push notification data")
                     NewLendingRequest(lendingId, userSub)
+                }
+                NewSpaceLending.TYPE -> {
+                    spaceLendingId ?: throw IllegalArgumentException("Missing or invalid spaceLendingId field in NewSpaceLending push notification data")
+                    userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in NewSpaceLending push notification data")
+                    NewSpaceLending(spaceLendingId, userSub)
                 }
                 NewMemoryUpload.TYPE -> {
                     lendingId ?: throw IllegalArgumentException("Missing or invalid lendingId field in NewMemoryUpload push notification data")
@@ -137,6 +143,23 @@ sealed interface PushNotification {
         }
 
         override val type: String = TYPE
+    }
+
+    /**
+     * A new space lending was made. For the users who manage space lendings.
+     */
+    @Serializable
+    class NewSpaceLending(
+        val spaceLendingId: Uuid,
+        override val userSub: String,
+    ) : TargetedNotification {
+        companion object {
+            const val TYPE = "NewSpaceLending"
+        }
+
+        override val type: String = TYPE
+
+        override fun toMap(): Map<String, String> = super.toMap() + mapOf("spaceLendingId" to spaceLendingId.toString())
     }
 
     @Serializable

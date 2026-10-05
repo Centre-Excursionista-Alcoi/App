@@ -35,6 +35,13 @@ import org.centrexcursionistalcoi.app.database.table.Posts
 import org.centrexcursionistalcoi.app.database.table.Qualifications
 import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.database.table.RecoverPasswordRequests
+import org.centrexcursionistalcoi.app.database.table.SpaceKeys
+import org.centrexcursionistalcoi.app.database.table.SpaceLendingFiles
+import org.centrexcursionistalcoi.app.database.table.SpaceLendingKeys
+import org.centrexcursionistalcoi.app.database.table.SpaceLendingTransactions
+import org.centrexcursionistalcoi.app.database.table.SpaceLendings
+import org.centrexcursionistalcoi.app.database.table.Spaces
+import org.centrexcursionistalcoi.app.database.table.Transactions
 import org.centrexcursionistalcoi.app.database.table.UserCredentialRecords
 import org.centrexcursionistalcoi.app.database.table.UserInsuranceDocuments
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
@@ -89,6 +96,13 @@ object Database {
         UserQualifications,
         EventQualificationRequirements,
         DocumentVerifications,
+        Spaces,
+        SpaceLendings,
+        SpaceLendingFiles,
+        SpaceKeys,
+        SpaceLendingKeys,
+        Transactions,
+        SpaceLendingTransactions,
     ).let { sortTablesByReferences(it) }
     private var database: JdbcDatabase? = null
 

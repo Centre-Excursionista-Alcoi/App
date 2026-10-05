@@ -116,7 +116,8 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>,
     writePermission: EntityWritePermission<EE>? = null,
     noinline afterCreate: suspend (EE) -> Unit = {},
     noinline onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
-) = provideEntityRoutes(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, createRequestSerializer, creator, updater, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected)
+    writeGroup: String? = null,
+) = provideEntityRoutes(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, createRequestSerializer, creator, updater, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected, writeGroup)
 
 @OptIn(InternalSerializationApi::class)
 fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any, C : Any, I : Any> Route.provideEntityRoutes(
@@ -169,7 +170,13 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      * otherwise be orphaned by a rejected creation.
      */
     onWriteRejected: JdbcTransaction.(EE) -> Unit = { it.delete() },
+    /**
+     * A global group (besides admins) whose members may write any entity, e.g. a "spaces manager".
+     */
+    writeGroup: String? = null,
 ) {
+    fun UserSession.isWriteGroupMember() = writeGroup != null && writeGroup in groups
+
     val base = ResourcesFormat().encodeToPathPattern(resources.collectionSerializer).trim('/')
     require(updater == null || entityKClass.isSubclassOf(EntityPatcher::class)) { "${entityKClass.simpleName} doesn't extend EntityPatcher" }
 
@@ -181,7 +188,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      */
     suspend fun RoutingContext.assertMayWriteAtAll(): UserSession? {
         val session = getUserSessionOrFail() ?: return null
-        if (session.isAdmin()) return session
+        if (session.isAdmin() || session.isWriteGroupMember()) return session
         val allowed = if (writePermission == null) false else session.hasAnyDepartmentRole(writePermission.role)
         return if (allowed) session else { respondError(if (writePermission == null) Error.NotAnAdmin() else Error.PermissionRejected()); null }
     }
@@ -192,7 +199,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
      * entity) requires global admin. [session] is assumed to have already passed [assertMayWriteAtAll].
      */
     suspend fun RoutingContext.assertWritePermission(session: UserSession, entity: EE): UserSession? {
-        if (session.isAdmin()) return session
+        if (session.isAdmin() || session.isWriteGroupMember()) return session
         val departmentId = writePermission?.let { wp -> Database { wp.departmentOfEntity(entity) } }
         return if (writePermission == null || departmentId == null) {
             respondError(Error.NotAnAdmin())

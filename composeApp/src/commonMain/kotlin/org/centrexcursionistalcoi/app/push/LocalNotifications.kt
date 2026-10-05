@@ -15,6 +15,8 @@ import cea_app.composeapp.generated.resources.notification_lending_confirmed_mes
 import cea_app.composeapp.generated.resources.notification_lending_confirmed_title
 import cea_app.composeapp.generated.resources.notification_lending_created_message
 import cea_app.composeapp.generated.resources.notification_lending_created_title
+import cea_app.composeapp.generated.resources.notification_space_lending_created_message
+import cea_app.composeapp.generated.resources.notification_space_lending_created_title
 import cea_app.composeapp.generated.resources.notification_lending_deleted_message
 import cea_app.composeapp.generated.resources.notification_lending_deleted_reason_message
 import cea_app.composeapp.generated.resources.notification_lending_deleted_title
@@ -296,6 +298,14 @@ class LocalNotifications(
                 showNotification(
                     Res.string.notification_lending_created_title,
                     Res.string.notification_lending_created_message,
+                    data
+                )
+            }
+
+            is PushNotification.NewSpaceLending -> {
+                showNotification(
+                    Res.string.notification_space_lending_created_title,
+                    Res.string.notification_space_lending_created_message,
                     data
                 )
             }

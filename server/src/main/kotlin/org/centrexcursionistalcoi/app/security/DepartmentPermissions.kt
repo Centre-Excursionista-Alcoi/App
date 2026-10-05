@@ -2,6 +2,8 @@ package org.centrexcursionistalcoi.app.security
 
 import io.ktor.server.routing.RoutingContext
 import org.centrexcursionistalcoi.app.MEMBERS_MANAGER_GROUP_NAME
+import org.centrexcursionistalcoi.app.SPACES_MANAGER_GROUP_NAME
+import org.centrexcursionistalcoi.app.SPACE_LENDINGS_MANAGER_GROUP_NAME
 import org.centrexcursionistalcoi.app.USERS_MANAGER_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.database.Database
@@ -55,3 +57,9 @@ suspend fun RoutingContext.assertDepartmentRole(session: UserSession, department
     }
     return session
 }
+
+/** General (non-department) role: manages spaces and their keys. Implied by [UserSession.isAdmin]. */
+fun UserSession.isSpacesManager(): Boolean = isAdmin() || SPACES_MANAGER_GROUP_NAME in groups
+
+/** General (non-department) role: manages space lendings. Implied by [UserSession.isAdmin]. */
+fun UserSession.isSpaceLendingsManager(): Boolean = isAdmin() || SPACE_LENDINGS_MANAGER_GROUP_NAME in groups
