@@ -14,6 +14,7 @@ import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.Qualification
 import org.centrexcursionistalcoi.app.data.QualificationGrant
 import org.centrexcursionistalcoi.app.data.PaymentStatus
+import org.centrexcursionistalcoi.app.data.SpaceKeyTypeSpace
 import org.centrexcursionistalcoi.app.data.SpaceLendingKey
 import org.centrexcursionistalcoi.app.data.Sports
 import org.centrexcursionistalcoi.app.data.UserInsurance
@@ -162,6 +163,22 @@ class RoomConverters {
     @ColumnTypeConverter
     fun stringToSpaceLendingKeyList(value: String?): List<SpaceLendingKey>? =
         value?.let { json.decodeFromString(ListSerializer(SpaceLendingKey.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun spaceKeyTypeSpaceListToString(value: List<SpaceKeyTypeSpace>?): String? =
+        value?.let { json.encodeToString(ListSerializer(SpaceKeyTypeSpace.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun stringToSpaceKeyTypeSpaceList(value: String?): List<SpaceKeyTypeSpace>? =
+        value?.let { json.decodeFromString(ListSerializer(SpaceKeyTypeSpace.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun uuidQuantitiesToString(value: Map<Uuid, Int>?): String? =
+        value?.let { json.encodeToString(MapSerializer(Uuid.serializer(), Int.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun stringToUuidQuantities(value: String?): Map<Uuid, Int>? =
+        value?.let { json.decodeFromString(MapSerializer(Uuid.serializer(), Int.serializer()), it) }
 
     @ColumnTypeConverter
     fun paymentStatusToString(value: PaymentStatus?): String? = value?.name

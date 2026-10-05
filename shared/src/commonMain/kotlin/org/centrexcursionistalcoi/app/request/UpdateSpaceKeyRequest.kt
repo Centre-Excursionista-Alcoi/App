@@ -6,26 +6,24 @@ import org.centrexcursionistalcoi.app.serializer.Base64Serializer
 import kotlin.uuid.Uuid
 
 /**
- * An empty [nfcId] removes the NFC tag of the key.
+ * An empty [label] or [nfcId] removes it.
  */
 @Serializable
 data class UpdateSpaceKeyRequest(
-    val name: String? = null,
-    val maxQuantity: Int? = null,
+    val label: String? = null,
     @Serializable(Base64Serializer::class) val nfcId: ByteArray? = null,
 ) : UpdateEntityRequest<Uuid, SpaceKey> {
-    override fun isEmpty(): Boolean = name == null && maxQuantity == null && nfcId == null
+    override fun isEmpty(): Boolean = label == null && nfcId == null
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is UpdateSpaceKeyRequest) return false
 
-        return name == other.name && maxQuantity == other.maxQuantity && nfcId.contentEquals(other.nfcId)
+        return label == other.label && nfcId.contentEquals(other.nfcId)
     }
 
     override fun hashCode(): Int {
-        var result = name?.hashCode() ?: 0
-        result = 31 * result + (maxQuantity ?: 0)
+        var result = label?.hashCode() ?: 0
         result = 31 * result + (nfcId?.contentHashCode() ?: 0)
         return result
     }

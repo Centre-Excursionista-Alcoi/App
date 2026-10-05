@@ -244,6 +244,16 @@ object Api {
         }
     }
 
+    @Resource("/space_key_types")
+    class SpaceKeyTypes {
+        @Resource("{id}")
+        class Id(val id: String, val parent: SpaceKeyTypes = SpaceKeyTypes())
+
+        companion object {
+            val resources = EntityResources(serializer(), Id.serializer(), SpaceKeyTypes(), ::Id, Id::id)
+        }
+    }
+
     @Resource("/space_keys")
     class SpaceKeys {
         @Resource("{id}")

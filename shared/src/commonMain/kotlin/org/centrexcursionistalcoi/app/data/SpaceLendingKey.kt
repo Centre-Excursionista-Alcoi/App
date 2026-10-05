@@ -6,14 +6,16 @@ import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 /**
- * How many keys of a [SpaceKey] a lending takes, and their hand-over and return.
+ * A [SpaceKey] a lending has taken: when it was handed out and by whom, and, once it is back, when and to whom.
  */
 @Serializable
 data class SpaceLendingKey(
     val key: Uuid,
-    val quantity: Int,
     val givenBy: String? = null,
     @Serializable(InstantSerializer::class) val givenAt: Instant? = null,
     val returnedTo: String? = null,
     @Serializable(InstantSerializer::class) val returnedAt: Instant? = null,
-)
+) {
+    /** Whether the key is still with the lending. */
+    val isOut: Boolean get() = givenAt != null && returnedAt == null
+}

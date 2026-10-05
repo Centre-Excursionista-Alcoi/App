@@ -89,8 +89,8 @@ fun SpaceDetailsScreen(
                         modifier = Modifier.padding(top = 16.dp),
                     )
                 }
-                items(keys.orEmpty(), key = { "key_${it.id}" }) { key ->
-                    Text(stringResource(Res.string.spaces_key_line, key.name, key.maxQuantity))
+                items(keys.orEmpty(), key = { "key_${it.type.id}" }) { key ->
+                    Text(stringResource(Res.string.spaces_key_line, key.type.name, key.maxPerLending))
                 }
             }
             space.conditionsOfUse?.let { conditions ->

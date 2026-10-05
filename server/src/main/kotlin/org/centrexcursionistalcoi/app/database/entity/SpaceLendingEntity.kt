@@ -7,6 +7,7 @@ import org.centrexcursionistalcoi.app.data.SpaceLendingKey
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
 import org.centrexcursionistalcoi.app.database.table.SpaceLendingFiles
+import org.centrexcursionistalcoi.app.database.table.SpaceLendingKeyRequests
 import org.centrexcursionistalcoi.app.database.table.SpaceLendingKeys
 import org.centrexcursionistalcoi.app.database.table.SpaceLendings
 import org.centrexcursionistalcoi.app.now
@@ -56,6 +57,13 @@ class SpaceLendingEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity,
         Database { lastUpdate = now() }
     }
 
+    /** How many keys of each type this lending asks for. */
+    context(_: JdbcTransaction)
+    fun requestedKeys(): Map<Uuid, Int> = preloadedRequestedKeys
+        ?: SpaceLendingKeyRequests.selectAll().where { SpaceLendingKeyRequests.lending eq id }
+            .associate { it[SpaceLendingKeyRequests.keyType].value to it[SpaceLendingKeyRequests.quantity] }
+
+    /** The keys handed out to this lending, returned or not. */
     context(_: JdbcTransaction)
     fun keys(): List<SpaceLendingKey> = preloadedKeys
         ?: SpaceLendingKeys.selectAll().where { SpaceLendingKeys.lending eq id }.map { it.toKey() }
@@ -68,6 +76,7 @@ class SpaceLendingEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity,
 
     /** The keys and files, loaded ahead for a whole list, see [withDataPreloaded]. */
     private var preloadedKeys: List<SpaceLendingKey>? = null
+    private var preloadedRequestedKeys: Map<Uuid, Int>? = null
     private var preloadedFiles: Map<SpaceLendingFileKind, List<Uuid>>? = null
 
     context(_: JdbcTransaction)
@@ -89,6 +98,7 @@ class SpaceLendingEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity,
         pickedUpBy = SpaceLendings.pickedUpBy.lookup()?.value,
         returnedAt = returnedAt,
         returnedBy = SpaceLendings.returnedBy.lookup()?.value,
+        requestedKeys = requestedKeys(),
         keys = keys(),
         totalPrice = totalPrice,
         paymentStatus = paymentStatus,
@@ -103,7 +113,6 @@ class SpaceLendingEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity,
     companion object : UuidEntityClass<SpaceLendingEntity>(SpaceLendings) {
         private fun ResultRow.toKey() = SpaceLendingKey(
             key = this[SpaceLendingKeys.key].value,
-            quantity = this[SpaceLendingKeys.quantity],
             givenBy = this[SpaceLendingKeys.givenBy]?.value,
             givenAt = this[SpaceLendingKeys.givenAt],
             returnedTo = this[SpaceLendingKeys.returnedTo]?.value,
@@ -111,7 +120,7 @@ class SpaceLendingEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity,
         )
 
         /**
-         * Loads, for all of [lendings] at once, their keys and files. Instead, each would run its own queries. Only
+         * Loads, for all of [lendings] at once, their keys (asked for and handed out) and files. Instead, each would run its own queries. Only
          * holds while the caller stays in the current transaction.
          */
         context(_: JdbcTransaction)
@@ -120,10 +129,13 @@ class SpaceLendingEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity,
             val ids = lendings.map { it.id }
             val keys = SpaceLendingKeys.selectAll().where { SpaceLendingKeys.lending inList ids }
                 .groupBy({ it[SpaceLendingKeys.lending].value }, { it.toKey() })
+            val requested = SpaceLendingKeyRequests.selectAll().where { SpaceLendingKeyRequests.lending inList ids }
+                .groupBy({ it[SpaceLendingKeyRequests.lending].value }, { it[SpaceLendingKeyRequests.keyType].value to it[SpaceLendingKeyRequests.quantity] })
             val files = SpaceLendingFiles.selectAll().where { SpaceLendingFiles.lending inList ids }
                 .groupBy({ it[SpaceLendingFiles.lending].value }, { it[SpaceLendingFiles.kind] to it[SpaceLendingFiles.file].value })
             for (lending in lendings) {
                 lending.preloadedKeys = keys[lending.id.value].orEmpty()
+                lending.preloadedRequestedKeys = requested[lending.id.value].orEmpty().toMap()
                 lending.preloadedFiles = SpaceLendingFileKind.entries.associateWith { kind ->
                     files[lending.id.value].orEmpty().filter { it.first == kind }.map { it.second }
                 }

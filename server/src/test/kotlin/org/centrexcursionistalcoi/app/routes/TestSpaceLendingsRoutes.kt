@@ -29,6 +29,9 @@ import org.centrexcursionistalcoi.app.data.CategoryPrice
 import org.centrexcursionistalcoi.app.data.PriceUnit
 import org.centrexcursionistalcoi.app.database.entity.SpaceEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceKeyEntity
+import org.centrexcursionistalcoi.app.database.entity.SpaceKeyTypeEntity
+import org.centrexcursionistalcoi.app.database.table.SpaceKeyTypeSpaces
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.notifications.Email
@@ -43,7 +46,7 @@ import kotlinx.coroutines.withTimeout
 import org.centrexcursionistalcoi.app.assertError
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.Space
-import org.centrexcursionistalcoi.app.data.SpaceKey
+import org.centrexcursionistalcoi.app.data.SpaceKeyType
 import org.centrexcursionistalcoi.app.data.SpaceLending
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.data.FileWithContext
@@ -86,11 +89,14 @@ class TestSpaceLendingsRoutes : ApplicationTestBase() {
                 CategoryPrice(Category.NON_MEMBER, 6.0, PriceUnit.PER_NIGHT),
             )
         }
-        SpaceKeyEntity.new(carKeyId) {
-            space = SpaceEntity[spaceId]
-            name = "Car"
-            maxQuantity = 3
+        val carType = SpaceKeyTypeEntity.new(carKeyId) { name = "Car" }
+        SpaceKeyTypeSpaces.insert {
+            it[keyType] = carType.id
+            it[space] = spaceId
+            it[maxPerLending] = 3
         }
+        // The club has 3 car permits
+        repeat(3) { SpaceKeyEntity.new { this.type = carType; label = "${it + 1}" } }
     }
 
     private fun body(
@@ -354,7 +360,7 @@ class TestSpaceLendingsRoutes : ApplicationTestBase() {
         fetch().apply {
             assertEquals("2026-10-14", getValue("checkIn").jsonPrimitive.content)
             assertEquals(3 * 3.0 * 2, getValue("totalPrice").jsonPrimitive.double)
-            assertEquals(2, getValue("keys").jsonArray.single().jsonObject.getValue("quantity").jsonPrimitive.int)
+            assertEquals(2, getValue("requestedKeys").jsonObject.getValue("$carKeyId").jsonPrimitive.int)
         }
         // Following availability: someone else's lending blocks it
         loginAs(FakeUser2)
@@ -463,12 +469,12 @@ class TestSpaceLendingsRoutes : ApplicationTestBase() {
         assertEquals("Casa", spaces.single().name)
         assertEquals(2, spaces.single().prices.size)
 
-        val keys = json.decodeFromString(ListSerializer(SpaceKey.serializer()), client.get("/space_keys").bodyAsText())
-        assertEquals(3, keys.single().maxQuantity)
+        val types = json.decodeFromString(ListSerializer(SpaceKeyType.serializer()), client.get("/space_key_types").bodyAsText())
+        assertEquals(3, types.single().spaces.single().maxPerLending)
 
         val lending = json.decodeFromString(SpaceLending.serializer(), client.get(lendingLocation).bodyAsText())
         assertEquals(mapOf(Category.MEMBER to 2), lending.attendees)
-        assertEquals(2, lending.keys.single().quantity)
+        assertEquals(mapOf(carKeyId to 2), lending.requestedKeys)
         val all = json.decodeFromString(ListSerializer(SpaceLending.serializer()), client.get("/space_lendings").bodyAsText())
         assertEquals(lending.id, all.single().id)
     }
@@ -538,5 +544,120 @@ class TestSpaceLendingsRoutes : ApplicationTestBase() {
         } finally {
             Email.sent = null
         }
+    }
+
+    private fun carKeys() = Database { SpaceKeyEntity.all().map { it.id.value.toString() }.sorted() }
+
+    @Test
+    fun test_keys_are_limited_by_the_club_inventory() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            createSpace()
+            FakeUser2.provideEntity()
+        },
+        mockDate = today,
+    ) {
+        // 2 of the 3 permits
+        client.book(body("2026-10-09", "2026-10-11", extra = ""","keys":{"$carKeyId":2}""")).assertStatusCode(HttpStatusCode.Created)
+        payAll()
+        // Only 1 is left for those nights
+        client.book(body("2026-10-10", "2026-10-12", extra = ""","keys":{"$carKeyId":2}""")).apply {
+            assertStatusCode(HttpStatusCode.Conflict)
+        }
+    }
+
+    @Test
+    fun test_keys_are_free_again_for_other_nights() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = { createSpace() },
+        mockDate = today,
+    ) {
+        client.book(body("2026-10-09", "2026-10-10", extra = ""","keys":{"$carKeyId":3}""")).assertStatusCode(HttpStatusCode.Created)
+        payAll()
+        client.book(body("2026-10-10", "2026-10-11", extra = ""","keys":{"$carKeyId":3}""")).assertStatusCode(HttpStatusCode.Created)
+    }
+
+    @Test
+    fun test_a_key_type_is_shared_by_several_spaces() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            createSpace()
+            val otherSpace = SpaceEntity.new { name = "Refugi"; description = "A shelter"; prices = emptyList() }
+            SpaceKeyTypeSpaces.insert {
+                it[keyType] = carKeyId
+                it[space] = otherSpace.id
+                it[maxPerLending] = 3
+            }
+        },
+        mockDate = today,
+    ) {
+        val otherSpace = Database { SpaceEntity.all().first { it.name == "Refugi" }.id.value }
+        client.book(body("2026-10-09", "2026-10-10", extra = ""","keys":{"$carKeyId":2}""")).assertStatusCode(HttpStatusCode.Created)
+        payAll()
+        // The same permits are needed in the other space on the same nights
+        client.book(
+            """{"space":"$otherSpace","checkIn":"2026-10-09","checkOut":"2026-10-10","attendees":{"MEMBER":1},"keys":{"$carKeyId":2}}"""
+        ).assertStatusCode(HttpStatusCode.Conflict)
+    }
+
+    @Test
+    fun test_keys_from_a_type_not_for_the_space_are_rejected() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            createSpace()
+            SpaceKeyTypeEntity.new { name = "Other" }
+        },
+        mockDate = today,
+    ) {
+        val other = Database { SpaceKeyTypeEntity.all().first { it.name == "Other" }.id.value }
+        client.book(body("2026-10-09", "2026-10-10", extra = ""","keys":{"$other":1}""")).assertStatusCode(HttpStatusCode.BadRequest)
+    }
+
+    @Test
+    fun test_pickup_assigns_keys_and_they_are_returned_one_by_one() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = { createSpace() },
+        userEntityPatches = { it.groups = it.groups + SPACE_LENDINGS_MANAGER_GROUP_NAME },
+        mockDate = today,
+    ) {
+        val location = client.book(body("2026-10-09", "2026-10-10", extra = ""","keys":{"$carKeyId":2}""")).headers["Location"]!!
+        val (a, b, c) = carKeys()
+
+        // More keys than asked for, a key twice, or one that doesn't exist
+        client.postJson("$location/pickup", """{"keys":["$a","$b","$c"]}""").assertStatusCode(HttpStatusCode.BadRequest)
+        client.postJson("$location/pickup", """{"keys":["$a","$a"]}""").assertStatusCode(HttpStatusCode.BadRequest)
+        client.postJson("$location/pickup", """{"keys":["7c1c3f0e-0b0a-4c3a-9d55-0a1b2c3d4e5f"]}""").assertStatusCode(HttpStatusCode.BadRequest)
+
+        client.postJson("$location/pickup", """{"keys":["$a","$b"]}""").assertStatusCode(HttpStatusCode.NoContent)
+        val given = Json.parseToJsonElement(client.get(location).bodyAsText()).jsonObject.getValue("keys").jsonArray
+        assertEquals(setOf(a, b), given.map { it.jsonObject.getValue("key").jsonPrimitive.content }.toSet())
+
+        // Only one comes back: the lending is not over
+        client.postJson("$location/return", """{"keys":["$a"]}""").assertStatusCode(HttpStatusCode.NoContent)
+        assertEquals(null, Database { SpaceLendingEntity.all().single().returnedAt })
+        // It cannot come back twice, nor can a key that wasn't given
+        client.postJson("$location/return", """{"keys":["$a"]}""").assertStatusCode(HttpStatusCode.BadRequest)
+        client.postJson("$location/return", """{"keys":["$c"]}""").assertStatusCode(HttpStatusCode.BadRequest)
+
+        client.postJson("$location/return", """{"keys":["$b"]}""").assertStatusCode(HttpStatusCode.NoContent)
+        assertEquals(true, Database { SpaceLendingEntity.all().single().returnedAt != null })
+    }
+
+    @Test
+    fun test_a_key_out_cannot_be_given_again() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = { createSpace() },
+        userEntityPatches = { it.groups = it.groups + SPACE_LENDINGS_MANAGER_GROUP_NAME },
+        mockDate = today,
+    ) {
+        val first = client.book(body("2026-10-09", "2026-10-10", extra = ""","keys":{"$carKeyId":1}""")).headers["Location"]!!
+        payAll()
+        val second = client.book(body("2026-10-20", "2026-10-21", extra = ""","keys":{"$carKeyId":1}""")).headers["Location"]!!
+        val (a) = carKeys()
+        client.postJson("$first/pickup", """{"keys":["$a"]}""").assertStatusCode(HttpStatusCode.NoContent)
+        client.postJson("$second/pickup", """{"keys":["$a"]}""").assertStatusCode(HttpStatusCode.BadRequest)
+        // Without a list, everything outstanding comes back
+        client.post("$first/return").assertStatusCode(HttpStatusCode.NoContent)
+        client.postJson("$second/pickup", """{"keys":["$a"]}""").assertStatusCode(HttpStatusCode.NoContent)
     }
 }

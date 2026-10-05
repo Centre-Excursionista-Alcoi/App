@@ -6,25 +6,21 @@ import kotlin.uuid.Uuid
 
 @Serializable
 data class CreateSpaceKeyRequest(
-    val space: Uuid,
-    val name: String,
-    val maxQuantity: Int = 1,
+    /** The [org.centrexcursionistalcoi.app.data.SpaceKeyType] of the key. */
+    val type: Uuid,
+    val label: String? = null,
     @Serializable(Base64Serializer::class) val nfcId: ByteArray? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is CreateSpaceKeyRequest) return false
 
-        return maxQuantity == other.maxQuantity &&
-            space == other.space &&
-            name == other.name &&
-            nfcId.contentEquals(other.nfcId)
+        return type == other.type && label == other.label && nfcId.contentEquals(other.nfcId)
     }
 
     override fun hashCode(): Int {
-        var result = maxQuantity
-        result = 31 * result + space.hashCode()
-        result = 31 * result + name.hashCode()
+        var result = type.hashCode()
+        result = 31 * result + (label?.hashCode() ?: 0)
         result = 31 * result + (nfcId?.contentHashCode() ?: 0)
         return result
     }

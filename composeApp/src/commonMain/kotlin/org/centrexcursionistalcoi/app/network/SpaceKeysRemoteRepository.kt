@@ -21,29 +21,28 @@ class SpaceKeysRemoteRepository(
     remoteToLocalIdConverter = { it },
 ) {
     suspend fun create(
-        space: Uuid,
-        name: String,
-        maxQuantity: Int,
+        type: Uuid,
+        label: String?,
         nfcId: ByteArray?,
         progressNotifier: ProgressNotifier? = null,
     ) {
         createJson(
-            CreateSpaceKeyRequest(space, name, maxQuantity, nfcId),
+            CreateSpaceKeyRequest(type, label, nfcId),
             CreateSpaceKeyRequest.serializer(),
             progressNotifier,
         )
     }
 
     /**
+     * @param label An empty string removes it.
      * @param nfcId An empty array removes the NFC tag of the key.
      */
     suspend fun update(
         id: Uuid,
-        name: String?,
-        maxQuantity: Int?,
+        label: String?,
         nfcId: ByteArray?,
         progressNotifier: ProgressNotifier? = null,
-    ) = update(id, UpdateSpaceKeyRequest(name, maxQuantity, nfcId), UpdateSpaceKeyRequest.serializer(), progressNotifier)
+    ) = update(id, UpdateSpaceKeyRequest(label, nfcId), UpdateSpaceKeyRequest.serializer(), progressNotifier)
 
     override suspend fun insertRemoteEntity(entity: SpaceKey): SpaceKey {
         spaceKeysRepository.upsert(entity)

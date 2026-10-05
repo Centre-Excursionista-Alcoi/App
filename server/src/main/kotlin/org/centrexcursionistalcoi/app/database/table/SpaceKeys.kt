@@ -6,13 +6,13 @@ import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.datetime.timestamp
 
 /**
- * A type of key of a space. A lending takes up to [maxQuantity] of them.
+ * The keys the club has: each one an exact copy of a [SpaceKeyTypes], identifiable by its id and by its NFC tag, if it
+ * has one. Like the items of the inventory.
  */
 object SpaceKeys : UuidTable("space_keys") {
     val lastUpdate = timestamp("lastUpdate").defaultExpression(DatabaseNowExpression)
 
-    val space = reference("space", Spaces, onDelete = ReferenceOption.CASCADE)
-    val name = text("name")
-    val maxQuantity = integer("maxQuantity").default(1)
+    val type = reference("type", SpaceKeyTypes, onDelete = ReferenceOption.RESTRICT)
+    val label = text("label").nullable()
     val nfcId = binary("nfcId").nullable().uniqueIndex()
 }

@@ -30,6 +30,9 @@ data class SpaceLending(
     @Serializable(InstantSerializer::class) val returnedAt: Instant?,
     val returnedBy: String?,
 
+    /** How many keys of each [SpaceKeyType] the lending asked for. */
+    val requestedKeys: Map<Uuid, Int>,
+    /** The keys handed out, in the end (they are chosen when a manager hands them over). */
     val keys: List<SpaceLendingKey>,
 
     val totalPrice: Double,

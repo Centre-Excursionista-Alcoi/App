@@ -21,14 +21,14 @@ interface SpaceKeyDao {
     @Query("SELECT * FROM SpaceKeys WHERE id = :id LIMIT 1")
     fun getAsFlow(id: Uuid): Flow<SpaceKeyEntity?>
 
-    @Query("SELECT * FROM SpaceKeys ORDER BY name")
+    @Query("SELECT * FROM SpaceKeys ORDER BY label")
     suspend fun selectAll(): List<SpaceKeyEntity>
 
-    @Query("SELECT * FROM SpaceKeys ORDER BY name")
+    @Query("SELECT * FROM SpaceKeys ORDER BY label")
     fun selectAllAsFlow(): Flow<List<SpaceKeyEntity>>
 
-    @Query("SELECT * FROM SpaceKeys WHERE space = :space ORDER BY name")
-    fun getBySpaceAsFlow(space: Uuid): Flow<List<SpaceKeyEntity>>
+    @Query("SELECT * FROM SpaceKeys WHERE type = :type ORDER BY label")
+    fun getByTypeAsFlow(type: Uuid): Flow<List<SpaceKeyEntity>>
 
     @Query("DELETE FROM SpaceKeys WHERE id = :id")
     suspend fun deleteById(id: Uuid)

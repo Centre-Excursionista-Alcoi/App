@@ -19,6 +19,7 @@ val SETTINGS_LAST_EVENTS_SYNC = longPreferencesKey("last_events_sync")
 val SETTINGS_LAST_MEMBERS_SYNC = longPreferencesKey("last_members_sync")
 val SETTINGS_LAST_MEMORIES_SYNC = longPreferencesKey("last_memories_sync")
 val SETTINGS_LAST_SPACES_SYNC = longPreferencesKey("last_spaces_sync")
+val SETTINGS_LAST_SPACE_KEY_TYPES_SYNC = longPreferencesKey("last_space_key_types_sync")
 val SETTINGS_LAST_SPACE_KEYS_SYNC = longPreferencesKey("last_space_keys_sync")
 val SETTINGS_LAST_SPACE_LENDINGS_SYNC = longPreferencesKey("last_space_lendings_sync")
 

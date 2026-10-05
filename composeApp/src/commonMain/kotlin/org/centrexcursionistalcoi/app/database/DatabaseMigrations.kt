@@ -61,3 +61,26 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
         connection.execSQL("CREATE INDEX IF NOT EXISTS `index_SpaceLendings_space` ON `SpaceLendings` (`space`)")
     }
 }
+
+/**
+ * v6 turned the keys of the spaces into an inventory: `SpaceKeys` are now individual keys of a type (`SpaceKeyTypes`),
+ * and a lending asks for keys by type. The old keys and lendings are a cache the server's own migration also dropped,
+ * so they are recreated empty: [SyncAllDataBackgroundJob] fetches everything again as the schema just changed.
+ */
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("DROP TABLE IF EXISTS `SpaceKeys`")
+        connection.execSQL("DROP TABLE IF EXISTS `SpaceLendings`")
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `SpaceKeyTypes` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT, `spaces` TEXT NOT NULL, PRIMARY KEY(`id`))"
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `SpaceKeys` (`id` TEXT NOT NULL, `type` TEXT NOT NULL, `label` TEXT, `nfcId` BLOB, PRIMARY KEY(`id`), FOREIGN KEY(`type`) REFERENCES `SpaceKeyTypes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )"
+        )
+        connection.execSQL("CREATE INDEX IF NOT EXISTS `index_SpaceKeys_type` ON `SpaceKeys` (`type`)")
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `SpaceLendings` (`id` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `space` TEXT NOT NULL, `userSub` TEXT, `checkIn` TEXT NOT NULL, `checkOut` TEXT NOT NULL, `attendees` TEXT NOT NULL, `acceptedConditionsAt` INTEGER, `cancelled` INTEGER NOT NULL, `notes` TEXT, `pickedUpAt` INTEGER, `pickedUpBy` TEXT, `returnedAt` INTEGER, `returnedBy` TEXT, `requestedKeys` TEXT NOT NULL, `keys` TEXT NOT NULL, `totalPrice` REAL NOT NULL, `paymentStatus` TEXT NOT NULL, `reportNotes` TEXT, `reportIssues` TEXT, `reportSubmittedAt` INTEGER, `reportNotesFiles` TEXT NOT NULL, `reportIssuesFiles` TEXT NOT NULL, `paymentProofs` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`space`) REFERENCES `Spaces`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )"
+        )
+        connection.execSQL("CREATE INDEX IF NOT EXISTS `index_SpaceLendings_space` ON `SpaceLendings` (`space`)")
+    }
+}

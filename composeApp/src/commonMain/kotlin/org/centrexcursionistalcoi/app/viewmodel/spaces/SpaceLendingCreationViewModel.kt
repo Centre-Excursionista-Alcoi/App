@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Category
 import org.centrexcursionistalcoi.app.data.SpaceOccupancy
-import org.centrexcursionistalcoi.app.database.SpaceKeysRepository
+import org.centrexcursionistalcoi.app.database.SpaceKeyTypesRepository
 import org.centrexcursionistalcoi.app.database.SpaceLendingsRepository
 import org.centrexcursionistalcoi.app.database.SpacesRepository
 import org.centrexcursionistalcoi.app.network.SpaceLendingsRemoteRepository
@@ -35,7 +35,7 @@ data class SpaceLendingFormTarget(val spaceId: Uuid, val lendingId: Uuid? = null
 class SpaceLendingCreationViewModel(
     @InjectedParam target: SpaceLendingFormTarget,
     spacesRepository: SpacesRepository,
-    spaceKeysRepository: SpaceKeysRepository,
+    spaceKeyTypesRepository: SpaceKeyTypesRepository,
     private val spaceLendingsRepository: SpaceLendingsRepository,
     private val spaceLendingsRemoteRepository: SpaceLendingsRemoteRepository,
 ) : ViewModel() {
@@ -45,7 +45,7 @@ class SpaceLendingCreationViewModel(
     private val lendingId = target.lendingId
 
     val space = spacesRepository.getAsFlow(spaceId).stateInViewModel()
-    val keys = spaceKeysRepository.getBySpaceAsFlow(spaceId).stateInViewModel()
+    val keys = spaceKeyTypesRepository.selectAllAsFlow().forSpace(spaceId).stateInViewModel()
 
     /**
      * The dates of the lending being modified, or `null` when creating one. They are only the starting point: the
@@ -84,7 +84,7 @@ class SpaceLendingCreationViewModel(
                 spaceLendingsRepository.get(lendingId)?.let { lending ->
                     initialDates = lending.checkIn to lending.checkOut
                     _attendees.value = lending.attendees
-                    _keyQuantities.value = lending.keys.associate { it.key to it.quantity }
+                    _keyQuantities.value = lending.requestedKeys
                     _notes.value = lending.notes.orEmpty()
                     _acceptedConditions.value = lending.acceptedConditionsAt != null
                 }

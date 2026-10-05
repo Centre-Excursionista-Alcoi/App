@@ -12,6 +12,7 @@ import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.MembersRepository
 import org.centrexcursionistalcoi.app.database.MemoriesRepository
 import org.centrexcursionistalcoi.app.database.PostsRepository
+import org.centrexcursionistalcoi.app.database.SpaceKeyTypesRepository
 import org.centrexcursionistalcoi.app.database.SpaceKeysRepository
 import org.centrexcursionistalcoi.app.database.SpaceLendingsRepository
 import org.centrexcursionistalcoi.app.database.SpacesRepository
@@ -27,6 +28,7 @@ import org.centrexcursionistalcoi.app.network.MembersRemoteRepository
 import org.centrexcursionistalcoi.app.network.MemoriesRemoteRepository
 import org.centrexcursionistalcoi.app.network.PostsRemoteRepository
 import org.centrexcursionistalcoi.app.network.PreferencesRemoteRepository
+import org.centrexcursionistalcoi.app.network.SpaceKeyTypesRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpaceKeysRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpaceLendingsRemoteRepository
 import org.centrexcursionistalcoi.app.network.SpacesRemoteRepository
@@ -108,6 +110,7 @@ class TestKoinModules {
         assertNotNull(koin.get<MemoriesRepository>())
         assertNotNull(koin.get<LendingsRepository>())
         assertNotNull(koin.get<SpacesRepository>())
+        assertNotNull(koin.get<SpaceKeyTypesRepository>())
         assertNotNull(koin.get<SpaceKeysRepository>())
         assertNotNull(koin.get<SpaceLendingsRepository>())
 
@@ -121,6 +124,7 @@ class TestKoinModules {
         assertNotNull(koin.get<MemoriesRemoteRepository>())
         assertNotNull(koin.get<LendingsRemoteRepository>())
         assertNotNull(koin.get<SpacesRemoteRepository>())
+        assertNotNull(koin.get<SpaceKeyTypesRemoteRepository>())
         assertNotNull(koin.get<SpaceKeysRemoteRepository>())
         assertNotNull(koin.get<SpaceLendingsRemoteRepository>())
         assertNotNull(koin.get<SyncRemoteRepository>())

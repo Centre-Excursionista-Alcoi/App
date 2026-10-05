@@ -19,9 +19,8 @@ import kotlin.uuid.Uuid
 class SpaceKeyEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, EntityDataConverter<SpaceKey, Uuid>, EntityPatcher<UpdateSpaceKeyRequest> {
     override var lastUpdate: Instant by SpaceKeys.lastUpdate
 
-    var space by SpaceEntity referencedOn SpaceKeys.space
-    var name: String by SpaceKeys.name
-    var maxQuantity: Int by SpaceKeys.maxQuantity
+    var type by SpaceKeyTypeEntity referencedOn SpaceKeys.type
+    var label: String? by SpaceKeys.label
     var nfcId by SpaceKeys.nfcId
 
     override suspend fun updated() {
@@ -32,16 +31,15 @@ class SpaceKeyEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Ent
     context(_: JdbcTransaction)
     override fun toData(): SpaceKey = SpaceKey(
         id = id.value,
-        space = SpaceKeys.space.lookup().value,
-        name = name,
-        maxQuantity = maxQuantity,
+        type = SpaceKeys.type.lookup().value,
+        label = label,
         nfcId = nfcId,
     )
 
     context(_: JdbcTransaction)
     override fun patch(request: UpdateSpaceKeyRequest) {
-        request.name?.takeUnlessEmpty()?.let { name = it }
-        request.maxQuantity?.let { maxQuantity = it }
+        // An empty value clears them
+        request.label?.let { label = it.takeUnlessEmpty() }
         request.nfcId?.let { nfcId = it.takeUnless { id -> id.isEmpty() } }
     }
 

@@ -198,12 +198,12 @@ fun SpaceLendingCreationScreen(
                         modifier = Modifier.padding(top = 16.dp),
                     )
                 }
-                items(keys.orEmpty(), key = { "key_${it.id}" }) { key ->
+                items(keys.orEmpty(), key = { "key_${it.type.id}" }) { key ->
                     Stepper(
-                        label = key.name,
-                        value = keyQuantities[key.id] ?: 0,
-                        max = key.maxQuantity,
-                        onChange = { model.setKeyQuantity(key.id, it) },
+                        label = key.type.name,
+                        value = keyQuantities[key.type.id] ?: 0,
+                        max = key.maxPerLending,
+                        onChange = { model.setKeyQuantity(key.type.id, it) },
                     )
                 }
             }

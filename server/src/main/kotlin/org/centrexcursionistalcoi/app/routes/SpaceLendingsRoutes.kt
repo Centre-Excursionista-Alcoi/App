@@ -23,9 +23,12 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceKeyEntity
+import org.centrexcursionistalcoi.app.database.entity.SpaceKeyTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceLendingEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.SpaceLendingFiles
+import org.centrexcursionistalcoi.app.database.table.SpaceKeyTypeSpaces
+import org.centrexcursionistalcoi.app.database.table.SpaceLendingKeyRequests
 import org.centrexcursionistalcoi.app.database.table.SpaceLendingKeys
 import org.centrexcursionistalcoi.app.database.table.SpaceLendings
 import org.centrexcursionistalcoi.app.database.utils.encodeList
@@ -45,11 +48,14 @@ import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.AttachPaymentProofRequest
 import org.centrexcursionistalcoi.app.request.CreateSpaceLendingRequest
 import org.centrexcursionistalcoi.app.request.MissingPartException
+import org.centrexcursionistalcoi.app.request.PickupSpaceLendingRequest
+import org.centrexcursionistalcoi.app.request.ReturnSpaceLendingRequest
 import org.centrexcursionistalcoi.app.request.SetSpaceLendingPaymentRequest
 import org.centrexcursionistalcoi.app.request.SubmitSpaceLendingReportRequest
 import org.centrexcursionistalcoi.app.request.UpdateSpaceLendingAttendeesRequest
 import org.centrexcursionistalcoi.app.request.UpdateSpaceLendingRequest
 import org.centrexcursionistalcoi.app.request.receiveJson
+import org.centrexcursionistalcoi.app.request.receiveOptionalJson
 import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
 import org.centrexcursionistalcoi.app.routes.sync.SyncSection
 import org.centrexcursionistalcoi.app.routes.sync.SyncSections
@@ -59,14 +65,18 @@ import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSess
 import org.centrexcursionistalcoi.app.security.isSpaceLendingsManager
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.SpacePricing
+import org.centrexcursionistalcoi.app.utils.freeSpaceKeys
 import org.centrexcursionistalcoi.app.utils.hasSpaceLendingConflict
 import org.centrexcursionistalcoi.app.utils.isClosedDuring
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.slf4j.LoggerFactory
 import kotlin.uuid.Uuid
@@ -122,9 +132,9 @@ private fun SpaceLendingEntity.recomputePrice() {
 private val settledPayments = setOf(PaymentStatus.COMPLETED, PaymentStatus.REFUNDED)
 
 /**
- * Checks that a stay in [space] from [checkIn] to [checkOut] is valid, and resolves the keys wanted.
+ * Checks that a stay in [space] from [checkIn] to [checkOut] is valid, and that the keys wanted are free.
  * @param ignore A lending that is being modified, which doesn't collide with itself.
- * @return The keys and their quantity, or `null` if an error has been responded.
+ * @return The quantity wanted of each type of key, or `null` if an error has been responded.
  */
 private suspend fun RoutingContext.validateStay(
     space: SpaceEntity,
@@ -133,7 +143,7 @@ private suspend fun RoutingContext.validateStay(
     attendees: Map<Category, Int>,
     keysWanted: Map<Uuid, Int>,
     ignore: SpaceLendingEntity? = null,
-): List<Pair<SpaceKeyEntity, Int>>? {
+): Map<Uuid, Int>? {
     if (checkOut < checkIn) {
         respondError(Error.EndDateCannotBeBeforeStart())
         return null
@@ -146,20 +156,30 @@ private suspend fun RoutingContext.validateStay(
         respondError(Error.SpaceClosed())
         return null
     }
-    // Keys: each must be a key of the space, in a quantity between 1 and its maximum
-    val keys = Database {
-        keysWanted.filterValues { it != 0 }.map { (keyId, quantity) ->
-            val key = SpaceKeyEntity.findById(keyId)
-            if (key == null || key.space.id != space.id || quantity !in 1..key.maxQuantity) return@Database null
-            key to quantity
+    // Keys: each type must be for the space, in a quantity between 1 and its maximum, and enough must be free
+    val keys = keysWanted.filterValues { it != 0 }
+    val invalid = Database {
+        keys.any { (typeId, quantity) ->
+            val max = SpaceKeyTypeSpaces.selectAll()
+                .where { (SpaceKeyTypeSpaces.keyType eq typeId) and (SpaceKeyTypeSpaces.space eq space.id) }
+                .firstOrNull()?.get(SpaceKeyTypeSpaces.maxPerLending)
+            max == null || quantity !in 1..max
         }
     }
-    if (keys == null) {
+    if (invalid) {
         respondError(Error.InvalidArgument("keys"))
         return null
     }
     if (Database { hasSpaceLendingConflict(space, checkIn, checkOut, ignore) }) {
         respondError(Error.SpaceConflict())
+        return null
+    }
+    val unavailable = Database {
+        keys.entries.firstOrNull { (typeId, quantity) -> freeSpaceKeys(typeId, checkIn, checkOut, ignore) < quantity }
+            ?.let { SpaceKeyTypeEntity[it.key].name }
+    }
+    if (unavailable != null) {
+        respondError(Error.SpaceKeysUnavailable(unavailable))
         return null
     }
     return keys
@@ -263,11 +283,11 @@ fun Route.spaceLendingsRoutes() {
                 this.notes = request.notes?.takeIf { it.isNotBlank() }
             }
             entity.recomputePrice()
-            for ((key, quantity) in keys) {
-                SpaceLendingKeys.insert {
-                    it[SpaceLendingKeys.lending] = entity.id
-                    it[SpaceLendingKeys.key] = key.id
-                    it[SpaceLendingKeys.quantity] = quantity
+            for ((typeId, quantity) in keys) {
+                SpaceLendingKeyRequests.insert {
+                    it[SpaceLendingKeyRequests.lending] = entity.id
+                    it[keyType] = typeId
+                    it[SpaceLendingKeyRequests.quantity] = quantity
                 }
             }
             entity
@@ -298,7 +318,7 @@ fun Route.spaceLendingsRoutes() {
         val attendees = request.attendees ?: Database { lending.attendees }
         val space = Database { lending.space }
         if (request.checkIn != null && checkIn < today()) return@patchWithLock respondError(Error.DateMustBeInFuture())
-        val keysWanted = request.keys ?: Database { lending.keys().associate { it.key to it.quantity } }
+        val keysWanted = request.keys ?: Database { lending.requestedKeys() }
         val keys = validateStay(space, checkIn, checkOut, attendees, keysWanted, ignore = lending) ?: return@patchWithLock
 
         Database {
@@ -308,12 +328,12 @@ fun Route.spaceLendingsRoutes() {
             request.notes?.let { lending.notes = it.takeIf { notes -> notes.isNotBlank() } }
             lending.recomputePrice()
             if (request.keys != null) {
-                SpaceLendingKeys.deleteWhere { SpaceLendingKeys.lending eq lending.id }
-                for ((key, quantity) in keys) {
-                    SpaceLendingKeys.insert {
-                        it[SpaceLendingKeys.lending] = lending.id
-                        it[SpaceLendingKeys.key] = key.id
-                        it[SpaceLendingKeys.quantity] = quantity
+                SpaceLendingKeyRequests.deleteWhere { SpaceLendingKeyRequests.lending eq lending.id }
+                for ((typeId, quantity) in keys) {
+                    SpaceLendingKeyRequests.insert {
+                        it[SpaceLendingKeyRequests.lending] = lending.id
+                        it[keyType] = typeId
+                        it[SpaceLendingKeyRequests.quantity] = quantity
                     }
                 }
             }
@@ -427,39 +447,75 @@ fun Route.spaceLendingsRoutes() {
         call.respond(HttpStatusCode.NoContent)
     }
 
-    // Step 2: a manager hands the keys over. From then on, the lending is locked.
+    // Step 2: a manager hands the keys over, choosing the exact ones. From then on, the lending is locked.
     postWithLock<Api.SpaceLendings.Id.Pickup>(spaceLendingsMutex) { resource ->
         val session = getUserSessionOrFail() ?: return@postWithLock
         val lending = spaceLendingFor(session, resource.parent.id, managerOnly = true) ?: return@postWithLock
+        val request = receiveOptionalJson(PickupSpaceLendingRequest.serializer()) ?: return@postWithLock
         notPickedUpOrFail(lending) ?: return@postWithLock
+
+        val keyIds = request.keys
+        if (keyIds.distinct().size != keyIds.size) return@postWithLock respondError(Error.InvalidArgument("keys"))
+        val valid = Database {
+            val requested = lending.requestedKeys()
+            val keys = keyIds.map { SpaceKeyEntity.findById(it) }
+            val perType = keys.groupingBy { it?.type?.id?.value }.eachCount()
+            val busy = SpaceLendingKeys.selectAll()
+                .where { (SpaceLendingKeys.key inList keyIds) and SpaceLendingKeys.returnedAt.isNull() }
+                .any()
+            keys.none { it == null } && !busy && perType.all { (typeId, count) -> count <= (requested[typeId] ?: 0) }
+        }
+        if (!valid) return@postWithLock respondError(Error.InvalidArgument("keys"))
+
         Database {
-            lending.pickedUpAt = now()
+            val now = now()
+            lending.pickedUpAt = now
             lending.pickedUpBy = UserReferenceEntity.findById(session.sub)
-            SpaceLendingKeys.update({ SpaceLendingKeys.lending eq lending.id }) {
-                it[givenBy] = session.sub
-                it[givenAt] = now()
+            for (keyId in keyIds) {
+                SpaceLendingKeys.insert {
+                    it[SpaceLendingKeys.lending] = lending.id
+                    it[key] = keyId
+                    it[givenBy] = session.sub
+                    it[givenAt] = now
+                }
             }
         }
         lending.updated()
         call.respond(HttpStatusCode.NoContent)
     }
 
-    // Step 3: a manager takes the keys back, and then the lending gets paid
+    // Step 3: a manager takes the keys back, one by one, and then the lending gets paid
     postWithLock<Api.SpaceLendings.Id.Return>(spaceLendingsMutex) { resource ->
         val session = getUserSessionOrFail() ?: return@postWithLock
         val lending = spaceLendingFor(session, resource.parent.id, managerOnly = true) ?: return@postWithLock
+        val request = receiveOptionalJson(ReturnSpaceLendingRequest.serializer()) ?: return@postWithLock
         if (Database { lending.pickedUpAt == null || lending.returnedAt != null }) {
             return@postWithLock respondError(Error.InvalidSpaceLendingState("The keys must have been picked up, and not returned yet"))
         }
+        val outstanding = Database {
+            SpaceLendingKeys.selectAll()
+                .where { (SpaceLendingKeys.lending eq lending.id) and SpaceLendingKeys.returnedAt.isNull() }
+                .map { it[SpaceLendingKeys.key].value }
+        }
+        // Without a list, all that are still out
+        val returning = request.keys ?: outstanding
+        if (returning.any { it !in outstanding }) return@postWithLock respondError(Error.InvalidArgument("keys"))
+
         Database {
-            lending.returnedAt = now()
-            lending.returnedBy = UserReferenceEntity.findById(session.sub)
-            SpaceLendingKeys.update({ SpaceLendingKeys.lending eq lending.id }) {
-                it[returnedTo] = session.sub
-                it[returnedAt] = now()
+            val now = now()
+            if (returning.isNotEmpty()) {
+                SpaceLendingKeys.update({ (SpaceLendingKeys.lending eq lending.id) and (SpaceLendingKeys.key inList returning) }) {
+                    it[returnedTo] = session.sub
+                    it[returnedAt] = now
+                }
             }
-            // Nothing to pay
-            if (lending.totalPrice <= 0.0) lending.paymentStatus = PaymentStatus.COMPLETED
+            // The lending is over once no key is left out
+            if (returning.size == outstanding.size) {
+                lending.returnedAt = now
+                lending.returnedBy = UserReferenceEntity.findById(session.sub)
+                // Nothing to pay
+                if (lending.totalPrice <= 0.0) lending.paymentStatus = PaymentStatus.COMPLETED
+            }
         }
         lending.updated()
         call.respond(HttpStatusCode.NoContent)
