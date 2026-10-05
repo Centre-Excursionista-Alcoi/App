@@ -24,7 +24,6 @@ import org.centrexcursionistalcoi.app.data.Category
 import org.centrexcursionistalcoi.app.data.CategoryPrice
 import org.centrexcursionistalcoi.app.data.PriceUnit
 import org.centrexcursionistalcoi.app.data.Space
-import org.centrexcursionistalcoi.app.viewmodel.spaces.SpaceKeyOption
 import org.centrexcursionistalcoi.app.ui.reusable.LazyColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.screen.spaces.formatPrice
@@ -40,13 +39,11 @@ import kotlin.time.Clock
 @Composable
 fun SpacesListView(model: SpacesManagementViewModel = koinViewModel()) {
     val spaces by model.spaces.collectAsState()
-    val keyTypes by model.keyTypes.collectAsState()
 
     var editing by remember { mutableStateOf<Space?>(null) }
     var creating by remember { mutableStateOf(false) }
     var closing by remember { mutableStateOf<Space?>(null) }
     var deleting by remember { mutableStateOf<Space?>(null) }
-    var keyDialog by remember { mutableStateOf<Pair<Space, SpaceKeyOption?>?>(null) }
 
     val spacesValue = spaces
     if (spacesValue == null) {
@@ -63,10 +60,8 @@ fun SpacesListView(model: SpacesManagementViewModel = koinViewModel()) {
         if (spacesValue.isEmpty()) {
             item("empty") { Text(stringResource(Res.string.spaces_empty)) }
         }
+        item("inventory") { SpaceKeysInventory(model, spacesValue) }
         items(spacesValue, key = { it.id.toString() }) { space ->
-            val spaceKeys = keyTypes.orEmpty().mapNotNull { type ->
-                type.spaces.find { it.space == space.id }?.let { SpaceKeyOption(type, it.maxPerLending) }
-            }
             OutlinedCard(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(space.name, style = MaterialTheme.typography.titleMedium)
@@ -88,24 +83,6 @@ fun SpacesListView(model: SpacesManagementViewModel = koinViewModel()) {
                             ),
                             style = MaterialTheme.typography.bodySmall,
                         )
-                    }
-                    Text(
-                        stringResource(Res.string.management_spaces_keys),
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(top = 8.dp),
-                    )
-                    spaceKeys.forEach { key ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                stringResource(Res.string.spaces_key_line, key.type.name, key.maxPerLending),
-                                modifier = Modifier.weight(1f),
-                            )
-                            TextButton(onClick = { keyDialog = space to key }) { Text(stringResource(Res.string.edit)) }
-                            TextButton(onClick = { model.removeKeyType(key.type, space.id) }) { Text(stringResource(Res.string.delete)) }
-                        }
-                    }
-                    TextButton(onClick = { keyDialog = space to null }) {
-                        Text(stringResource(Res.string.management_spaces_key_add))
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(onClick = { editing = space }) { Text(stringResource(Res.string.edit)) }
@@ -166,16 +143,6 @@ fun SpacesListView(model: SpacesManagementViewModel = koinViewModel()) {
             },
             dismissButton = {
                 TextButton(onClick = { deleting = null }) { Text(stringResource(Res.string.management_spaces_cancel)) }
-            },
-        )
-    }
-    keyDialog?.let { (space, key) ->
-        SpaceKeyDialog(
-            key = key,
-            onDismiss = { keyDialog = null },
-            onSave = { name, max ->
-                keyDialog = null
-                if (key == null) model.createKeyType(space.id, name, max) else model.updateKeyType(key.type, space.id, name, max)
             },
         )
     }
@@ -292,43 +259,6 @@ private fun CloseSpaceDialog(onDismiss: () -> Unit, onClose: (reason: String) ->
         },
         confirmButton = {
             TextButton(onClick = { onClose(reason) }) { Text(stringResource(Res.string.management_spaces_close)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.management_spaces_cancel)) }
-        },
-    )
-}
-
-@Composable
-private fun SpaceKeyDialog(key: SpaceKeyOption?, onDismiss: () -> Unit, onSave: (name: String, maxPerLending: Int) -> Unit) {
-    var name by remember { mutableStateOf(key?.type?.name.orEmpty()) }
-    var max by remember { mutableStateOf((key?.maxPerLending ?: 1).toString()) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.management_spaces_key_add)) },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(stringResource(Res.string.management_spaces_key_name)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = max,
-                    onValueChange = { max = it.filter { c -> c.isDigit() } },
-                    label = { Text(stringResource(Res.string.management_spaces_key_max)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = name.isNotBlank() && (max.toIntOrNull() ?: 0) > 0,
-                onClick = { onSave(name.trim(), max.toInt()) },
-            ) { Text(stringResource(Res.string.management_spaces_save)) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(Res.string.management_spaces_cancel)) }

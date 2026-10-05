@@ -106,6 +106,11 @@ fun SpaceLendingDetailsScreen(
 
     var showCancelConfirmation by rememberSaveable { mutableStateOf(false) }
     var showAttendeesDialog by rememberSaveable { mutableStateOf(false) }
+    var showPickupDialog by rememberSaveable { mutableStateOf(false) }
+    var showReturnDialog by rememberSaveable { mutableStateOf(false) }
+    val clubKeys by model.keys.collectAsState()
+    val keysOut by model.keysOut.collectAsState()
+    val keysOutOrEmpty = keysOut.orEmpty()
 
     Scaffold(
         topBar = {
@@ -220,11 +225,21 @@ fun SpaceLendingDetailsScreen(
                         when (stage) {
                             SpaceLendingStage.CREATED -> {
                                 Text(stringResource(Res.string.space_lending_pickup_hint), style = MaterialTheme.typography.bodySmall)
-                                Button(onClick = model::pickup, enabled = !isWorking) {
+                                Button(
+                                    onClick = {
+                                        if (lending.requestedKeys.isEmpty()) model.pickup(emptyList()) else showPickupDialog = true
+                                    },
+                                    enabled = !isWorking,
+                                ) {
                                     Text(stringResource(Res.string.space_lending_pickup))
                                 }
                             }
-                            SpaceLendingStage.PICKED_UP -> Button(onClick = model::returnKeys, enabled = !isWorking) {
+                            SpaceLendingStage.PICKED_UP -> Button(
+                                onClick = {
+                                    if (lending.keys.none { it.isOut }) model.returnKeys(null) else showReturnDialog = true
+                                },
+                                enabled = !isWorking,
+                            ) {
                                 Text(stringResource(Res.string.space_lending_return))
                             }
                             SpaceLendingStage.RETURNED -> Button(
@@ -276,6 +291,30 @@ fun SpaceLendingDetailsScreen(
             item("bottom_spacer") { Spacer(Modifier.height(32.dp)) }
         }
 
+        if (showPickupDialog) {
+            SpaceKeysPickupDialog(
+                requested = lending.requestedKeys,
+                keyTypes = keyTypes.orEmpty(),
+                keys = clubKeys.orEmpty().filter { it.id !in keysOutOrEmpty },
+                onDismiss = { showPickupDialog = false },
+                onConfirm = {
+                    showPickupDialog = false
+                    model.pickup(it)
+                },
+            )
+        }
+        if (showReturnDialog) {
+            SpaceKeysReturnDialog(
+                given = lending.keys.filter { it.isOut },
+                keys = clubKeys.orEmpty(),
+                keyTypes = keyTypes.orEmpty(),
+                onDismiss = { showReturnDialog = false },
+                onConfirm = {
+                    showReturnDialog = false
+                    model.returnKeys(it)
+                },
+            )
+        }
         if (showCancelConfirmation) {
             AlertDialog(
                 onDismissRequest = { showCancelConfirmation = false },

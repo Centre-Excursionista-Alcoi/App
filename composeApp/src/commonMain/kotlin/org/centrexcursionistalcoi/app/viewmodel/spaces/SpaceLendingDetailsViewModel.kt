@@ -7,10 +7,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Category
 import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.database.SpaceKeyTypesRepository
+import org.centrexcursionistalcoi.app.database.SpaceKeysRepository
 import org.centrexcursionistalcoi.app.database.SpaceLendingsRepository
 import org.centrexcursionistalcoi.app.database.SpacesRepository
 import org.centrexcursionistalcoi.app.network.SpaceLendingsRemoteRepository
@@ -27,6 +29,7 @@ class SpaceLendingDetailsViewModel(
     spaceLendingsRepository: SpaceLendingsRepository,
     spacesRepository: SpacesRepository,
     spaceKeyTypesRepository: SpaceKeyTypesRepository,
+    spaceKeysRepository: SpaceKeysRepository,
     profileRepository: ProfileRepository,
     private val remote: SpaceLendingsRemoteRepository,
 ) : ViewModel() {
@@ -39,6 +42,14 @@ class SpaceLendingDetailsViewModel(
 
     /** The types of keys, to tell the names of the ones the lending asks for. */
     val keyTypes = spaceKeyTypesRepository.selectAllAsFlow().stateInViewModel()
+
+    /** The keys of the club. Only managers get them. */
+    val keys = spaceKeysRepository.selectAllAsFlow().stateInViewModel()
+
+    /** The keys that are out with any lending, so they can't be given again. */
+    val keysOut = spaceLendingsRepository.selectAllAsFlow()
+        .map { lendings -> lendings.flatMap { it.keys }.filter { it.isOut }.map { it.key }.toSet() }
+        .stateInViewModel()
 
     private val _isWorking = MutableStateFlow(false)
     val isWorking = _isWorking.asStateFlow()
@@ -56,9 +67,11 @@ class SpaceLendingDetailsViewModel(
 
     fun updateAttendees(attendees: Map<Category, Int>) = work { remote.updateAttendees(lendingId, attendees) }
 
-    fun pickup() = work { remote.pickup(lendingId) }
+    /** @param keys The exact keys given to the user. */
+    fun pickup(keys: List<Uuid>) = work { remote.pickup(lendingId, keys) }
 
-    fun returnKeys() = work { remote.returnKeys(lendingId) }
+    /** @param keys The keys that are back, or `null` for all that are still out. */
+    fun returnKeys(keys: List<Uuid>?) = work { remote.returnKeys(lendingId, keys) }
 
     fun setPayment(status: PaymentStatus) = work { remote.setPayment(lendingId, status) }
 
