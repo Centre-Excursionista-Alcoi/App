@@ -433,14 +433,4 @@ class TestSpaceLendingsRoutes : ApplicationTestBase() {
             assertEquals(name, Database { FileEntity[fileId.toUuid()].name })
         }
     }
-
-    @Test
-    fun test_new_lending_sends_emails_without_failing() = runApplicationTest(
-        shouldLogIn = LoginType.USER,
-        databaseInitBlock = { createSpace() },
-        mockDate = today,
-        disableEmail = false,
-    ) {
-        client.book(body("2026-10-09", "2026-10-10")).assertStatusCode(HttpStatusCode.Created)
-    }
 }

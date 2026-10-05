@@ -22,6 +22,7 @@ class SpaceKeyEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Ent
     var space by SpaceEntity referencedOn SpaceKeys.space
     var name: String by SpaceKeys.name
     var maxQuantity: Int by SpaceKeys.maxQuantity
+    var nfcId by SpaceKeys.nfcId
 
     override suspend fun updated() {
         notifyUpdateForEntity(Companion, id)
@@ -35,12 +36,14 @@ class SpaceKeyEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Ent
         space = space.id.value,
         name = name,
         maxQuantity = maxQuantity,
+        nfcId = nfcId,
     )
 
     context(_: JdbcTransaction)
     override fun patch(request: UpdateSpaceKeyRequest) {
         request.name?.takeUnlessEmpty()?.let { name = it }
         request.maxQuantity?.let { maxQuantity = it }
+        request.nfcId?.let { nfcId = it.takeUnless { id -> id.isEmpty() } }
     }
 
     companion object : UuidEntityClass<SpaceKeyEntity>(SpaceKeys)

@@ -66,6 +66,7 @@ fun Route.spacesRoutes() {
                     this.space = space
                     this.name = request.name
                     this.maxQuantity = request.maxQuantity
+                    this.nfcId = request.nfcId?.takeUnless { it.isEmpty() }
                 }
             }
         },

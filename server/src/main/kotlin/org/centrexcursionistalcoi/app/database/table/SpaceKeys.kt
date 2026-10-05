@@ -14,4 +14,5 @@ object SpaceKeys : UuidTable("space_keys") {
     val space = reference("space", Spaces, onDelete = ReferenceOption.CASCADE)
     val name = text("name")
     val maxQuantity = integer("maxQuantity").default(1)
+    val nfcId = binary("nfcId").nullable().uniqueIndex()
 }
