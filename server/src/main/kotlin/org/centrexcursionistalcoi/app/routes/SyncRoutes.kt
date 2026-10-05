@@ -12,9 +12,26 @@ import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.routes.sync.SyncSections
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.utils.toInstant
+import io.sentry.Sentry
+import io.sentry.SpanStatus
+import org.centrexcursionistalcoi.app.tracing.TraceOperation
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("SyncRoutes")
+
+/** Runs [block] as a [TraceOperation.SYNC_SECTION] span of the request's transaction, if any. */
+private inline fun <T> traceSpan(description: String, block: () -> T): T {
+    val span = Sentry.getSpan()?.startChild(TraceOperation.SYNC_SECTION.value, description)
+    return try {
+        block()
+    } catch (e: Exception) {
+        span?.throwable = e
+        span?.status = SpanStatus.INTERNAL_ERROR
+        throw e
+    } finally {
+        span?.finish()
+    }
+}
 
 /**
  * `GET /sync` answers in a single request what the app otherwise asks of each of the routes that list what it keeps
@@ -37,8 +54,13 @@ fun Route.syncRoutes() {
         val sections = SyncSections.all()
 
         val since = sections.associate { it.key to call.request.queryParameters[it.key]?.toLongOrNull()?.toInstant() }
-        for (section in sections) section.prepare(session)
-        val lastUpdates = sections.associate { it.key to it.lastUpdate(session) }
+        // Each part is a span of the request's transaction, to see which section takes the time
+        for (section in sections) {
+            traceSpan("prepare ${section.key}") { section.prepare(session) }
+        }
+        val lastUpdates = sections.associate { section ->
+            section.key to traceSpan("lastUpdate ${section.key}") { section.lastUpdate(session) }
+        }
 
         val body = Database {
             buildString {
@@ -54,7 +76,7 @@ fun Route.syncRoutes() {
                         if (lastUpdate != null) append(",\"lastUpdate\":").append(lastUpdate.toEpochMilliseconds())
                         append(",\"items\":")
                         try {
-                            append(section.snapshot(session))
+                            append(traceSpan("snapshot ${section.key}") { section.snapshot(session) })
                         } catch (e: Exception) {
                             logger.error("Could not sync the section ${section.key}", e)
                             throw e

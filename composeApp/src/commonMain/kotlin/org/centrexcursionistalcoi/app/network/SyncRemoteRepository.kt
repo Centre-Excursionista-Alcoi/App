@@ -13,6 +13,8 @@ import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.error.bodyAsError
 import org.centrexcursionistalcoi.app.json
+import org.centrexcursionistalcoi.app.log.TraceOperation
+import org.centrexcursionistalcoi.app.log.traceSpan
 import org.centrexcursionistalcoi.app.process.Progress
 import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorDownloadProgress
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -97,11 +99,15 @@ class SyncRemoteRepository(
             throw response.bodyAsError().toThrowable().also(GlobalAsyncErrorHandler::setError)
         }
 
-        val body: JsonObject = json.parseToJsonElement(response.bodyAsText()).jsonObject
+        val body: JsonObject = traceSpan(TraceOperation.SERIALIZE, "Parse /sync") {
+            json.parseToJsonElement(response.bodyAsText()).jsonObject
+        }
         val serverTime = body.getValue("serverTime").jsonPrimitive.long
 
         progress?.invoke(Progress.DataProcessing)
-        body[PROFILE_KEY]?.jsonObject?.let { storeProfile(it, serverTime) }
+        body[PROFILE_KEY]?.jsonObject?.let { section ->
+            traceSpan(TraceOperation.SYNC_ENTITY, "profile") { storeProfile(section, serverTime) }
+        }
         for (section in sections) {
             val data = body[section.key]?.jsonObject ?: continue
             section.repository.synchronizeFromBulkSync(data, serverTime, progress)
