@@ -10,7 +10,6 @@ import io.ktor.server.response.header
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
-import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 import org.centrexcursionistalcoi.app.data.DepartmentRole
@@ -126,7 +125,6 @@ inline fun <EID : Any, reified EE, ID: Any, reified E : Entity<ID>, UER: UpdateE
     dataSerializer: KSerializer<E> = serializer<E>(),
 ) where EE : ExposedEntity<EID>, EE : EntityDataConverter<E, ID> = provideEntityRoutes(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, createRequestSerializer, creator, updater, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected, writeGroup, syncKey, dataSerializer)
 
-@OptIn(InternalSerializationApi::class)
 fun <EID : Any, EE, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any, C : Any, I : Any> Route.provideEntityRoutes(
     resources: EntityResources<C, I>,
     entityClass: EntityClass<EID, EE>,
