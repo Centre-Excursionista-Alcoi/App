@@ -136,7 +136,7 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
                 }
             }
         }
-        femecvLastSync = now()
+        Database { femecvLastSync = now() }
         updated()
     }
 
