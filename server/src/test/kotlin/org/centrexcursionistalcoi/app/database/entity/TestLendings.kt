@@ -12,7 +12,7 @@ import org.centrexcursionistalcoi.app.data.ZonedDateTime
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.MemoriesFiles
-import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
+import org.centrexcursionistalcoi.app.database.utils.encodeOne
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
@@ -230,8 +230,7 @@ class TestLendings {
 
         assertJsonEquals(
             json.encodeToString(Lending.serializer(), instance),
-            json.encodeEntityToString(entity),
-            ignoreKeys = setOf("files")
+            encodeOne(Lending.serializer(), entity),
         )
     }
 }

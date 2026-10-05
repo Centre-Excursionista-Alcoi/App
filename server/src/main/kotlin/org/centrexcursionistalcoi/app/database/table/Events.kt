@@ -1,18 +1,10 @@
 package org.centrexcursionistalcoi.app.database.table
 
-import kotlinx.serialization.SerializationStrategy
-import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
-import org.centrexcursionistalcoi.app.database.entity.EventEntity
-import org.centrexcursionistalcoi.app.database.utils.CustomTableSerializer
-import org.centrexcursionistalcoi.app.database.utils.list
-import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.datetime.timestamp
-import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import kotlin.uuid.Uuid
 
-object Events : UuidTable("events"), CustomTableSerializer<Uuid, EventEntity> {
+object Events : UuidTable("events") {
     val created = timestamp("created").defaultExpression(DatabaseNowExpression)
     val lastUpdate = timestamp("lastUpdate").defaultExpression(DatabaseNowExpression)
 
@@ -30,16 +22,4 @@ object Events : UuidTable("events"), CustomTableSerializer<Uuid, EventEntity> {
 
     val department = optReference("department", Departments)
     val image = optReference("image", Files)
-
-
-    override fun columnSerializers(): Map<String, SerializationStrategy<*>> = mapOf(
-        "userSubList" to String.serializer().list(),
-        "qualificationRequirements" to Uuid.serializer().list().list(),
-    )
-
-    context(_: JdbcTransaction)
-    override fun extraColumns(entity: EventEntity, session: UserSession?): Map<String, Any?> = mapOf(
-        "userSubList" to entity.userReferences.map { it.id.value },
-        "qualificationRequirements" to entity.qualificationRequirements(),
-    )
 }

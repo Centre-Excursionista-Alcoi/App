@@ -81,7 +81,7 @@ fun Route.departmentsRoutes() {
         syncKey = "departments",
         idTypeConverter = { it.toUuidOrNull() },
         // The default listProvider (entityClass.all()) is unrestricted for every session, including anonymous --
-        // a department's own displayName/image is public (its member roster is not, see Departments.extraColumns
+        // a department's own displayName/image is public (its member roster is not, see DepartmentEntity.toData
         // / DepartmentEntity.visibleMembersFor). Stated explicitly rather than falling through to the default
         // listProvider-scanning visibleTo, which would otherwise scan every department to confirm what's already
         // known to always be true.
@@ -201,7 +201,7 @@ fun Route.departmentsRoutes() {
     get<Api.Departments.Id.Members> {
         val (session, department) = departmentRequest() ?: return@get
 
-        // Shared with Departments.extraColumns (DepartmentEntity.visibleMembersFor) so this and GET
+        // Shared with DepartmentEntity.toData (DepartmentEntity.visibleMembersFor) so this and GET
         // /departments/{id} can't silently diverge on who's allowed to see the roster.
         val pendingRequests = Database {
             department.visibleMembersFor(session).map { entity ->

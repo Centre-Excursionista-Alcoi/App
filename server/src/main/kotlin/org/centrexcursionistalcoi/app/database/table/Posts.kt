@@ -1,18 +1,11 @@
 package org.centrexcursionistalcoi.app.database.table
 
-import kotlin.uuid.Uuid
-import kotlinx.serialization.SerializationStrategy
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
-import org.centrexcursionistalcoi.app.database.entity.FileEntity
-import org.centrexcursionistalcoi.app.database.entity.PostEntity
-import org.centrexcursionistalcoi.app.database.utils.ViaLink
-import org.centrexcursionistalcoi.app.database.utils.serializer
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
 import org.jetbrains.exposed.v1.datetime.timestamp
-import org.jetbrains.exposed.v1.jdbc.SizedIterable
 
-object Posts : UuidTable("posts"), ViaLink<Uuid, PostEntity, Uuid, FileEntity> {
+object Posts : UuidTable("posts") {
     val date = timestamp("date").defaultExpression(DatabaseNowExpression)
     val lastUpdate = timestamp("lastUpdate").defaultExpression(CurrentTimestamp)
 
@@ -22,14 +15,4 @@ object Posts : UuidTable("posts"), ViaLink<Uuid, PostEntity, Uuid, FileEntity> {
 
 
     val link = varchar("link", 512).nullable()
-
-    override val linkName: String = "files"
-
-    override fun linkSerializer(): Pair<SerializationStrategy<FileEntity>, Boolean> {
-        return FileEntity.serializer() to /* nullable */ false
-    }
-
-    override fun links(entity: PostEntity): SizedIterable<FileEntity> {
-        return entity.files
-    }
 }

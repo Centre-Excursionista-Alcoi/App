@@ -4,7 +4,7 @@ import kotlinx.coroutines.test.runTest
 import org.centrexcursionistalcoi.app.assertJsonEquals
 import org.centrexcursionistalcoi.app.data.InventoryItem
 import org.centrexcursionistalcoi.app.database.Database
-import org.centrexcursionistalcoi.app.database.utils.encodeEntityToString
+import org.centrexcursionistalcoi.app.database.utils.encodeOne
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.utils.toUuid
 import kotlin.test.Test
@@ -36,7 +36,7 @@ class TestInventoryItem {
         )
 
         assertJsonEquals(
-            json.encodeEntityToString(inventoryItemEntity),
+            encodeOne(InventoryItem.serializer(), inventoryItemEntity),
             json.encodeToString(InventoryItem.serializer(), inventoryItemClass)
         )
     }

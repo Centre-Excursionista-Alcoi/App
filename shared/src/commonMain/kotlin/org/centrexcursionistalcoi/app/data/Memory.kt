@@ -1,11 +1,6 @@
 package org.centrexcursionistalcoi.app.data
 
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
 import kotlin.uuid.Uuid
 
 @Serializable
@@ -25,29 +20,12 @@ data class Memory(
     val to: ZonedDateTime,
     val pdf: Uuid?,
     val lending: Uuid?,
-): JsonSerializable, Entity<Uuid>, DocumentFileContainer, ImageFileListContainer {
+): Entity<Uuid>, DocumentFileContainer, ImageFileListContainer {
     /** The generated summary PDF, exposed as a [DocumentFileContainer] so it's downloaded like any other document. */
     override val documentFile: Uuid? get() = pdf
 
     /** The user-attached photos, exposed as an [ImageFileListContainer] (fetched on demand, like [Post.images]). */
     override val images: List<Uuid> get() = attachments
-
-    @OptIn(ExperimentalSerializationApi::class)
-    override fun toJsonObject(): JsonObject = buildJsonObject {
-        put("id", JsonPrimitive(id.toString()))
-        put("place", JsonPrimitive(place))
-        put("members", JsonArray(members.map { JsonPrimitive(it) }))
-        put("externalUsers", JsonPrimitive(externalUsers))
-        put("text", JsonPrimitive(text))
-        put("sport", JsonPrimitive(sport?.name))
-        put("department", JsonPrimitive(department?.toString()))
-        put("attachments", JsonArray(attachments.map { JsonPrimitive(it.toString()) }))
-        put("submittedBy", JsonPrimitive(submittedBy))
-        put("from", JsonPrimitive(from.toString()))
-        put("to", JsonPrimitive(to.toString()))
-        put("pdf", JsonPrimitive(pdf?.toString()))
-        put("lending", JsonPrimitive(lending?.toString()))
-    }
 
     fun referenced(users: List<UserData>, members: List<Member>, departments: List<Department>) = ReferencedMemory(
         id = id,

@@ -1,26 +1,13 @@
 package org.centrexcursionistalcoi.app.database.table
 
-import kotlinx.serialization.SerializationStrategy
-import kotlinx.serialization.builtins.serializer
-import org.centrexcursionistalcoi.app.data.ReceivedItem
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
-import org.centrexcursionistalcoi.app.database.entity.InventoryItemEntity
-import org.centrexcursionistalcoi.app.database.entity.LendingEntity
-import org.centrexcursionistalcoi.app.database.utils.CustomTableSerializer
-import org.centrexcursionistalcoi.app.database.utils.ViaLink
-import org.centrexcursionistalcoi.app.database.utils.list
-import org.centrexcursionistalcoi.app.database.utils.serializer
-import org.centrexcursionistalcoi.app.security.UserSession
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.datetime.date
 import org.jetbrains.exposed.v1.datetime.timestamp
-import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
-import org.jetbrains.exposed.v1.jdbc.SizedIterable
-import kotlin.uuid.Uuid
 
-object Lendings : UuidTable("Lendings"), ViaLink<Uuid, LendingEntity, Uuid, InventoryItemEntity>, CustomTableSerializer<Uuid, LendingEntity> {
+object Lendings : UuidTable("Lendings") {
     val userSub = reference("userSub", UserReferences, onDelete = ReferenceOption.CASCADE)
     val timestamp = timestamp("timestamp").defaultExpression(DatabaseNowExpression)
     val lastUpdate = timestamp("lastUpdate").defaultExpression(DatabaseNowExpression)
@@ -43,27 +30,5 @@ object Lendings : UuidTable("Lendings"), ViaLink<Uuid, LendingEntity, Uuid, Inve
 
     init {
         check("from_is_before_to") { from lessEq to }
-    }
-
-
-    override val linkName: String = "items"
-
-    override fun linkSerializer(): Pair<SerializationStrategy<InventoryItemEntity>, Boolean> =
-        (InventoryItemEntity.serializer() to /* nullable */ false)
-
-    override fun links(entity: LendingEntity): SizedIterable<InventoryItemEntity> = entity.items
-
-
-    override fun columnSerializers(): Map<String, SerializationStrategy<*>> = mapOf(
-        "receivedItems" to ReceivedItem.serializer().list(),
-        "memory" to Uuid.serializer(),
-    )
-
-    context(_: JdbcTransaction)
-    override fun extraColumns(entity: LendingEntity, session: UserSession?): Map<String, Any?> = buildMap {
-        put("receivedItems", entity.receivedItems.map { it.toReceivedItem() })
-        // "memory" only holds the linked memory's id (memories are their own resource, fetched separately), so
-        // it's only included when present to avoid encoding a null value.
-        entity.memory?.id?.value?.let { put("memory", it) }
     }
 }
