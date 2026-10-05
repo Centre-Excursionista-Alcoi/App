@@ -1,7 +1,12 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.readRawBytes
+import io.ktor.http.HttpHeaders
+import java.io.ByteArrayInputStream
+import java.util.zip.GZIPInputStream
 import io.ktor.http.HttpStatusCode
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -126,5 +131,29 @@ class TestSyncRoutes : ApplicationTestBase() {
         // ... but changed since 1970, and the others have no time given
         assertEquals(true, sync.getValue("space_keys").jsonObject.getValue("modified").jsonPrimitive.boolean)
         assertEquals(true, sync.getValue("space_lendings").jsonObject.getValue("modified").jsonPrimitive.boolean)
+    }
+
+    @Test
+    fun test_only_the_sync_is_compressed() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN,
+        databaseInitBlock = { seed(FakeAdminUser.provideEntity()) },
+    ) {
+        val plain = client.get("/sync").bodyAsText()
+
+        val compressed = client.get("/sync") { header(HttpHeaders.AcceptEncoding, "gzip") }
+        assertEquals("gzip", compressed.headers[HttpHeaders.ContentEncoding])
+        // Once uncompressed, it's the same
+        val bytes = compressed.readRawBytes()
+        assertTrue(bytes.size < plain.length, "The compressed response should be smaller")
+        val uncompressed = GZIPInputStream(ByteArrayInputStream(bytes)).readBytes().decodeToString()
+        assertEquals(
+            Json.parseToJsonElement(plain).jsonObject.filterKeys { it != "serverTime" },
+            Json.parseToJsonElement(uncompressed).jsonObject.filterKeys { it != "serverTime" },
+        )
+
+        // Without asking for it, it is not
+        assertEquals(null, client.get("/sync").headers[HttpHeaders.ContentEncoding])
+        // Other routes are never compressed
+        assertEquals(null, client.get("/spaces") { header(HttpHeaders.AcceptEncoding, "gzip") }.headers[HttpHeaders.ContentEncoding])
     }
 }

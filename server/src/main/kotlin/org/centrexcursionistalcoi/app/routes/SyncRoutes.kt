@@ -1,6 +1,9 @@
 package org.centrexcursionistalcoi.app.routes
 
 import io.ktor.http.ContentType
+import io.ktor.server.plugins.compression.Compression
+import io.ktor.server.plugins.compression.deflate
+import io.ktor.server.plugins.compression.gzip
 import io.ktor.server.resources.get
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
@@ -24,6 +27,9 @@ private val logger = LoggerFactory.getLogger("SyncRoutes")
  * is always sent.
  *
  * All the sections are read in one transaction, so they are consistent with each other.
+ *
+ * The response is compressed (gzip or deflate, if the client accepts it), the only route that is: it's the one that
+ * answers a lot of data at once.
  */
 fun Route.syncRoutes() {
     get<Api.Sync> {
@@ -60,5 +66,9 @@ fun Route.syncRoutes() {
             }
         }
         call.respondText(body, ContentType.Application.Json)
+    }.install(Compression) {
+        // Only this route: it's the one answering a lot of data at once
+        gzip()
+        deflate()
     }
 }

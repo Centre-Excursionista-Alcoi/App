@@ -6,6 +6,7 @@ import com.diamondedge.logging.logging
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.HttpRedirect
+import io.ktor.client.plugins.compression.ContentEncoding
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
@@ -40,6 +41,11 @@ private fun createHttpClient(): HttpClient = HttpClient(createHttpClientEngine()
         checkHttpMethod = false
     }
     install(Resources)
+    // Tells the server it can compress its answers, and uncompresses them. The server only does it for GET /sync
+    install(ContentEncoding) {
+        gzip()
+        deflate()
+    }
     configureLogging()
 }.installSessionAuth()
 
