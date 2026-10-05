@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.*
@@ -28,16 +29,14 @@ import kotlin.uuid.Uuid
 /**
  * The tab of [LendingsPage] with the spaces that can be booked, and the user's own space lendings.
  *
- * Spaces can't be mixed with items: while there are items selected a space can't be selected, and while a space is
- * selected ([selectedSpace]) the page hides its tabs, so the selection stays in the spaces.
+ * Booking goes straight to choosing the dates. Spaces can't be mixed with items, so while there are items selected
+ * ([hasItemsSelected]) no space can be booked.
  */
 @Composable
 fun SpacesTab(
     spaces: List<Space>,
     lendings: List<SpaceLending>,
-    selectedSpace: Space?,
     hasItemsSelected: Boolean,
-    onSelect: (Uuid?) -> Unit,
     onDetailsRequested: (Uuid) -> Unit,
     onBookRequested: (Uuid) -> Unit,
     onLendingClick: (Uuid) -> Unit,
@@ -55,36 +54,26 @@ fun SpacesTab(
                     icon = MaterialSymbols.Home,
                 )
             }
-        } else if (selectedSpace != null) {
-            item("selected_hint") {
-                CardWithIcon(
-                    title = selectedSpace.name,
-                    message = stringResource(Res.string.spaces_selected_hint),
-                    icon = MaterialSymbols.Home,
-                )
-            }
         }
         if (spaces.isEmpty()) {
             item("empty") { Text(stringResource(Res.string.spaces_empty), modifier = Modifier.padding(vertical = 16.dp)) }
         }
-        // Once one is selected, only that one is shown
-        items(spaces.filter { selectedSpace == null || it.id == selectedSpace.id }, key = { it.id.toString() }) { space ->
-            val isSelected = selectedSpace?.id == space.id
+        items(spaces, key = { it.id.toString() }) { space ->
+            // A space closed with no end date can't be booked at all
             val isClosed = space.isClosed && space.closedUntil == null
             OutlinedCard(
-                colors = if (isSelected) {
-                    CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                } else {
-                    CardDefaults.outlinedCardColors()
-                },
+                onClick = { onDetailsRequested(space.id) },
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(MaterialSymbols.Home, null, modifier = Modifier.padding(end = 8.dp))
-                        Text(space.name, style = MaterialTheme.typography.titleMedium)
+                        Text(space.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                        Button(onClick = { onBookRequested(space.id) }, enabled = !hasItemsSelected && !isClosed) {
+                            Text(stringResource(Res.string.spaces_book_short))
+                        }
                     }
-                    Text(space.description, maxLines = 3, modifier = Modifier.padding(vertical = 4.dp))
+                    Text(space.description, maxLines = 3, modifier = Modifier.padding(top = 4.dp))
                     if (space.isClosed) {
                         Text(
                             text = space.closedReason?.let { stringResource(Res.string.spaces_closed_reason, it) }
@@ -92,25 +81,10 @@ fun SpacesTab(
                             color = MaterialTheme.colorScheme.error,
                         )
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
-                        OutlinedButton(onClick = { onDetailsRequested(space.id) }) {
-                            Text(stringResource(Res.string.spaces_details))
-                        }
-                        if (isSelected) {
-                            Button(onClick = { onBookRequested(space.id) }, enabled = !isClosed) {
-                                Text(stringResource(Res.string.spaces_book))
-                            }
-                            TextButton(onClick = { onSelect(null) }) { Text(stringResource(Res.string.spaces_deselect)) }
-                        } else {
-                            Button(onClick = { onSelect(space.id) }, enabled = !hasItemsSelected && !isClosed) {
-                                Text(stringResource(Res.string.spaces_select))
-                            }
-                        }
-                    }
                 }
             }
         }
-        if (selectedSpace == null && lendings.isNotEmpty()) {
+        if (lendings.isNotEmpty()) {
             item("my_lendings_title") {
                 Text(
                     text = stringResource(Res.string.spaces_my_lendings),

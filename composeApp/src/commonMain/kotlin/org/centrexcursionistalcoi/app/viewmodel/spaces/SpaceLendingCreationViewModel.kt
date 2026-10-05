@@ -60,6 +60,10 @@ class SpaceLendingCreationViewModel(
     private val _occupancy = MutableStateFlow<List<SpaceOccupancy>?>(null)
     val occupancy = _occupancy.asStateFlow()
 
+    private val _isLoaded = MutableStateFlow(lendingId == null)
+    /** Whether the lending being modified has been loaded. Always `true` when creating. */
+    val isLoaded = _isLoaded.asStateFlow()
+
     private val _isWorking = MutableStateFlow(false)
     val isWorking = _isWorking.asStateFlow()
 
@@ -82,6 +86,7 @@ class SpaceLendingCreationViewModel(
                     _notes.value = lending.notes.orEmpty()
                     _acceptedConditions.value = lending.acceptedConditionsAt != null
                 }
+                _isLoaded.value = true
             }
             try {
                 _occupancy.value = spaceLendingsRemoteRepository.occupancy(spaceId)

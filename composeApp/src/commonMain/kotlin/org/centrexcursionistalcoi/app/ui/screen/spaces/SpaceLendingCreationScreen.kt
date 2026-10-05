@@ -63,6 +63,7 @@ fun SpaceLendingCreationScreen(
     val occupancy by model.occupancy.collectAsState()
     val price by model.price.collectAsState()
     val isWorking by model.isWorking.collectAsState()
+    val isLoaded by model.isLoaded.collectAsState()
 
     val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
 
@@ -81,7 +82,7 @@ fun SpaceLendingCreationScreen(
         },
     ) { paddingValues ->
         val space = space
-        if (space == null) {
+        if (space == null || !isLoaded) {
             LoadingBox()
             return@Scaffold
         }
@@ -105,7 +106,10 @@ fun SpaceLendingCreationScreen(
                 LaunchedEffect(state) {
                     snapshotFlow { state.selectedStartDateMillis to state.selectedEndDateMillis }
                         .collect { (start, end) ->
-                            model.setDates(start?.let(LocalDate::fromEpochMillis), end?.let(LocalDate::fromEpochMillis))
+                            // Nothing selected is the initial state, not a choice: it must not clear the dates
+                            if (start != null) {
+                                model.setDates(LocalDate.fromEpochMillis(start), end?.let(LocalDate::fromEpochMillis))
+                            }
                         }
                 }
                 DateRangePicker(
@@ -201,6 +205,21 @@ fun SpaceLendingCreationScreen(
                         stringResource(Res.string.space_lending_price, formatPrice(it)),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(top = 16.dp),
+                    )
+                }
+                // Say what is missing, instead of leaving the button disabled without a reason
+                val missing = when {
+                    checkIn == null -> Res.string.space_lending_missing_dates
+                    attendees.values.sum() <= 0 -> Res.string.space_lending_missing_people
+                    hasConditions && !acceptedConditions -> Res.string.space_lending_missing_conditions
+                    else -> null
+                }
+                if (missing != null) {
+                    Text(
+                        stringResource(missing),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 8.dp),
                     )
                 }
                 Button(

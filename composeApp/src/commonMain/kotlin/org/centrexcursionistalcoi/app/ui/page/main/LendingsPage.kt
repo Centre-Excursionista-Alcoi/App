@@ -43,7 +43,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -149,39 +148,24 @@ fun LendingsPage(
     // The tab with the spaces is the last one
     val spacesPage = if (hasSpaces) itemPagesCount else -1
 
-    // Items and spaces can't be mixed: once a space is selected, the tabs are hidden and the pager can't be slid, so
-    // the selection stays in the spaces
-    var selectedSpaceId by rememberSaveable { mutableStateOf<String?>(null) }
-    val selectedSpace = selectedSpaceId?.let { id -> spaces?.find { it.id.toString() == id } }
-    val isSpaceSelected = selectedSpace != null
-    LaunchedEffect(isSpaceSelected, spacesPage) {
-        if (isSpaceSelected && spacesPage >= 0 && pagerState.currentPage != spacesPage) {
-            pagerState.animateScrollToPage(spacesPage)
-        }
-    }
-
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             val spacesTab = TabData.fromResources(Res.string.spaces_tab, MaterialSymbols.Home, MaterialSymbols.HomeFilled)
-            if (isSpaceSelected) {
-                Spacer(Modifier.weight(1f))
-            } else {
-                AdaptiveTabRow(
-                    selectedTabIndex = pagerState.currentPage,
-                    tabs = departments.map { TabData(it.displayName) } +
-                            (if (itemsWithoutDepartmentExist)
-                                listOf(TabData(stringResource(Res.string.lending_category_without_department)))
-                            else
-                                emptyList()) +
-                            (if (hasSpaces) listOf(spacesTab) else emptyList()),
-                    modifier = Modifier.weight(1f),
-                    onTabSelected = { index ->
-                        scope.launch { pagerState.animateScrollToPage(index) }
-                    },
-                )
-            }
+            AdaptiveTabRow(
+                selectedTabIndex = pagerState.currentPage,
+                tabs = departments.map { TabData(it.displayName) } +
+                        (if (itemsWithoutDepartmentExist)
+                            listOf(TabData(stringResource(Res.string.lending_category_without_department)))
+                        else
+                            emptyList()) +
+                        (if (hasSpaces) listOf(spacesTab) else emptyList()),
+                modifier = Modifier.weight(1f),
+                onTabSelected = { index ->
+                    scope.launch { pagerState.animateScrollToPage(index) }
+                },
+            )
             if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded) {
                 TooltipIconButton(
                     MaterialSymbols.History,
@@ -192,16 +176,13 @@ fun LendingsPage(
         }
         HorizontalPager(
             state = pagerState,
-            userScrollEnabled = !isSpaceSelected,
             modifier = Modifier.fillMaxWidth().weight(1f)
         ) { page ->
             if (page == spacesPage) {
                 SpacesTab(
                     spaces = spaces.orEmpty(),
                     lendings = myLendings.orEmpty(),
-                    selectedSpace = selectedSpace,
                     hasItemsSelected = shoppingList.isNotEmpty(),
-                    onSelect = { selectedSpaceId = it?.toString() },
                     onDetailsRequested = onSpaceDetailsRequested,
                     onBookRequested = onSpaceBookRequested,
                     onLendingClick = onSpaceLendingClick,

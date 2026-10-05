@@ -705,10 +705,7 @@
     <string name="event_assistance_closed">This event has already started, so your assistance can no longer be changed</string>
     <string name="spaces_title">Spaces</string>
     <string name="spaces_tab">Spaces</string>
-    <string name="spaces_select">Select</string>
-    <string name="spaces_deselect">Deselect</string>
-    <string name="spaces_details">Details</string>
-    <string name="spaces_selected_hint">Spaces can't be mixed with items. Book this space, or deselect it to go back to the items.</string>
+    <string name="spaces_book_short">Book</string>
     <string name="spaces_blocked_by_items">You have items selected. Spaces can't be mixed with items: finish or empty your selection first.</string>
     <string name="spaces_empty">There are no spaces yet.</string>
     <string name="spaces_my_lendings">My space lendings</string>
@@ -751,6 +748,9 @@
     <string name="space_lending_keys">Keys</string>
     <string name="space_lending_notes">Notes</string>
     <string name="space_lending_accept_conditions">I have read and accept the conditions of use</string>
+    <string name="space_lending_missing_dates">Pick the dates.</string>
+    <string name="space_lending_missing_people">Add at least one person.</string>
+    <string name="space_lending_missing_conditions">Accept the conditions of use.</string>
     <string name="space_lending_price">Price: %1$s</string>
     <string name="space_lending_submit">Book</string>
     <string name="space_lending_save">Save changes</string>
