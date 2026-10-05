@@ -71,7 +71,7 @@ qrose = "1.3.0"
 # Cross-dependency, do not upgrade
 #noinspection NewerVersionAvailable
 retrofit = "2.9.0"
-richeditor = "1.2.0"
+richeditor = "1.2.1"
 sentry = "6.23.0"
 sentry-multiplatform = "0.27.0"
 # The io.sentry.jvm.gradle plugin auto-installs io.sentry:sentry at whatever version it resolves to
