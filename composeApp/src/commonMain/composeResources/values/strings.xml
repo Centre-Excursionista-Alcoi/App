@@ -744,7 +744,10 @@
     <string name="space_lending_edit_title">Change the lending</string>
     <string name="space_lending_dates">Dates</string>
     <string name="space_lending_dates_hint">Pick the day you arrive and the day you leave. Pick the same day for a stay without nights.</string>
-    <string name="space_lending_nights">%1$s night(s)</string>
+    <plurals name="space_lending_nights">
+        <item quantity="one">%1$d night</item>
+        <item quantity="other">%1$d nights</item>
+    </plurals>
     <string name="space_lending_attendees">People</string>
     <string name="space_lending_keys">Keys</string>
     <string name="space_lending_notes">Notes</string>
@@ -777,7 +780,10 @@
     <string name="space_lending_report_issues">Issues</string>
     <string name="space_lending_report_notes_photos">Photos of the notes</string>
     <string name="space_lending_report_issues_photos">Photos of the issues</string>
-    <string name="space_lending_report_files">%1$s photo(s)</string>
+    <plurals name="space_lending_report_files">
+        <item quantity="one">%1$d photo</item>
+        <item quantity="other">%1$d photos</item>
+    </plurals>
     <string name="space_lending_report_available_later">You will be able to leave notes and issues when the lending is over.</string>
     <string name="space_lending_keys_line">%1$s × %2$s</string>
     <string name="space_lending_picked_up_by">Handed over on %1$s</string>

@@ -1,13 +1,25 @@
 package org.centrexcursionistalcoi.app.ui.screen.spaces
 
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.*
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DateRangePicker
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -16,7 +28,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.back
+import cea_app.composeapp.generated.resources.remove
+import cea_app.composeapp.generated.resources.space_lending_accept_conditions
+import cea_app.composeapp.generated.resources.space_lending_attendees
+import cea_app.composeapp.generated.resources.space_lending_creation_title
+import cea_app.composeapp.generated.resources.space_lending_dates
+import cea_app.composeapp.generated.resources.space_lending_dates_hint
+import cea_app.composeapp.generated.resources.space_lending_edit_title
+import cea_app.composeapp.generated.resources.space_lending_keys
+import cea_app.composeapp.generated.resources.space_lending_missing_conditions
+import cea_app.composeapp.generated.resources.space_lending_missing_dates
+import cea_app.composeapp.generated.resources.space_lending_missing_people
+import cea_app.composeapp.generated.resources.space_lending_nights
+import cea_app.composeapp.generated.resources.space_lending_notes
+import cea_app.composeapp.generated.resources.space_lending_price
+import cea_app.composeapp.generated.resources.space_lending_save
+import cea_app.composeapp.generated.resources.space_lending_submit
+import cea_app.composeapp.generated.resources.spaces_conditions
+import cea_app.composeapp.generated.resources.spaces_occupied
+import cea_app.composeapp.generated.resources.spaces_occupied_range
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -33,6 +65,7 @@ import org.centrexcursionistalcoi.app.utils.fromEpochMillis
 import org.centrexcursionistalcoi.app.utils.toEpochMillis
 import org.centrexcursionistalcoi.app.viewmodel.spaces.SpaceLendingCreationViewModel
 import org.centrexcursionistalcoi.app.viewmodel.spaces.SpaceLendingFormTarget
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -118,7 +151,14 @@ fun SpaceLendingCreationScreen(
             }
             item("nights") {
                 if (checkIn != null && checkOut != null) {
-                    Text(stringResource(Res.string.space_lending_nights, SpacePricing.nights(checkIn, checkOut)))
+                    val nights = SpacePricing.nights(checkIn, checkOut)
+                    Text(
+                        text = pluralStringResource(
+                            Res.plurals.space_lending_nights,
+                            nights,
+                            nights
+                        )
+                    )
                 }
             }
             if (!occupancy.isNullOrEmpty()) {

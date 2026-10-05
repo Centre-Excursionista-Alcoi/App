@@ -7,7 +7,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -17,7 +29,41 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import cea_app.composeapp.generated.resources.*
+import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.back
+import cea_app.composeapp.generated.resources.space_lending_attendees
+import cea_app.composeapp.generated.resources.space_lending_attendees_edit
+import cea_app.composeapp.generated.resources.space_lending_attendees_hint
+import cea_app.composeapp.generated.resources.space_lending_cancel
+import cea_app.composeapp.generated.resources.space_lending_cancel_confirm
+import cea_app.composeapp.generated.resources.space_lending_dismiss
+import cea_app.composeapp.generated.resources.space_lending_edit
+import cea_app.composeapp.generated.resources.space_lending_keys
+import cea_app.composeapp.generated.resources.space_lending_keys_line
+import cea_app.composeapp.generated.resources.space_lending_nights
+import cea_app.composeapp.generated.resources.space_lending_notes
+import cea_app.composeapp.generated.resources.space_lending_payment
+import cea_app.composeapp.generated.resources.space_lending_payment_hint
+import cea_app.composeapp.generated.resources.space_lending_payment_mark_paid
+import cea_app.composeapp.generated.resources.space_lending_payment_proof
+import cea_app.composeapp.generated.resources.space_lending_payment_proofs
+import cea_app.composeapp.generated.resources.space_lending_picked_up_by
+import cea_app.composeapp.generated.resources.space_lending_pickup
+import cea_app.composeapp.generated.resources.space_lending_pickup_hint
+import cea_app.composeapp.generated.resources.space_lending_price
+import cea_app.composeapp.generated.resources.space_lending_report
+import cea_app.composeapp.generated.resources.space_lending_report_available_later
+import cea_app.composeapp.generated.resources.space_lending_report_files
+import cea_app.composeapp.generated.resources.space_lending_report_hint
+import cea_app.composeapp.generated.resources.space_lending_report_issues
+import cea_app.composeapp.generated.resources.space_lending_report_issues_photos
+import cea_app.composeapp.generated.resources.space_lending_report_notes
+import cea_app.composeapp.generated.resources.space_lending_report_notes_photos
+import cea_app.composeapp.generated.resources.space_lending_return
+import cea_app.composeapp.generated.resources.space_lending_returned_on
+import cea_app.composeapp.generated.resources.space_lending_save_short
+import cea_app.composeapp.generated.resources.space_lending_send
+import cea_app.composeapp.generated.resources.space_lending_title
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import kotlinx.datetime.TimeZone
@@ -32,6 +78,7 @@ import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.form.FormFilesPicker
 import org.centrexcursionistalcoi.app.utils.SpacePricing
 import org.centrexcursionistalcoi.app.viewmodel.spaces.SpaceLendingDetailsViewModel
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -86,10 +133,12 @@ fun SpaceLendingDetailsScreen(
 
         LazyColumnWidthWrapper(Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 16.dp)) {
             item("stage") {
+                val nights = SpacePricing.nights(lending.checkIn, lending.checkOut)
+
                 AssistChip(onClick = {}, label = { Text(stage.label()) })
                 Text(
                     "${lending.checkIn.formatted()} → ${lending.checkOut.formatted()} " +
-                        "(${stringResource(Res.string.space_lending_nights, SpacePricing.nights(lending.checkIn, lending.checkOut))})",
+                        "(${pluralStringResource(Res.plurals.space_lending_nights, nights, nights)})",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
@@ -378,14 +427,14 @@ private fun ReportSummary(lending: SpaceLending) {
             Text(it)
         }
         if (lending.reportNotesFiles.isNotEmpty()) {
-            Text(stringResource(Res.string.space_lending_report_files, lending.reportNotesFiles.size))
+            Text(pluralStringResource(Res.plurals.space_lending_report_files, lending.reportNotesFiles.size, lending.reportNotesFiles.size))
         }
         lending.reportIssues?.let {
             Text(stringResource(Res.string.space_lending_report_issues), style = MaterialTheme.typography.labelMedium)
             Text(it)
         }
         if (lending.reportIssuesFiles.isNotEmpty()) {
-            Text(stringResource(Res.string.space_lending_report_files, lending.reportIssuesFiles.size))
+            Text(pluralStringResource(Res.plurals.space_lending_report_files, lending.reportIssuesFiles.size, lending.reportIssuesFiles.size))
         }
     }
 }
