@@ -264,11 +264,10 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
     handle(resources.collectionSerializer, HttpMethod.Get) {
         val session = getUserSession()
         handleIfModifiedForType(entityClass) ?: return@handle
-        val list = Database { listProvider(session).toList() }
+        // Read and encoded in the same transaction, so what the encoding needs is loaded once for the whole list
+        val body = Database { json.encodeEntityListToString(listProvider(session).toList(), entityClass, session) }
 
-        call.respondText(ContentType.Application.Json) {
-            json.encodeEntityListToString(list, entityClass, session)
-        }
+        call.respondText(body, ContentType.Application.Json)
     }
 
     handle(resources.itemSerializer, HttpMethod.Get) { resource ->

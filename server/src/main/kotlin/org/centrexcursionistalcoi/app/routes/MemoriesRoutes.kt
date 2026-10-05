@@ -61,6 +61,7 @@ import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.dao.with
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -116,7 +117,7 @@ private val logger = LoggerFactory.getLogger("MemoriesRoutes")
  */
 internal fun memoriesFor(session: UserSession): List<MemoryEntity> {
     return Database {
-        if (session.isAdmin()) {
+        val memories = if (session.isAdmin()) {
             MemoryEntity.all().toList()
         } else {
             // Regular users see memories they submitted, memories they're tagged as a participant on, plus
@@ -135,6 +136,9 @@ internal fun memoriesFor(session: UserSession): List<MemoryEntity> {
                     (Memories.department inList managedDepartmentIds)
             }.toList()
         }
+        // What encoding a memory needs besides its own row (its participants and its files), loaded for all of them at
+        // once instead of for each. Only holds while the caller stays in this transaction.
+        memories.also { it.with(MemoryEntity::members, MemoryEntity::files) }
     }
 }
 
@@ -334,11 +338,10 @@ fun Route.memoriesRoutes() {
     }
     get<Api.Memories> {
         val session = getUserSessionOrFail() ?: return@get
-        val memories = memoriesFor(session)
+        // In one transaction, so what the encoding needs (see memoriesFor) is loaded once for the whole list
+        val body = Database { json.encodeEntityListToString(memoriesFor(session), MemoryEntity) }
 
-        call.respondText(ContentType.Application.Json) {
-            json.encodeEntityListToString(memories, MemoryEntity)
-        }
+        call.respondText(body, ContentType.Application.Json)
     }
     get<Api.Memories.Id> {
         val session = getUserSessionOrFail() ?: return@get
