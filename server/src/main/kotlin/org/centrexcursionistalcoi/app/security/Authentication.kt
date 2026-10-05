@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.security
 
+import org.centrexcursionistalcoi.app.translation.UserLanguage
 import com.webauthn4j.verifier.exception.VerificationException
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -135,6 +136,8 @@ data class UserSession(val sub: String, val fullName: String, val email: String,
             attributes.getOrNull(resolvedSessionKey)?.let { return it.session }
             val resolved = resolveSession()
             attributes.put(resolvedSessionKey, resolved)
+            // Users registered before their language was stored get it from their first request that has one
+            resolved.session?.let { UserLanguage.rememberFrom(it.sub, request) }
             if (!response.isCommitted) response.header("CEA-LoggedIn", (resolved.session != null).toString())
             return resolved.session
         }

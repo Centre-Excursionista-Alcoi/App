@@ -32,6 +32,8 @@ import org.centrexcursionistalcoi.app.database.entity.SpaceKeyEntity
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.notifications.Email
+import org.centrexcursionistalcoi.app.database.UserPreferenceKey
+import org.centrexcursionistalcoi.app.database.UserPreferenceStore
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import kotlinx.coroutines.Dispatchers
@@ -503,6 +505,36 @@ class TestSpaceLendingsRoutes : ApplicationTestBase() {
             assertTrue(toStaff.to.any { it.email == FakeAdminUser.EMAIL })
             assertTrue(toStaff.subject.startsWith("New space lending (#"), toStaff.subject)
             assertTrue("/admin/space_lendings/" in toStaff.htmlContent, toStaff.htmlContent)
+        } finally {
+            Email.sent = null
+        }
+    }
+
+    @Test
+    fun test_staff_emails_are_in_the_language_of_each_recipient() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            createSpace()
+            val admin = FakeAdminUser.provideEntity()
+            UserPreferenceStore[admin.id.value, UserPreferenceKey.Language] = java.util.Locale.forLanguageTag("es")
+        },
+        mockDate = today,
+        disableEmail = false,
+    ) {
+        val sent = mutableListOf<Email.SentEmail>()
+        Email.sent = sent
+        try {
+            client.post("/space_lendings") {
+                contentType(ContentType.Application.Json)
+                setBody(body("2026-10-09", "2026-10-10"))
+            }.assertStatusCode(HttpStatusCode.Created)
+            withContext(Dispatchers.Default) { withTimeout(10_000) { while (sent.size < 2) delay(50) } }
+
+            val toStaff = sent.single { it.to.any { to -> to.email == FakeAdminUser.EMAIL } }
+            assertTrue(toStaff.subject.startsWith("Nuevo alquiler de espacio (#"), toStaff.subject)
+            // The user has no language: english
+            val toUser = sent.single { it !== toStaff }
+            assertEquals("Your space lending is confirmed", toUser.subject)
         } finally {
             Email.sent = null
         }

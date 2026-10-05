@@ -22,6 +22,7 @@ import org.centrexcursionistalcoi.app.security.ClientInfo
 import org.centrexcursionistalcoi.app.storage.RedisStoreMap
 import org.centrexcursionistalcoi.app.test.FakeAdminUser
 import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.translation.UserLanguage
 import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.centrexcursionistalcoi.app.test.StubUser
 import org.centrexcursionistalcoi.app.test.LoginType
@@ -63,6 +64,8 @@ abstract class ApplicationTestBase {
         mockNow?.let(::mockTime)
 
         Database.initForTests()
+        // Each test has a new database: no user has a language yet
+        UserLanguage.reset()
 
         AES.secretKey = AES.generateKey()
 

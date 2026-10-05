@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.plugins
 
+import org.centrexcursionistalcoi.app.translation.localeOrNull
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -165,7 +166,7 @@ fun Route.configureAuthRoutes() {
 
         // Update the user's password
         val hashedPassword = Passwords.hash(password)
-        member.insertUser(hashedPassword)
+        member.insertUser(hashedPassword, language = call.request.localeOrNull())
 
         // Success, respond accordingly
         recordAuthEvent(AuthEventType.REGISTER, email, null)

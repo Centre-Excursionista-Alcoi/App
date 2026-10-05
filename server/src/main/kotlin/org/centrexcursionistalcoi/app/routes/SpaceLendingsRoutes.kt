@@ -34,7 +34,8 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Email
-import org.centrexcursionistalcoi.app.translation.locale
+import org.centrexcursionistalcoi.app.notifications.emailLocale
+import org.centrexcursionistalcoi.app.translation.localeOrNull
 import org.centrexcursionistalcoi.app.notifications.EmailTemplate
 import org.centrexcursionistalcoi.app.notifications.EmailRecipient
 import java.util.Locale
@@ -279,7 +280,7 @@ fun Route.spaceLendingsRoutes() {
                 SPACE_LENDINGS_MANAGER_GROUP_NAME,
             )
         }
-        sendNewSpaceLendingEmails(lending, userReference, call.request.locale())
+        sendNewSpaceLendingEmails(lending, userReference, call.request.localeOrNull() ?: userReference.emailLocale())
 
         call.response.header(HttpHeaders.Location, "/space_lendings/${lending.id.value}")
         call.respond(HttpStatusCode.Created)

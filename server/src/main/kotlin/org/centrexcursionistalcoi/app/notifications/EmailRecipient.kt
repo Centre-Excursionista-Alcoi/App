@@ -3,6 +3,8 @@ package org.centrexcursionistalcoi.app.notifications
 import java.util.Locale
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.UserPreferenceKey
+import org.centrexcursionistalcoi.app.database.UserPreferenceStore
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
 
@@ -29,6 +31,6 @@ class EmailRecipient(val email: MailerSendEmail, val locale: Locale) {
 }
 
 /**
- * The language to send emails to this user in.
+ * The language to send emails to this user in: the one they use the app in, or English if it isn't known yet.
  */
-fun UserReferenceEntity.emailLocale(): Locale = Locale.ENGLISH
+fun UserReferenceEntity.emailLocale(): Locale = Database { UserPreferenceStore[sub.value, UserPreferenceKey.Language] } ?: Locale.ENGLISH

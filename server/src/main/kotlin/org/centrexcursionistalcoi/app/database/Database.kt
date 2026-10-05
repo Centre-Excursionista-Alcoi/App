@@ -46,6 +46,7 @@ import org.centrexcursionistalcoi.app.database.table.UserCredentialRecords
 import org.centrexcursionistalcoi.app.database.table.UserInsuranceDocuments
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.database.table.UserQualifications
+import org.centrexcursionistalcoi.app.database.table.UserPreferences
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.annotations.VisibleForTesting
@@ -70,6 +71,7 @@ object Database {
         Departments,
         Members,
         UserReferences,
+        UserPreferences,
         UserCredentialRecords,
         AuthSessions,
         AuthRefreshTokens,
