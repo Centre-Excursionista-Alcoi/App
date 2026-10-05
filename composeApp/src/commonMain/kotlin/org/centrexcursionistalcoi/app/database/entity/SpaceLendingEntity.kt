@@ -27,7 +27,6 @@ import kotlin.uuid.Uuid
 data class SpaceLendingEntity(
     @PrimaryKey
     val id: Uuid,
-    val lastUpdate: Instant,
     val timestamp: Instant,
     val space: Uuid,
     val userSub: String?,
@@ -53,7 +52,6 @@ data class SpaceLendingEntity(
 ) {
     fun toSpaceLending() = SpaceLending(
         id = id,
-        lastUpdate = lastUpdate,
         timestamp = timestamp,
         space = space,
         userSub = userSub,
@@ -81,8 +79,7 @@ data class SpaceLendingEntity(
     companion object {
         fun SpaceLending.toEntity() = SpaceLendingEntity(
             id = id,
-            lastUpdate = lastUpdate,
-            timestamp = timestamp,
+                timestamp = timestamp,
             space = space,
             userSub = userSub,
             checkIn = checkIn,

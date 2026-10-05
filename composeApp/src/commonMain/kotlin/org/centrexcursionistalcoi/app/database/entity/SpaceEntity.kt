@@ -11,7 +11,6 @@ import kotlin.uuid.Uuid
 data class SpaceEntity(
     @PrimaryKey
     val id: Uuid,
-    val lastUpdate: Instant,
     val name: String,
     val description: String,
     val conditionsOfUse: String?,
@@ -24,7 +23,6 @@ data class SpaceEntity(
 ) {
     fun toSpace() = Space(
         id = id,
-        lastUpdate = lastUpdate,
         name = name,
         description = description,
         conditionsOfUse = conditionsOfUse,
@@ -39,8 +37,7 @@ data class SpaceEntity(
     companion object {
         fun Space.toEntity() = SpaceEntity(
             id = id,
-            lastUpdate = lastUpdate,
-            name = name,
+                name = name,
             description = description,
             conditionsOfUse = conditionsOfUse,
             requiresKeys = requiresKeys,

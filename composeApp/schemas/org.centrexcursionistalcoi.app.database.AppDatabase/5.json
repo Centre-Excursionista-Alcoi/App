@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 5,
-    "identityHash": "4f34458a4b5be3c2b6aed5dc96586f65",
+    "identityHash": "6cddb006a2b945a4336c6fe491f61f9a",
     "entities": [
       {
         "tableName": "Departments",
@@ -867,18 +867,12 @@
       },
       {
         "tableName": "Spaces",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `lastUpdate` INTEGER NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `conditionsOfUse` TEXT, `requiresKeys` INTEGER NOT NULL, `prices` TEXT NOT NULL, `isClosed` INTEGER NOT NULL, `closedSince` INTEGER, `closedUntil` INTEGER, `closedReason` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `conditionsOfUse` TEXT, `requiresKeys` INTEGER NOT NULL, `prices` TEXT NOT NULL, `isClosed` INTEGER NOT NULL, `closedSince` INTEGER, `closedUntil` INTEGER, `closedReason` TEXT, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
             "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "lastUpdate",
-            "columnName": "lastUpdate",
-            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -941,18 +935,12 @@
       },
       {
         "tableName": "SpaceKeys",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `lastUpdate` INTEGER NOT NULL, `space` TEXT NOT NULL, `name` TEXT NOT NULL, `maxQuantity` INTEGER NOT NULL, `nfcId` BLOB, PRIMARY KEY(`id`), FOREIGN KEY(`space`) REFERENCES `Spaces`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `space` TEXT NOT NULL, `name` TEXT NOT NULL, `maxQuantity` INTEGER NOT NULL, `nfcId` BLOB, PRIMARY KEY(`id`), FOREIGN KEY(`space`) REFERENCES `Spaces`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
             "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "lastUpdate",
-            "columnName": "lastUpdate",
-            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -1012,18 +1000,12 @@
       },
       {
         "tableName": "SpaceLendings",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `lastUpdate` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `space` TEXT NOT NULL, `userSub` TEXT, `checkIn` TEXT NOT NULL, `checkOut` TEXT NOT NULL, `attendees` TEXT NOT NULL, `acceptedConditionsAt` INTEGER, `cancelled` INTEGER NOT NULL, `notes` TEXT, `pickedUpAt` INTEGER, `pickedUpBy` TEXT, `returnedAt` INTEGER, `returnedBy` TEXT, `keys` TEXT NOT NULL, `totalPrice` REAL NOT NULL, `paymentStatus` TEXT NOT NULL, `reportNotes` TEXT, `reportIssues` TEXT, `reportSubmittedAt` INTEGER, `reportNotesFiles` TEXT NOT NULL, `reportIssuesFiles` TEXT NOT NULL, `paymentProofs` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`space`) REFERENCES `Spaces`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `space` TEXT NOT NULL, `userSub` TEXT, `checkIn` TEXT NOT NULL, `checkOut` TEXT NOT NULL, `attendees` TEXT NOT NULL, `acceptedConditionsAt` INTEGER, `cancelled` INTEGER NOT NULL, `notes` TEXT, `pickedUpAt` INTEGER, `pickedUpBy` TEXT, `returnedAt` INTEGER, `returnedBy` TEXT, `keys` TEXT NOT NULL, `totalPrice` REAL NOT NULL, `paymentStatus` TEXT NOT NULL, `reportNotes` TEXT, `reportIssues` TEXT, `reportSubmittedAt` INTEGER, `reportNotesFiles` TEXT NOT NULL, `reportIssuesFiles` TEXT NOT NULL, `paymentProofs` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`space`) REFERENCES `Spaces`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
             "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "lastUpdate",
-            "columnName": "lastUpdate",
-            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -1259,7 +1241,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4f34458a4b5be3c2b6aed5dc96586f65')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6cddb006a2b945a4336c6fe491f61f9a')"
     ]
   }
 }

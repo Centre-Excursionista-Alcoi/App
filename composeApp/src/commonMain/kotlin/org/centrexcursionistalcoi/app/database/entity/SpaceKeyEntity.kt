@@ -23,7 +23,6 @@ import kotlin.uuid.Uuid
 data class SpaceKeyEntity(
     @PrimaryKey
     val id: Uuid,
-    val lastUpdate: Instant,
     val space: Uuid,
     val name: String,
     val maxQuantity: Int,
@@ -31,7 +30,6 @@ data class SpaceKeyEntity(
 ) {
     fun toSpaceKey() = SpaceKey(
         id = id,
-        lastUpdate = lastUpdate,
         space = space,
         name = name,
         maxQuantity = maxQuantity,
@@ -45,8 +43,7 @@ data class SpaceKeyEntity(
     companion object {
         fun SpaceKey.toEntity() = SpaceKeyEntity(
             id = id,
-            lastUpdate = lastUpdate,
-            space = space,
+                space = space,
             name = name,
             maxQuantity = maxQuantity,
             nfcId = nfcId,
