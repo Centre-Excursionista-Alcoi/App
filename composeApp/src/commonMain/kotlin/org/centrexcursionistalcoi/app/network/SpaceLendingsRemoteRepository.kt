@@ -24,6 +24,8 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadPr
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.AttachPaymentProofRequest
 import org.centrexcursionistalcoi.app.request.CreateSpaceLendingRequest
+import org.centrexcursionistalcoi.app.request.PickupSpaceLendingRequest
+import org.centrexcursionistalcoi.app.request.ReturnSpaceLendingRequest
 import org.centrexcursionistalcoi.app.request.SetSpaceLendingPaymentRequest
 import org.centrexcursionistalcoi.app.request.SubmitSpaceLendingReportRequest
 import org.centrexcursionistalcoi.app.request.UpdateSpaceLendingAttendeesRequest
@@ -148,16 +150,27 @@ class SpaceLendingsRemoteRepository(
         refresh(lendingId, progress)
     }
 
-    /** For managers: hands the keys over, which locks the lending. */
-    suspend fun pickup(lendingId: Uuid, progress: ProgressNotifier? = null) {
-        val response = httpClient.post(Api.SpaceLendings.Id.Pickup(id(lendingId))) { monitorUploadProgress(progress) }
+    /** For managers: hands the keys over, which locks the lending. [keys] are the exact keys given. */
+    suspend fun pickup(lendingId: Uuid, keys: List<Uuid> = emptyList(), progress: ProgressNotifier? = null) {
+        val response = httpClient.post(Api.SpaceLendings.Id.Pickup(id(lendingId))) {
+            contentType(ContentType.Application.Json)
+            setBody(json.encodeToString(PickupSpaceLendingRequest.serializer(), PickupSpaceLendingRequest(keys)))
+            monitorUploadProgress(progress)
+        }
         if (!response.status.isSuccess()) throw response.bodyAsError().toThrowable()
         refresh(lendingId, progress)
     }
 
-    /** For managers: takes the keys back. */
-    suspend fun returnKeys(lendingId: Uuid, progress: ProgressNotifier? = null) {
-        val response = httpClient.post(Api.SpaceLendings.Id.Return(id(lendingId))) { monitorUploadProgress(progress) }
+    /**
+     * For managers: takes keys back. The lending is over once the last one is back.
+     * @param keys The keys that are back, or `null` for all that are still out.
+     */
+    suspend fun returnKeys(lendingId: Uuid, keys: List<Uuid>? = null, progress: ProgressNotifier? = null) {
+        val response = httpClient.post(Api.SpaceLendings.Id.Return(id(lendingId))) {
+            contentType(ContentType.Application.Json)
+            setBody(json.encodeToString(ReturnSpaceLendingRequest.serializer(), ReturnSpaceLendingRequest(keys)))
+            monitorUploadProgress(progress)
+        }
         if (!response.status.isSuccess()) throw response.bodyAsError().toThrowable()
         refresh(lendingId, progress)
     }
