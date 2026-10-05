@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml version='1.0' encoding='UTF-8'?>
 <translations>
-    <item name="subject">Nueva memoria de préstamo enviada (#%1$s)</item>
-    <item name="line_1">%2$s ha enviado la memoria del préstamo #%1$s.</item>
-    <item name="label_from">Desde</item>
-    <item name="label_to">Hasta</item>
-    <item name="label_notes">Notas</item>
-    <item name="none">Ninguna</item>
-    <item name="line_2">Revisa la memoria enviada en el panel de administración.</item>
-    <item name="open_in_app">Abrir en la aplicación</item>
+  <item name="subject">Nueva memoria de préstamo enviada (#%1$s)</item>
+  <item name="line_1">%2$s ha enviado la memoria del préstamo #%1$s.</item>
+  <item name="label_from">Desde</item>
+  <item name="label_to">Hasta</item>
+  <item name="label_notes">Notas</item>
+  <item name="none">Ninguna</item>
+  <item name="line_2">Revisa la memoria enviada en el panel de administración.</item>
+  <item name="open_in_app">Abrir en la aplicación</item>
 </translations>
