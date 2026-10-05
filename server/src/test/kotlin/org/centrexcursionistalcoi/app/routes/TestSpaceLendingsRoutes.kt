@@ -30,6 +30,11 @@ import org.centrexcursionistalcoi.app.database.entity.SpaceEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceKeyEntity
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.assertError
+import kotlinx.serialization.builtins.ListSerializer
+import org.centrexcursionistalcoi.app.data.Space
+import org.centrexcursionistalcoi.app.data.SpaceKey
+import org.centrexcursionistalcoi.app.data.SpaceLending
+import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.database.Database
@@ -432,5 +437,28 @@ class TestSpaceLendingsRoutes : ApplicationTestBase() {
             assertEquals(ContentType.Image.JPEG, download.contentType()?.withoutParameters())
             assertEquals(name, Database { FileEntity[fileId.toUuid()].name })
         }
+    }
+
+    @Test
+    fun test_responses_can_be_decoded_by_the_app() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = { createSpace() },
+        mockDate = today,
+    ) {
+        // The app decodes what the server answers into the shared data classes
+        val lendingLocation = client.book(body("2026-10-09", "2026-10-10", extra = ""","keys":{"$carKeyId":2}""")).headers["Location"]!!
+
+        val spaces = json.decodeFromString(ListSerializer(Space.serializer()), client.get("/spaces").bodyAsText())
+        assertEquals("Casa", spaces.single().name)
+        assertEquals(2, spaces.single().prices.size)
+
+        val keys = json.decodeFromString(ListSerializer(SpaceKey.serializer()), client.get("/space_keys").bodyAsText())
+        assertEquals(3, keys.single().maxQuantity)
+
+        val lending = json.decodeFromString(SpaceLending.serializer(), client.get(lendingLocation).bodyAsText())
+        assertEquals(mapOf(Category.MEMBER to 2), lending.attendees)
+        assertEquals(2, lending.keys.single().quantity)
+        val all = json.decodeFromString(ListSerializer(SpaceLending.serializer()), client.get("/space_lendings").bodyAsText())
+        assertEquals(lending.id, all.single().id)
     }
 }

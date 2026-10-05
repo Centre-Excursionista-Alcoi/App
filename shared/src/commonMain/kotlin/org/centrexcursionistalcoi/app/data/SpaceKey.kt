@@ -2,7 +2,6 @@ package org.centrexcursionistalcoi.app.data
 
 import kotlinx.serialization.Serializable
 import org.centrexcursionistalcoi.app.serializer.Base64Serializer
-import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 /**
@@ -11,7 +10,6 @@ import kotlin.uuid.Uuid
 @Serializable
 data class SpaceKey(
     override val id: Uuid,
-    val lastUpdate: Instant,
     val space: Uuid,
     val name: String,
     val maxQuantity: Int,
@@ -24,7 +22,6 @@ data class SpaceKey(
 
         if (maxQuantity != other.maxQuantity) return false
         if (id != other.id) return false
-        if (lastUpdate != other.lastUpdate) return false
         if (space != other.space) return false
         if (name != other.name) return false
         if (!nfcId.contentEquals(other.nfcId)) return false
@@ -35,7 +32,6 @@ data class SpaceKey(
     override fun hashCode(): Int {
         var result = maxQuantity
         result = 31 * result + id.hashCode()
-        result = 31 * result + lastUpdate.hashCode()
         result = 31 * result + space.hashCode()
         result = 31 * result + name.hashCode()
         result = 31 * result + (nfcId?.contentHashCode() ?: 0)

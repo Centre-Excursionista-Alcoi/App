@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.data
 
 import kotlinx.serialization.Serializable
+import org.centrexcursionistalcoi.app.serializer.InstantSerializer
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -12,7 +13,7 @@ data class SpaceLendingKey(
     val key: Uuid,
     val quantity: Int,
     val givenBy: String? = null,
-    val givenAt: Instant? = null,
+    @Serializable(InstantSerializer::class) val givenAt: Instant? = null,
     val returnedTo: String? = null,
-    val returnedAt: Instant? = null,
+    @Serializable(InstantSerializer::class) val returnedAt: Instant? = null,
 )

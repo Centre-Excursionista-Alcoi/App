@@ -40,7 +40,6 @@ class SpaceEntity(id: EntityID<Uuid>): UuidEntity(id), LastUpdateEntity, EntityD
     context(_: JdbcTransaction)
     override fun toData(): Space = Space(
         id = id.value,
-        lastUpdate = lastUpdate,
         name = name,
         description = description,
         conditionsOfUse = conditionsOfUse,

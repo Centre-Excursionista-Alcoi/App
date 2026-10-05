@@ -79,7 +79,6 @@ class SpaceLendingEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity,
     context(_: JdbcTransaction)
     override fun toData(): SpaceLending = SpaceLending(
         id = id.value,
-        lastUpdate = lastUpdate,
         timestamp = timestamp,
         space = space.id.value,
         userSub = userSub?.id?.value,
