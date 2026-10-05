@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml version='1.0' encoding='UTF-8'?>
 <translations>
-    <item name="subject">Nova memòria de préstec enviada (#%1$s)</item>
-    <item name="line_1">%2$s ha enviat la memòria del préstec #%1$s.</item>
-    <item name="label_from">Des de</item>
-    <item name="label_to">Fins a</item>
-    <item name="label_notes">Notes</item>
-    <item name="none">Cap</item>
-    <item name="line_2">Revisa la memòria enviada al panell d'administració.</item>
-    <item name="open_in_app">Obrir a l'aplicació</item>
+  <item name="subject">Nova memòria de préstec enviada (#%1$s)</item>
+  <item name="line_1">%2$s ha enviat la memòria del préstec #%1$s.</item>
+  <item name="label_from">Des de</item>
+  <item name="label_to">Fins a</item>
+  <item name="label_notes">Notes</item>
+  <item name="none">Cap</item>
+  <item name="line_2">Revisa la memòria enviada al panell d'administració.</item>
+  <item name="open_in_app">Obrir a l'aplicació</item>
 </translations>
