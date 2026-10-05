@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.plugins
 
+import org.centrexcursionistalcoi.app.translation.localeOrNull
 import com.webauthn4j.verifier.exception.VerificationException
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveNullable
@@ -196,7 +197,7 @@ fun Route.registrationRoutes() {
         }
 
         val tokens = Database {
-            val user = member.insertUser(hashedPassword = null, sub = registration.sub)
+            val user = member.insertUser(hashedPassword = null, sub = registration.sub, language = call.request.localeOrNull())
             UserCredentialRecordEntity.new(credential.credentialId) {
                 this.user = user
                 this.attestedCredentialData = credential.attestedCredentialData

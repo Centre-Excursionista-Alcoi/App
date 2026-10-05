@@ -41,6 +41,7 @@ private fun createHttpClient(): HttpClient = HttpClient(createHttpClientEngine()
         checkHttpMethod = false
     }
     install(Resources)
+    install(AcceptLanguageHeader)
     // Tells the server it can compress its answers, and uncompresses them. The server only does it for GET /sync
     install(ContentEncoding) {
         gzip()

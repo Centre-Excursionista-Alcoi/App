@@ -16,7 +16,13 @@ import org.centrexcursionistalcoi.app.security.Passwords
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.security.RegistrationCodes
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.util.Locale
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import org.centrexcursionistalcoi.app.database.UserPreferenceKey
+import org.centrexcursionistalcoi.app.database.UserPreferenceStore
+import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import kotlin.text.toCharArray
 
 class TestAuth: ApplicationTestBase() {
@@ -86,6 +92,37 @@ class TestAuth: ApplicationTestBase() {
         ).apply {
             assertSuccess()
         }
+    }
+
+    @Test
+    fun test_registration_storesTheLanguageOfTheRequest() = runApplicationTest(
+        databaseInitBlock = {
+            FakeUser.provideMemberEntity()
+        }
+    ) {
+        val code = RegistrationCodes.create(FakeUser.EMAIL.uppercase())
+        client.submitForm(
+            href(Api.Register()),
+            parameters { appendAll(parameters + ("code" to code)) },
+        ) {
+            header(HttpHeaders.AcceptLanguage, "ca-ES,ca;q=0.9,en;q=0.8")
+        }.assertSuccess()
+
+        val sub = transaction { UserReferenceEntity.findByEmail(FakeUser.EMAIL)!!.sub.value }
+        assertEquals(Locale.forLanguageTag("ca-ES"), transaction { UserPreferenceStore[sub, UserPreferenceKey.Language] })
+    }
+
+    @Test
+    fun test_registration_withoutLanguageStoresNone() = runApplicationTest(
+        databaseInitBlock = {
+            FakeUser.provideMemberEntity()
+        }
+    ) {
+        val code = RegistrationCodes.create(FakeUser.EMAIL.uppercase())
+        client.submitForm(href(Api.Register()), parameters { appendAll(parameters + ("code" to code)) }).assertSuccess()
+
+        val sub = transaction { UserReferenceEntity.findByEmail(FakeUser.EMAIL)!!.sub.value }
+        assertNull(transaction { UserPreferenceStore[sub, UserPreferenceKey.Language] })
     }
 
     @Test
