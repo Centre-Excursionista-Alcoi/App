@@ -17,8 +17,8 @@ import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.base.EntityPatcher
-import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
 import org.centrexcursionistalcoi.app.database.entity.EntityDataConverter
+import org.centrexcursionistalcoi.app.database.entity.base.LastUpdateEntity
 import org.centrexcursionistalcoi.app.database.utils.encodeList
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
@@ -30,11 +30,11 @@ import org.centrexcursionistalcoi.app.request.RequestWithFiles
 import org.centrexcursionistalcoi.app.request.UpdateEntityRequest
 import org.centrexcursionistalcoi.app.request.assertRequestWithFilesContentType
 import org.centrexcursionistalcoi.app.request.receiveRequestWithFiles
+import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
+import org.centrexcursionistalcoi.app.routes.helper.handleIfModifiedForType
 import org.centrexcursionistalcoi.app.routes.helper.lastUpdateForType
 import org.centrexcursionistalcoi.app.routes.sync.SyncSection
 import org.centrexcursionistalcoi.app.routes.sync.SyncSections
-import org.centrexcursionistalcoi.app.routes.helper.handleIfModified
-import org.centrexcursionistalcoi.app.routes.helper.handleIfModifiedForType
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
@@ -107,7 +107,7 @@ suspend fun RoutingContext.assertIdParameter(): Uuid? {
 }
 
 @Suppress("USELESS_CAST")
-inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, reified E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any, C : Any, I : Any> Route.provideEntityRoutes(
+inline fun <EID : Any, reified EE, ID: Any, reified E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any, C : Any, I : Any> Route.provideEntityRoutes(
     resources: EntityResources<C, I>,
     entityClass: EntityClass<EID, EE>,
     noinline idTypeConverter: (String) -> EID?,
@@ -124,10 +124,10 @@ inline fun <EID : Any, reified EE : ExposedEntity<EID>, ID: Any, reified E : Ent
     syncKey: String? = null,
     /** How the entities are answered: the data class they convert to. */
     dataSerializer: KSerializer<E> = serializer<E>(),
-) where EE : EntityDataConverter<E, ID> = provideEntityRoutes(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, createRequestSerializer, creator, updater, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected, writeGroup, syncKey, dataSerializer)
+) where EE : ExposedEntity<EID>, EE : EntityDataConverter<E, ID> = provideEntityRoutes(resources, entityClass, EE::class as KClass<EE>, idTypeConverter, createRequestSerializer, creator, updater, listProvider, visibleTo, deleteReferencesCheck, writePermission, afterCreate, onWriteRejected, writeGroup, syncKey, dataSerializer)
 
 @OptIn(InternalSerializationApi::class)
-fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any, C : Any, I : Any> Route.provideEntityRoutes(
+fun <EID : Any, EE, ID: Any, E : Entity<ID>, UER: UpdateEntityRequest<ID, E>, CR : Any, C : Any, I : Any> Route.provideEntityRoutes(
     resources: EntityResources<C, I>,
     entityClass: EntityClass<EID, EE>,
     entityKClass: KClass<EE>,
@@ -187,7 +187,7 @@ fun <EID : Any, EE : ExposedEntity<EID>, ID: Any, E : Entity<ID>, UER: UpdateEnt
     syncKey: String? = null,
     /** How the entities are answered: the data class they convert to. */
     dataSerializer: KSerializer<E>,
-) where EE : EntityDataConverter<E, ID> {
+) where EE : ExposedEntity<EID>, EE : EntityDataConverter<E, ID> {
     if (syncKey != null) {
         SyncSections.register(
             SyncSection(
