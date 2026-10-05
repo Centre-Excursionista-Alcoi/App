@@ -16,7 +16,6 @@ import io.ktor.server.routing.RoutingContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
-import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.Lending
@@ -43,8 +42,9 @@ import org.jetbrains.exposed.v1.dao.with
 import org.centrexcursionistalcoi.app.routes.sync.SyncSection
 import org.centrexcursionistalcoi.app.routes.sync.SyncSections
 import org.centrexcursionistalcoi.app.notifications.Email
+import org.centrexcursionistalcoi.app.notifications.EmailTemplate
+import org.centrexcursionistalcoi.app.notifications.EmailRecipient
 import org.centrexcursionistalcoi.app.notifications.Push
-import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.request.CreateLendingRequest
 import org.centrexcursionistalcoi.app.request.DeleteLendingRequest
@@ -284,31 +284,22 @@ fun Route.lendingsRoutes() {
         // Notify admins asynchronously
         println("Scheduling lending notification email for lending #${lendingEntity.id.value}")
         Email.launch {
-            val emails = Database {
-                UserReferenceEntity.all()
-                    .toList()
-                    .filter { it.groups.contains(ADMIN_GROUP_NAME) }
-                    .map { MailerSendEmail(it.email, it.fullName) }
-            }
             val (from, to) = Database { lendingEntity.from to lendingEntity.to }
-            val url = AppLinks.adminLending(lendingEntity.id.value)
-            Email.sendEmail(
-                to = emails,
-                subject = "New lending request (#${lendingEntity.id.value})",
-                htmlContent = """
-                    <p>A new lending request has been created by ${userReferenceEntity.fullName}.</p>
-                    <p>
-                        <strong>From:</strong> $from<br/>
-                        <strong>To:</strong> $to<br/>
-                        <strong>Notes:</strong> ${lendingEntity.notes ?: "None"}<br/>
-                        <strong>Items:</strong>
-                        <ul>
-                            ${itemsList.joinToString("\n") { "<li>${Database { it.type.displayName }} (${it.variation ?: "No variation"})</li>" }}
-                        </ul>
-                    </p>
-                    <p>Please review and confirm the lending in the admin panel.</p>
-                    <a href="$url">Open in app</a> (<a href="$url">$url</a>)
-                """.trimIndent()
+            val items = itemsList.joinToString("\n") { item ->
+                Database { item.type.displayName + (item.variation?.let { " ($it)" } ?: "") }
+            }
+            Email.sendTemplate(
+                recipients = EmailRecipient.staff(),
+                template = EmailTemplate.NewLendingRequest,
+                args = mapOf(
+                    "id" to lendingEntity.id.value.toString(),
+                    "userName" to userReferenceEntity.fullName,
+                    "from" to from.toString(),
+                    "to" to to.toString(),
+                    "notes" to lendingEntity.notes,
+                    "items" to items,
+                    "link" to AppLinks.adminLending(lendingEntity.id.value),
+                ),
             )
         }
         Push.launch {

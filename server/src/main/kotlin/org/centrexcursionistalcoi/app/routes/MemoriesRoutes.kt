@@ -38,9 +38,10 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Email
+import org.centrexcursionistalcoi.app.notifications.EmailTemplate
+import org.centrexcursionistalcoi.app.notifications.EmailRecipient
 import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendAttachment
-import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.pdf.PdfGeneratorService
 import org.centrexcursionistalcoi.app.request.CreateMemoryRequest
@@ -288,13 +289,6 @@ fun Route.memoriesRoutes() {
 
             // Notify administrators that a new memory has been uploaded
             Email.launch {
-                val emails = Database {
-                    UserReferenceEntity.all()
-                        .toList()
-                        .filter { it.groups.contains(ADMIN_GROUP_NAME) }
-                        .map { MailerSendEmail(it.email, it.fullName) }
-                }
-
                 val fileAttachments = mutableListOf<MailerSendAttachment>()
                 var bytesCounter = 0L
                 val maxTotalSizeBytes = 20 * 1024 * 1024 // 20 MB
@@ -308,20 +302,17 @@ fun Route.memoriesRoutes() {
                     fileAttachments.add(MailerSendAttachment(fileBytes, attachment.name))
                 }
 
-                val url = AppLinks.adminLending(lending.id.value)
-                Email.sendEmail(
-                    to = emails,
-                    subject = "New lending memory submitted (#${lending.id.value})",
-                    htmlContent = """
-                        <p>The lending memory for lending #${lending.id.value} has been submitted by ${userReference.fullName}.</p>
-                        <p>
-                            <strong>From:</strong> ${lending.from}<br/>
-                            <strong>To:</strong> ${lending.to}<br/>
-                            <strong>Notes:</strong> ${lending.notes ?: "None"}<br/>
-                        </p>
-                        <p>Please review the submitted memory in the admin panel.</p>
-                        <a href="$url">Open in app</a> (<a href="$url">$url</a>)
-                    """.trimIndent(),
+                Email.sendTemplate(
+                    recipients = EmailRecipient.staff(),
+                    template = EmailTemplate.NewMemoryUpload,
+                    args = mapOf(
+                        "id" to lending.id.value.toString(),
+                        "userName" to userReference.fullName,
+                        "from" to lending.from.toString(),
+                        "to" to lending.to.toString(),
+                        "notes" to lending.notes,
+                        "link" to AppLinks.adminLending(lending.id.value),
+                    ),
                     attachments = fileAttachments,
                 )
             }

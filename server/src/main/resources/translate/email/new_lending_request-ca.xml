@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<translations>
+    <item name="subject">Nova sol·licitud de préstec (#%1$s)</item>
+    <item name="line_1">%1$s ha creat una nova sol·licitud de préstec.</item>
+    <item name="label_from">Des de</item>
+    <item name="label_to">Fins a</item>
+    <item name="label_notes">Notes</item>
+    <item name="label_items">Material</item>
+    <item name="none">Cap</item>
+    <item name="line_2">Revisa i confirma el préstec al panell d'administració.</item>
+    <item name="open_in_app">Obrir a l'aplicació</item>
+</translations>

@@ -10,7 +10,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import kotlinx.coroutines.sync.Mutex
-import io.ktor.util.escapeHTML
+
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.AppLinks
@@ -34,8 +34,11 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.notifications.Email
+import org.centrexcursionistalcoi.app.translation.locale
+import org.centrexcursionistalcoi.app.notifications.EmailTemplate
+import org.centrexcursionistalcoi.app.notifications.EmailRecipient
+import java.util.Locale
 import org.centrexcursionistalcoi.app.notifications.Push
-import org.centrexcursionistalcoi.app.notifications.email.mailersend.MailerSendEmail
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.request.AttachPaymentProofRequest
@@ -161,56 +164,33 @@ private suspend fun RoutingContext.validateStay(
     return keys
 }
 
-private fun String.escaped() = escapeHTML()
-
-private fun emailButton(url: String) =
-    """<p><a href="$url" style="display:inline-block;padding:10px 16px;background:#1b5e20;color:#ffffff;text-decoration:none;border-radius:4px">View in app</a></p><p><a href="$url">$url</a></p>"""
-
 /**
- * Emails the user a confirmation of their new lending, and the people who manage space lendings (and admins) a
- * notice of it. Both with a link to open it in the app.
+ * Emails the user a confirmation of their new lending, in their language [locale], and the people who manage space
+ * lendings (and admins) a notice of it, each in theirs. Both with a link to open it in the app.
  */
-private fun sendNewSpaceLendingEmails(lending: SpaceLendingEntity, user: UserReferenceEntity) = Email.launch {
-    val (spaceName, checkIn, checkOut, notes, total) = Database {
-        listOf(lending.space.name, lending.checkIn, lending.checkOut, lending.notes, lending.totalPrice)
-    }
-    val details = """
-        <p>
-            <strong>Space:</strong> ${spaceName.toString().escaped()}<br/>
-            <strong>Check-in:</strong> $checkIn<br/>
-            <strong>Check-out:</strong> $checkOut<br/>
-            <strong>Price:</strong> $total &euro;<br/>
-            <strong>Notes:</strong> ${notes?.toString()?.escaped() ?: "None"}
-        </p>
-    """.trimIndent()
+private fun sendNewSpaceLendingEmails(lending: SpaceLendingEntity, user: UserReferenceEntity, locale: Locale) = Email.launch {
     val id = lending.id.value
-
-    val (userEmail, userName) = Database { user.email to user.fullName }
-    Email.sendEmail(
-        to = listOf(MailerSendEmail(userEmail, userName)),
-        subject = "Your space lending is confirmed",
-        htmlContent = """
-            <p>Hi ${userName.escaped()}, your lending has been registered.</p>
-            $details
-            <p>Before your stay, go to the club to pick up the keys. Until then you can still change your lending.
-            Once the stay is over, remember to leave your notes and report any issues, and to pay for it.</p>
-            ${emailButton(AppLinks.spaceLending(id))}
-        """.trimIndent(),
-    )
-
-    val recipients = Database {
-        UserReferenceEntity.all()
-            .filter { ADMIN_GROUP_NAME in it.groups || SPACE_LENDINGS_MANAGER_GROUP_NAME in it.groups }
-            .map { MailerSendEmail(it.email, it.fullName) }
+    val args = Database {
+        mapOf(
+            "id" to id.toString(),
+            "userName" to user.fullName,
+            "spaceName" to lending.space.name,
+            "checkIn" to lending.checkIn.toString(),
+            "checkOut" to lending.checkOut.toString(),
+            "price" to "%.2f €".format(Locale.ROOT, lending.totalPrice),
+            "notes" to lending.notes,
+        )
     }
-    Email.sendEmail(
-        to = recipients,
-        subject = "New space lending (#$id)",
-        htmlContent = """
-            <p>${userName.escaped()} has booked a space.</p>
-            $details
-            ${emailButton(AppLinks.adminSpaceLending(id))}
-        """.trimIndent(),
+
+    Email.sendTemplate(
+        recipients = listOf(EmailRecipient.of(user, locale)),
+        template = EmailTemplate.SpaceLendingConfirmation,
+        args = args + ("link" to AppLinks.spaceLending(id)),
+    )
+    Email.sendTemplate(
+        recipients = EmailRecipient.staff(SPACE_LENDINGS_MANAGER_GROUP_NAME),
+        template = EmailTemplate.NewSpaceLending,
+        args = args + ("link" to AppLinks.adminSpaceLending(id)),
     )
 }
 
@@ -299,7 +279,7 @@ fun Route.spaceLendingsRoutes() {
                 SPACE_LENDINGS_MANAGER_GROUP_NAME,
             )
         }
-        sendNewSpaceLendingEmails(lending, userReference)
+        sendNewSpaceLendingEmails(lending, userReference, call.request.locale())
 
         call.response.header(HttpHeaders.Location, "/space_lendings/${lending.id.value}")
         call.respond(HttpStatusCode.Created)
