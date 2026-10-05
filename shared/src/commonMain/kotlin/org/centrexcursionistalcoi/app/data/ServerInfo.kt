@@ -10,6 +10,11 @@ class ServerInfo(
      * Timestamp (in milliseconds) of the last successful synchronization with the CEA database.
      */
     val lastCEASync: Long,
+
+    /**
+     * Timestamp (in milliseconds) of the last successful synchronization with the FEMECV database.
+     */
+    val lastFEMECVSync: Long,
 ) {
     @Serializable
     data class Version(

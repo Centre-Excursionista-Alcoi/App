@@ -19,9 +19,6 @@ import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.routes.appLinkFallbackRoutes
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
-import org.centrexcursionistalcoi.app.routes.spaceLendingsRoutes
-import org.centrexcursionistalcoi.app.routes.syncRoutes
-import org.centrexcursionistalcoi.app.routes.spacesRoutes
 import org.centrexcursionistalcoi.app.routes.eventsRoutes
 import org.centrexcursionistalcoi.app.routes.inventoryRoutes
 import org.centrexcursionistalcoi.app.routes.lendingsRoutes
@@ -32,6 +29,9 @@ import org.centrexcursionistalcoi.app.routes.qualificationsRoutes
 import org.centrexcursionistalcoi.app.routes.respondAppLinkFallbackOr
 import org.centrexcursionistalcoi.app.routes.robotsRoute
 import org.centrexcursionistalcoi.app.routes.securityRoutes
+import org.centrexcursionistalcoi.app.routes.spaceLendingsRoutes
+import org.centrexcursionistalcoi.app.routes.spacesRoutes
+import org.centrexcursionistalcoi.app.routes.syncRoutes
 import org.centrexcursionistalcoi.app.routes.usersRoutes
 import org.centrexcursionistalcoi.app.routes.verifyRoutes
 import org.centrexcursionistalcoi.app.routes.webDavRoutes
@@ -117,6 +117,7 @@ fun Application.configureRouting() {
         get<Api.Info> {
             val databaseVersion = ConfigEntity.DatabaseVersion.get() ?: 0
             val lastCEASync = ConfigEntity.LastCEASync.get()?.toEpochMilliseconds() ?: 0L
+            val lastFEMECVSync = ConfigEntity.LastFEMECVSync.get()?.toEpochMilliseconds() ?: 0L
 
             call.respond(ServerInfo(
                 version = ServerInfo.Version(
@@ -125,6 +126,7 @@ fun Application.configureRouting() {
                     code = versionCode,
                 ),
                 lastCEASync = lastCEASync,
+                lastFEMECVSync = lastFEMECVSync,
             ))
         }
     }

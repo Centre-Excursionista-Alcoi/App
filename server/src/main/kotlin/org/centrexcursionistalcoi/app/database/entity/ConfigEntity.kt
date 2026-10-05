@@ -1,12 +1,12 @@
 package org.centrexcursionistalcoi.app.database.entity
 
-import kotlin.time.Instant
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.ConfigTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import kotlin.time.Instant
 
 class ConfigEntity(id: EntityID<String>) : Entity<String>(id) {
     companion object : EntityClass<String, ConfigEntity>(ConfigTable) {
@@ -45,7 +45,13 @@ class ConfigEntity(id: EntityID<String>) : Entity<String>(id) {
 
     object LastCEASync : ConfigEntry<Instant>(
         key = "last_cea_sync",
-        retrieve = { it?.toLongOrNull()?.let { Instant.fromEpochSeconds(it) } },
+        retrieve = { value -> value?.toLongOrNull()?.let(Instant::fromEpochSeconds) },
+        store = { it.epochSeconds.toString() },
+    )
+
+    object LastFEMECVSync : ConfigEntry<Instant>(
+        key = "last_femecv_sync",
+        retrieve = { value -> value?.toLongOrNull()?.let(Instant::fromEpochSeconds) },
         store = { it.epochSeconds.toString() },
     )
 }
