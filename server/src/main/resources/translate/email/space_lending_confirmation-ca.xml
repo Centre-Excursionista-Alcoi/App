@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<translations>
+    <item name="subject">El teu lloguer d'espai està confirmat</item>
+    <item name="line_1">Hola, %1$s. El teu lloguer s'ha registrat.</item>
+    <item name="label_space">Espai</item>
+    <item name="label_check_in">Entrada</item>
+    <item name="label_check_out">Eixida</item>
+    <item name="label_price">Preu</item>
+    <item name="label_notes">Notes</item>
+    <item name="none">Cap</item>
+    <item name="line_2">Abans de l'estada, passa pel club a arreplegar les claus. Fins aleshores encara pots canviar el lloguer.</item>
+    <item name="line_3">Quan acabe l'estada, recorda deixar les teues notes, informar de qualsevol incidència i pagar-la.</item>
+    <item name="open_in_app">Obrir a l'aplicació</item>
+</translations>

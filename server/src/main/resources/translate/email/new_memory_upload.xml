@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<translations>
+    <item name="subject">New lending memory submitted (#%1$s)</item>
+    <item name="line_1">The memory of lending #%1$s has been submitted by %2$s.</item>
+    <item name="label_from">From</item>
+    <item name="label_to">To</item>
+    <item name="label_notes">Notes</item>
+    <item name="none">None</item>
+    <item name="line_2">Please review the submitted memory in the admin panel.</item>
+    <item name="open_in_app">Open in app</item>
+</translations>

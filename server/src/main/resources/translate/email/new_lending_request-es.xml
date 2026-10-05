@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<translations>
+    <item name="subject">Nueva solicitud de préstamo (#%1$s)</item>
+    <item name="line_1">%1$s ha creado una nueva solicitud de préstamo.</item>
+    <item name="label_from">Desde</item>
+    <item name="label_to">Hasta</item>
+    <item name="label_notes">Notas</item>
+    <item name="label_items">Material</item>
+    <item name="none">Ninguna</item>
+    <item name="line_2">Revisa y confirma el préstamo en el panel de administración.</item>
+    <item name="open_in_app">Abrir en la aplicación</item>
+</translations>

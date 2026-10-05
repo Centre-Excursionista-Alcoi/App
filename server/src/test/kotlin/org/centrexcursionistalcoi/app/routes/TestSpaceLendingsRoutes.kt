@@ -21,6 +21,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.Category
@@ -29,6 +30,14 @@ import org.centrexcursionistalcoi.app.data.PriceUnit
 import org.centrexcursionistalcoi.app.database.entity.SpaceEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceKeyEntity
 import org.centrexcursionistalcoi.app.test.FakeUser
+import org.centrexcursionistalcoi.app.test.FakeAdminUser
+import org.centrexcursionistalcoi.app.notifications.Email
+import io.ktor.client.request.header
+import io.ktor.http.HttpHeaders
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.centrexcursionistalcoi.app.assertError
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.Space
@@ -460,5 +469,42 @@ class TestSpaceLendingsRoutes : ApplicationTestBase() {
         assertEquals(2, lending.keys.single().quantity)
         val all = json.decodeFromString(ListSerializer(SpaceLending.serializer()), client.get("/space_lendings").bodyAsText())
         assertEquals(lending.id, all.single().id)
+    }
+
+    @Test
+    fun test_new_lending_emails_the_user_and_the_managers_in_their_language() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            createSpace()
+            // A manager, who gets the notice
+            FakeAdminUser.provideEntity()
+        },
+        mockDate = today,
+        disableEmail = false,
+    ) {
+        val sent = mutableListOf<Email.SentEmail>()
+        Email.sent = sent
+        try {
+            client.post("/space_lendings") {
+                header(HttpHeaders.AcceptLanguage, "ca")
+                contentType(ContentType.Application.Json)
+                setBody(body("2026-10-09", "2026-10-10"))
+            }.assertStatusCode(HttpStatusCode.Created)
+
+            // They are sent in the background
+            withContext(Dispatchers.Default) { withTimeout(10_000) { while (sent.size < 2) delay(50) } }
+
+            val toUser = sent.single { it.to.any { to -> to.email == FakeUser.EMAIL } }
+            assertEquals("El teu lloguer d'espai està confirmat", toUser.subject)
+            assertTrue("Casa" in toUser.htmlContent, toUser.htmlContent)
+            assertTrue("/space_lendings/" in toUser.htmlContent, toUser.htmlContent)
+
+            val toStaff = sent.single { it !== toUser }
+            assertTrue(toStaff.to.any { it.email == FakeAdminUser.EMAIL })
+            assertTrue(toStaff.subject.startsWith("New space lending (#"), toStaff.subject)
+            assertTrue("/admin/space_lendings/" in toStaff.htmlContent, toStaff.htmlContent)
+        } finally {
+            Email.sent = null
+        }
     }
 }
