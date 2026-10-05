@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.viewmodel.spaces
 
 import androidx.lifecycle.ViewModel
 import io.github.vinceglb.filekit.PlatformFile
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -20,6 +21,7 @@ import org.koin.core.annotation.KoinViewModel
 import kotlin.uuid.Uuid
 
 @KoinViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
 class SpaceLendingDetailsViewModel(
     @InjectedParam private val lendingId: Uuid,
     spaceLendingsRepository: SpaceLendingsRepository,
