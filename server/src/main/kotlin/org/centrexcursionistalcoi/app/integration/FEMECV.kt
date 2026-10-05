@@ -16,14 +16,23 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import io.ktor.http.parameters
 import kotlinx.datetime.LocalDate
+import org.centrexcursionistalcoi.app.PeriodicWorker
+import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
+import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
 import org.centrexcursionistalcoi.app.integration.femecv.LicenseData
 import org.centrexcursionistalcoi.app.storage.RedisStoreMap
 import org.centrexcursionistalcoi.app.tracing.SentryHttpClientTracing
 import org.jetbrains.annotations.VisibleForTesting
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.neq
 import org.slf4j.LoggerFactory
+import kotlin.time.Duration.Companion.days
 
-object FEMECV {
+object FEMECV : PeriodicWorker(
+    period = 1.days,
+) {
     private val logger = LoggerFactory.getLogger(FEMECV::class.java)
 
     private val cookiesStoreMap by lazy { RedisStoreMap.fromEnv }
@@ -142,8 +151,7 @@ object FEMECV {
         }
     }
 
-    suspend fun getLicenses(username: String, password: String): List<Pair<LicenseData, ByteArray>> {
-        val client = newClient()
+    suspend fun getLicenses(username: String, password: String): List<Pair<LicenseData, ByteArray>> = newClient().use { client ->
         login(username, password, client)
 
         val response = client.get("/PanellControlUsuariFederat.php?accio=edit")
@@ -168,6 +176,25 @@ object FEMECV {
             return licenseIds.map { id -> getLicense(client, id) }
         } else {
             throw FEMECVException("Failed to retrieve licenses, status code: ${response.status}")
+        }
+    }
+
+    override suspend fun run() {
+        logger.info("Starting periodic FEMECV sync...")
+        val users = Database {
+            UserReferenceEntity.find {
+                (UserReferences.femecvUsername neq null) and (UserReferences.femecvPassword neq null)
+            }.toList()
+        }
+        logger.debug("Found ${users.count()} users with FEMECV credentials.")
+        for (user in users) {
+            try {
+                user.refreshFEMECVData()
+            } catch (e: FEMECVException) {
+                logger.error("Error syncing FEMECV data for user ${user.id.value} (${user.sub}): ${e.message}")
+            } catch (e: Exception) {
+                logger.error("Unexpected error syncing FEMECV data for user ${user.id.value} (${user.sub}): ${e.message}", e)
+            }
         }
     }
 }

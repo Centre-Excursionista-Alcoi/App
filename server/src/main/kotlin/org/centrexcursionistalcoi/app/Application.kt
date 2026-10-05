@@ -12,6 +12,7 @@ import kotlinx.datetime.todayIn
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.integration.CEA
+import org.centrexcursionistalcoi.app.integration.FEMECV
 import org.centrexcursionistalcoi.app.notifications.Email
 import org.centrexcursionistalcoi.app.notifications.NotificationsConfig
 import org.centrexcursionistalcoi.app.notifications.Push
@@ -133,6 +134,11 @@ fun main() {
 
     // Start periodic CEA synchronization
     CEA.start(
+        waitUntilFirstSync = dbInitResult and Database.INIT_RESULT_MIGRATION_EXECUTED == Database.INIT_RESULT_MIGRATION_EXECUTED
+    )
+
+    // Start periodic FEMECV synchronization
+    FEMECV.start(
         waitUntilFirstSync = dbInitResult and Database.INIT_RESULT_MIGRATION_EXECUTED == Database.INIT_RESULT_MIGRATION_EXECUTED
     )
 
