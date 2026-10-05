@@ -21,18 +21,28 @@ import org.koin.core.annotation.KoinViewModel
 import kotlin.uuid.Uuid
 
 /**
- * Creates a lending of a space, or, if [lendingId] is given, modifies one that hasn't been picked up yet.
+ * What the booking form is for: [spaceId], and, to modify a lending that hasn't been picked up yet, [lendingId].
+ *
+ * Handed to the view model as a single parameter: Koin matches injected parameters by type, so two ids of the same
+ * type would both receive the first one.
+ */
+data class SpaceLendingFormTarget(val spaceId: Uuid, val lendingId: Uuid? = null)
+
+/**
+ * Creates a lending of a space, or, if the target has a lending, modifies it.
  */
 @KoinViewModel
 class SpaceLendingCreationViewModel(
-    @InjectedParam private val spaceId: Uuid,
-    @InjectedParam private val lendingId: Uuid?,
+    @InjectedParam target: SpaceLendingFormTarget,
     spacesRepository: SpacesRepository,
     spaceKeysRepository: SpaceKeysRepository,
     private val spaceLendingsRepository: SpaceLendingsRepository,
     private val spaceLendingsRemoteRepository: SpaceLendingsRemoteRepository,
 ) : ViewModel() {
     private val log = logging()
+
+    private val spaceId = target.spaceId
+    private val lendingId = target.lendingId
 
     val space = spacesRepository.getAsFlow(spaceId).stateInViewModel()
     val keys = spaceKeysRepository.getBySpaceAsFlow(spaceId).stateInViewModel()

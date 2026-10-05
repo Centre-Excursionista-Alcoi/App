@@ -32,6 +32,7 @@ import org.centrexcursionistalcoi.app.utils.SpacePricing
 import org.centrexcursionistalcoi.app.utils.fromEpochMillis
 import org.centrexcursionistalcoi.app.utils.toEpochMillis
 import org.centrexcursionistalcoi.app.viewmodel.spaces.SpaceLendingCreationViewModel
+import org.centrexcursionistalcoi.app.viewmodel.spaces.SpaceLendingFormTarget
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -48,7 +49,7 @@ fun SpaceLendingCreationScreen(
     lendingId: Uuid?,
     onDone: (Uuid) -> Unit,
     onBack: () -> Unit,
-    model: SpaceLendingCreationViewModel = koinViewModel { parametersOf(spaceId, lendingId) },
+    model: SpaceLendingCreationViewModel = koinViewModel { parametersOf(SpaceLendingFormTarget(spaceId, lendingId)) },
 ) {
     val space by model.space.collectAsState()
     val keys by model.keys.collectAsState()

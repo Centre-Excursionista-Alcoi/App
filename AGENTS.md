@@ -184,6 +184,7 @@ single declared supertype; `@KoinViewModel` for a ViewModel; `@InjectedParam` on
 at resolution time, not by Koin). A class with exactly one declared supertype auto-binds to that supertype too
 — no need for an explicit `binds = [...]`, e.g. `AndroidPathsProvider : PathsProvider` resolves as both types
 with a bare `@Singleton`.
+**`@InjectedParam`s are matched by type, not position.** A ViewModel with two of the same type (e.g. a space's `Uuid` and a lending's `Uuid?`) gets the first one for both, silently. Wrap them in one parameter class (see `SpaceLendingFormTarget`).
 
 This was disabled for a while (issue #590 — the plugin, then pinned at 1.1.0, crashed on the Kotlin 2.4.20 bump
 needed for the SwiftPM migration) in favor of hand-written `di/ManualModules.kt`, replaced by `1.2.1`'s
