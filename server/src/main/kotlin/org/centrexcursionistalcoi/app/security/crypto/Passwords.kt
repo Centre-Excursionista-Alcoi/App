@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.security
+package org.centrexcursionistalcoi.app.security.crypto
 
 import at.favre.lib.crypto.bcrypt.BCrypt
 

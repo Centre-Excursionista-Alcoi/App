@@ -1,0 +1,14 @@
+/* The browser login page (BrowserLoginRoutes.kt), on top of app-links.css and verify.css. */
+
+/* The author styles below would otherwise override the hidden attribute. */
+[hidden] {
+    display: none !important;
+}
+
+/* Codes are compared by eye: a monospace font tells 0 from O and 1 from I. */
+.code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 1.8em;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+}

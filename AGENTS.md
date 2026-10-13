@@ -388,6 +388,18 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   password (`POST /register`'s `code`) or a passkey (`/register/passkey`) alike: nothing else proves the email
   is the person's. In tests, get a code with `RegistrationCodes.create(email)`; `SoftwareAuthenticator` (test
   sources) creates and signs in with real, software passkeys.
+- **Crypto helpers live in `server/.../security/crypto/`**: `Hashing` (SHA-256, constant-time comparison), `RandomValues`
+  (tokens, codes and every `SecureRandom` use), `Encoding.kt` (`toBase64Url`/`fromBase64Url`/`toHex`), plus `AES` and
+  `Passwords` (BCrypt). Add new hashing, encoding or randomness there instead of calling `MessageDigest`, `SecureRandom`
+  or `Base64` directly. (`V5` migration and the email attachment keep their own `Base64`: they're not crypto.)
+- **Desktop signs in with a passkey through the browser** (`plugins/BrowserLoginRoutes.kt`, `security/BrowserLogins.kt`,
+  `AuthBackend.startBrowserLogin`/`awaitBrowserLogin`/`finishBrowserLogin`). The app `POST`s `/auth/browser`, opens the
+  returned `/browser-login?id=...` page, and listens on SSE (`/auth/browser/{id}/events`, secret in the
+  `X-Login-Secret` header, never the URL). The page shows a code to compare with the app's, runs WebAuthn from
+  `https://<rp id>` (an allowed origin already), and `POST`s the assertion to `.../complete`; the app is then told through
+  SSE and redeems the tokens once at `.../redeem`, so they never reach the browser. Requests live in memory only: this
+  assumes a single server instance. The SSE server plugin is installed even with push disabled, for this. `/browser-login`
+  is a web-only path (see `WEB_ONLY_PATHS`).
 - Auth routes are rate-limited per client IP (`plugins/RateLimits.kt`); limits are lifted when `isTesting`.
 - In server tests, `loginAsFakeUser()`/`loginAs(user)` start a real session for the user (creating it if needed)
   and make the test client send its access token with every request; `logout()` stops that. To test the token

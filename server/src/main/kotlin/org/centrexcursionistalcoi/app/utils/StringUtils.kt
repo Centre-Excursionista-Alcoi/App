@@ -1,6 +1,6 @@
 package org.centrexcursionistalcoi.app.utils
 
-import java.security.SecureRandom
+import org.centrexcursionistalcoi.app.security.crypto.RandomValues
 import java.util.Random
 
 /**
@@ -9,9 +9,7 @@ import java.util.Random
  */
 fun generateRandomString(length: Int = 12): String {
     val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-    return (1..length)
-        .map { chars[SecureRandom().nextInt(chars.length)] }
-        .joinToString("")
+    return RandomValues.string(length, chars)
 }
 
 /**

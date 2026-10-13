@@ -28,7 +28,7 @@ import org.centrexcursionistalcoi.app.database.table.Memories
 import org.centrexcursionistalcoi.app.database.table.MemoriesFiles
 import org.centrexcursionistalcoi.app.database.table.PostFiles
 import org.centrexcursionistalcoi.app.database.table.Posts
-import org.centrexcursionistalcoi.app.security.AES
+import org.centrexcursionistalcoi.app.security.crypto.AES
 import org.centrexcursionistalcoi.app.storage.FailingFileStorage
 import org.centrexcursionistalcoi.app.storage.FileStorage
 import org.centrexcursionistalcoi.app.storage.FileStorageProvider

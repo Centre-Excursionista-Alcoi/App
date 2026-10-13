@@ -57,7 +57,7 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.request.CreateInsuranceRequest
 import org.centrexcursionistalcoi.app.request.RequestWithFiles
 import org.centrexcursionistalcoi.app.request.UpdatePostRequest
-import org.centrexcursionistalcoi.app.security.Passwords
+import org.centrexcursionistalcoi.app.security.crypto.Passwords
 import org.centrexcursionistalcoi.app.storage.createTestFile
 import org.centrexcursionistalcoi.app.storage.testStorage
 import org.centrexcursionistalcoi.app.test.FakeAdminUser

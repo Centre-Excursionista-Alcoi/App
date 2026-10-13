@@ -1,6 +1,8 @@
 package org.centrexcursionistalcoi.app.viewmodel
 
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,11 +14,14 @@ import org.centrexcursionistalcoi.app.auth.AuthBackend
 import org.centrexcursionistalcoi.app.auth.CredentialsStore
 import org.centrexcursionistalcoi.app.auth.PasskeyException
 import org.centrexcursionistalcoi.app.auth.PasskeyUpgrade
+import org.centrexcursionistalcoi.app.auth.PlatformBrowserLogin
 import org.centrexcursionistalcoi.app.auth.Passkeys
 import org.centrexcursionistalcoi.app.auth.SavedCredential
+import org.centrexcursionistalcoi.app.data.BrowserLoginRequest
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.exception.ServerException
 import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
+import io.ktor.client.plugins.sse.SSEClientException
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
@@ -104,6 +109,56 @@ class LoginViewModel(
         } finally {
             _isLoading.emit(false)
         }
+    }
+
+    /** Whether the user can sign in with a passkey in their browser, because this device can't use passkeys itself. */
+    val canSignInWithBrowser: Boolean get() = PlatformBrowserLogin.isSupported
+
+    /** The sign-in the user has to finish in their browser, while the app waits for it. */
+    val browserLogin: StateFlow<BrowserLoginRequest?>
+        field = MutableStateFlow<BrowserLoginRequest?>(null)
+
+    private var browserLoginJob: Job? = null
+
+    /**
+     * Signs in with a passkey in the user's browser: [openUrl] opens the page there, where they confirm the code
+     * shown in the app and use their passkey, and the server tells the app as soon as they have (no polling).
+     */
+    fun signInWithBrowser(openUrl: (String) -> Unit, afterLogin: () -> Unit) {
+        browserLoginJob?.cancel()
+        browserLoginJob = viewModelScope.launch(GlobalAsyncErrorHandler.coroutineExceptionHandler) {
+            try {
+                _isLoading.emit(true)
+                clearError()
+
+                val request = authBackend.startBrowserLogin(passkeys.deviceName)
+                browserLogin.value = request
+                withContext(dispatcherProvider.main) { openUrl(request.url) }
+
+                if (!authBackend.awaitBrowserLogin(request)) {
+                    setError(BrowserLoginExpiredException())
+                    return@launch
+                }
+                authBackend.finishBrowserLogin(request)
+                profileRemoteRepository.synchronize(ignoreIfModifiedSince = true)
+
+                withContext(dispatcherProvider.main) { afterLogin() }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: ServerException) {
+                setError(e)
+            } catch (e: SSEClientException) {
+                setError(e)
+            } finally {
+                browserLogin.value = null
+                _isLoading.emit(false)
+            }
+        }
+    }
+
+    /** The user gave up waiting for the browser. */
+    fun cancelBrowserLogin() {
+        browserLoginJob?.cancel()
     }
 
     /** Where the user is in registering, see [RegistrationStep]. */
@@ -207,3 +262,6 @@ sealed interface RegistrationStep {
     data class Code(val email: String) : RegistrationStep
     data class Method(val email: String, val code: String) : RegistrationStep
 }
+
+/** The user didn't sign in in their browser in time. */
+class BrowserLoginExpiredException : Exception("The sign-in in the browser expired.")

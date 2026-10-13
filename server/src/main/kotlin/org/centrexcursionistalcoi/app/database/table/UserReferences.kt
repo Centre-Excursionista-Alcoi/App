@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.database.table
 
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
-import org.centrexcursionistalcoi.app.security.AES
+import org.centrexcursionistalcoi.app.security.crypto.AES
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.TextColumnType
 import org.jetbrains.exposed.v1.core.dao.id.EntityID

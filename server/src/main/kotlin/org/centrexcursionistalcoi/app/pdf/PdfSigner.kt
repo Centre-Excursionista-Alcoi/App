@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.pdf
 
+import org.centrexcursionistalcoi.app.security.crypto.RandomValues
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
@@ -8,7 +9,6 @@ import java.math.BigInteger
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
-import java.security.SecureRandom
 import java.security.cert.X509Certificate
 import java.util.Calendar
 import kotlin.time.Clock
@@ -167,7 +167,7 @@ object PdfSigner {
         val now = Clock.System.now()
         val holder = JcaX509v3CertificateBuilder(
             name,
-            BigInteger(128, SecureRandom()),
+            BigInteger(128, RandomValues.secureRandom),
             java.util.Date.from(now.toJavaInstant()),
             java.util.Date.from((now + (10 * 365).days).toJavaInstant()),
             name,

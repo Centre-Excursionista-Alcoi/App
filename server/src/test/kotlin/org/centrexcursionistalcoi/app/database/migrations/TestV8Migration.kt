@@ -8,7 +8,7 @@ import org.centrexcursionistalcoi.app.assertTrue
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.PostgresTestBase
 import org.centrexcursionistalcoi.app.database.entity.DepartmentEntity
-import org.centrexcursionistalcoi.app.security.AES
+import org.centrexcursionistalcoi.app.security.crypto.AES
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction

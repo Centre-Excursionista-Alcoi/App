@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<translations>
+    <item name="title">Inicia sesión en la CEA App</item>
+    <item name="intro">La CEA App en %s solicita iniciar sesión en tu cuenta.</item>
+    <item name="code_label">Comprueba que este código es el que se muestra en la aplicación:</item>
+    <item name="warning">Si no acabas de pedir iniciar sesión desde la aplicación, cierra esta página.</item>
+    <item name="button">Continuar con mi passkey</item>
+    <item name="working">Esperando tu passkey…</item>
+    <item name="done">¡Listo! Has iniciado sesión. Puedes cerrar esta página y volver a la aplicación.</item>
+    <item name="failed">No hemos podido iniciar sesión con esa passkey. Inténtalo de nuevo.</item>
+    <item name="cancelled">Se canceló la petición de la passkey. Inténtalo de nuevo cuando estés listo.</item>
+    <item name="unsupported">Este navegador no admite passkeys. Abre esta página en otro navegador.</item>
+    <item name="js_required">Esta página necesita JavaScript para pedir tu passkey. Activa JavaScript en el navegador, o abre esta página en otro.</item>
+    <item name="expired_title">Este inicio de sesión ha caducado</item>
+    <item name="expired">Esta petición de inicio de sesión ha caducado o ya se usó. Vuelve a la aplicación e inícialo de nuevo.</item>
+</translations>

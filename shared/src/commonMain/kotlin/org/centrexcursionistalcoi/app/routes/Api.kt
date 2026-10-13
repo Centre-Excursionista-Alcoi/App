@@ -20,6 +20,23 @@ object Api {
 
         @Resource("logout")
         class Logout(val parent: Auth = Auth())
+
+        /**
+         * Signing in with a passkey in the user's browser, for apps that can't use passkeys themselves (desktop):
+         * `POST` starts a [org.centrexcursionistalcoi.app.data.BrowserLoginRequest], and the browser page
+         * (`/browser-login`) completes it. The app is told through SSE (`/auth/browser/{id}/events`, not a
+         * resource: Ktor has none for SSE) and then redeems the tokens.
+         */
+        @Resource("browser")
+        class Browser(val parent: Auth = Auth()) {
+            /** Called by the browser page once the user has signed in with their passkey. */
+            @Resource("{id}/complete")
+            class Complete(val id: String, val parent: Browser = Browser())
+
+            /** Called by the app once told the login was approved, to get the tokens. */
+            @Resource("{id}/redeem")
+            class Redeem(val id: String, val parent: Browser = Browser())
+        }
     }
 
     @Resource("/register")

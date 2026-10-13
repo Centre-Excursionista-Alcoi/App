@@ -13,11 +13,6 @@ import kotlin.uuid.Uuid
 private val logger = LoggerFactory.getLogger("SSE")
 
 fun Application.configureSSE() {
-    if (Push.disable) {
-        logger.info("Push notifications are disabled; SSE will not be configured.")
-        return
-    }
-
     install(SSE)
 }
 

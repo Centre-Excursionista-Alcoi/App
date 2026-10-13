@@ -1,7 +1,6 @@
-package org.centrexcursionistalcoi.app.security
+package org.centrexcursionistalcoi.app.security.crypto
 
 import java.io.File
-import java.security.SecureRandom
 import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -89,7 +88,7 @@ object AES {
 
         // Generate a random IV
         val iv = ByteArray(16)
-        SecureRandom().nextBytes(iv)
+        RandomValues.secureRandom.nextBytes(iv)
         val ivSpec = IvParameterSpec(iv)
 
         val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")

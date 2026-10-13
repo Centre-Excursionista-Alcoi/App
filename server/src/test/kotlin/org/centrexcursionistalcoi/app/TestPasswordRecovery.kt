@@ -17,7 +17,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.RecoverPasswordRequests
 import org.centrexcursionistalcoi.app.routes.Api
-import org.centrexcursionistalcoi.app.security.Passwords
+import org.centrexcursionistalcoi.app.security.crypto.Passwords
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<translations>
+    <item name="title">Inicia sessió a la CEA App</item>
+    <item name="intro">La CEA App a %s demana iniciar sessió al teu compte.</item>
+    <item name="code_label">Comprova que aquest codi és el que es mostra a l'aplicació:</item>
+    <item name="warning">Si no acabes de demanar iniciar sessió des de l'aplicació, tanca aquesta pàgina.</item>
+    <item name="button">Continua amb la meua passkey</item>
+    <item name="working">Esperant la teua passkey…</item>
+    <item name="done">Fet! Has iniciat sessió. Pots tancar aquesta pàgina i tornar a l'aplicació.</item>
+    <item name="failed">No hem pogut iniciar sessió amb aquesta passkey. Torna-ho a provar.</item>
+    <item name="cancelled">S'ha cancel·lat la petició de la passkey. Torna-ho a provar quan estigues a punt.</item>
+    <item name="unsupported">Aquest navegador no admet passkeys. Obri aquesta pàgina en un altre navegador.</item>
+    <item name="js_required">Aquesta pàgina necessita JavaScript per demanar la teua passkey. Activa JavaScript al navegador, o obri aquesta pàgina en un altre.</item>
+    <item name="expired_title">Aquest inici de sessió ha caducat</item>
+    <item name="expired">Aquesta petició d'inici de sessió ha caducat o ja s'ha utilitzat. Torna a l'aplicació i inicia-la de nou.</item>
+</translations>

@@ -1,7 +1,8 @@
 package org.centrexcursionistalcoi.app.security
 
-import java.security.MessageDigest
-import java.security.SecureRandom
+import org.centrexcursionistalcoi.app.security.crypto.toBase64Url
+import org.centrexcursionistalcoi.app.security.crypto.RandomValues
+import org.centrexcursionistalcoi.app.security.crypto.Hashing
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.serialization.Serializable
@@ -19,22 +20,20 @@ object RegistrationCodes {
     private val validity = 10.minutes
     private const val MAX_ATTEMPTS = 5
 
-    private val secureRandom = SecureRandom()
-
     @Serializable
     private class Stored(val hash: String, val attempts: Int, val expiresAt: Long)
 
     private fun key(email: String) = "registration_code:${email.uppercase()}"
 
     private fun hash(code: String): String =
-        MessageDigest.getInstance("SHA-256").digest(code.toByteArray()).toBase64Url()
+        Hashing.sha256(code).toBase64Url()
 
     /**
      * Creates a new code for [email], replacing any previous one.
      * @return the code, to email.
      */
     suspend fun create(email: String): String {
-        val code = secureRandom.nextInt(1_000_000).toString().padStart(6, '0')
+        val code = RandomValues.digits(6)
         val stored = Stored(hash(code), 0, (Clock.System.now() + validity).toEpochMilliseconds())
         RedisStoreMap.default.put(key(email), json.encodeToString(Stored.serializer(), stored), validity.inWholeSeconds)
         return code
@@ -56,7 +55,7 @@ object RegistrationCodes {
             return false
         }
 
-        val isRight = MessageDigest.isEqual(hash(code.trim()).toByteArray(), stored.hash.toByteArray())
+        val isRight = Hashing.constantTimeEquals(hash(code.trim()), stored.hash)
         if (!isRight) {
             val updated = Stored(stored.hash, stored.attempts + 1, stored.expiresAt)
             RedisStoreMap.default.put(key, json.encodeToString(Stored.serializer(), updated), remaining / 1000 + 1)
