@@ -1,5 +1,19 @@
 package org.centrexcursionistalcoi.app.ui.screen.spaces
 
+import cea_app.composeapp.generated.resources.space_lending_refund_not_online
+import cea_app.composeapp.generated.resources.space_lending_refund_rejected
+import cea_app.composeapp.generated.resources.space_lending_refund_confirm
+import cea_app.composeapp.generated.resources.space_lending_refund_online
+import cea_app.composeapp.generated.resources.space_lending_pay_unavailable
+import cea_app.composeapp.generated.resources.space_lending_pay_check
+import cea_app.composeapp.generated.resources.space_lending_pay_waiting
+import cea_app.composeapp.generated.resources.space_lending_pay_bizum
+import cea_app.composeapp.generated.resources.space_lending_pay_card
+import cea_app.composeapp.generated.resources.space_lending_pay_online_hint
+import cea_app.composeapp.generated.resources.space_lending_pay_online
+import org.centrexcursionistalcoi.app.data.PaymentMethod
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -103,6 +117,10 @@ fun SpaceLendingDetailsScreen(
     val keyTypes by model.keyTypes.collectAsState()
     val profile by model.profile.collectAsState()
     val isWorking by model.isWorking.collectAsState()
+    val paymentIssue by model.paymentIssue.collectAsState()
+    val awaitingPayment by model.awaitingPayment.collectAsState()
+    val uriHandler = LocalUriHandler.current
+    var showRefundConfirmation by rememberSaveable { mutableStateOf(false) }
 
     var showCancelConfirmation by rememberSaveable { mutableStateOf(false) }
     var showAttendeesDialog by rememberSaveable { mutableStateOf(false) }
@@ -254,6 +272,48 @@ fun SpaceLendingDetailsScreen(
                 }
             }
 
+            // Payment online, by the owner, once the keys are back
+            if (isOwner && stage == SpaceLendingStage.RETURNED && lending.totalPrice > 0 && model.paymentMethods.isNotEmpty()) {
+                item("payment_online") {
+                    OnlinePaymentSection(
+                        price = formatPrice(lending.totalPrice),
+                        bizum = PaymentMethod.BIZUM in model.paymentMethods,
+                        isWorking = isWorking,
+                        awaiting = awaitingPayment,
+                        onPay = { method -> model.pay(method, uriHandler::openUri) },
+                        onCheck = model::checkPayment,
+                    )
+                }
+            }
+            if (paymentIssue != null) {
+                item("payment_issue") {
+                    Text(
+                        stringResource(
+                            when (paymentIssue) {
+                                SpaceLendingDetailsViewModel.PaymentIssue.GATEWAY_UNAVAILABLE -> Res.string.space_lending_pay_unavailable
+                                SpaceLendingDetailsViewModel.PaymentIssue.REFUND_REJECTED -> Res.string.space_lending_refund_rejected
+                                else -> Res.string.space_lending_refund_not_online
+                            }
+                        ),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
+            }
+            // A manager can return what was paid online
+            if (isManager && lending.paymentStatus == PaymentStatus.COMPLETED) {
+                item("refund_online") {
+                    OutlinedButton(
+                        onClick = { showRefundConfirmation = true },
+                        enabled = !isWorking,
+                        modifier = Modifier.padding(top = 8.dp),
+                    ) {
+                        Text(stringResource(Res.string.space_lending_refund_online))
+                    }
+                }
+            }
+
             // Payment: by bank transfer, attaching the confirmation
             if ((isOwner || isManager) && stage != SpaceLendingStage.CANCELLED && stage != SpaceLendingStage.PAID && lending.totalPrice > 0) {
                 item("payment") {
@@ -312,6 +372,23 @@ fun SpaceLendingDetailsScreen(
                 onConfirm = {
                     showReturnDialog = false
                     model.returnKeys(it)
+                },
+            )
+        }
+        if (showRefundConfirmation) {
+            AlertDialog(
+                onDismissRequest = { showRefundConfirmation = false },
+                text = { Text(stringResource(Res.string.space_lending_refund_confirm)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showRefundConfirmation = false
+                        model.refundOnline()
+                    }) { Text(stringResource(Res.string.space_lending_refund_online)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showRefundConfirmation = false }) {
+                        Text(stringResource(Res.string.space_lending_dismiss))
+                    }
                 },
             )
         }
@@ -378,6 +455,41 @@ private fun AttendeesDialog(
             TextButton(onClick = onDismiss) { Text(stringResource(Res.string.space_lending_dismiss)) }
         },
     )
+}
+
+@Composable
+private fun OnlinePaymentSection(
+    price: String,
+    bizum: Boolean,
+    isWorking: Boolean,
+    awaiting: Boolean,
+    onPay: (PaymentMethod) -> Unit,
+    onCheck: () -> Unit,
+) {
+    Column(modifier = Modifier.padding(top = 16.dp)) {
+        Text(stringResource(Res.string.space_lending_pay_online), style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(Res.string.space_lending_pay_online_hint, price), style = MaterialTheme.typography.bodySmall)
+        Row(modifier = Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { onPay(PaymentMethod.CARD) }, enabled = !isWorking) {
+                Text(stringResource(Res.string.space_lending_pay_card))
+            }
+            if (bizum) {
+                Button(onClick = { onPay(PaymentMethod.BIZUM) }, enabled = !isWorking) {
+                    Text(stringResource(Res.string.space_lending_pay_bizum))
+                }
+            }
+        }
+        if (awaiting) {
+            Text(
+                stringResource(Res.string.space_lending_pay_waiting),
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            OutlinedButton(onClick = onCheck, enabled = !isWorking) {
+                Text(stringResource(Res.string.space_lending_pay_check))
+            }
+        }
+    }
 }
 
 @Composable

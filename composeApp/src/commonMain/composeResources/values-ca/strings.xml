@@ -786,4 +786,15 @@
     </plurals>
     <string name="space_lending_attendees_hint">Canvia les persones que finalment han acudit abans de pagar.</string>
     <string name="sync_step_space_keys">Claus d'Espais</string>
+    <string name="space_lending_pay_online">Pagar en línia</string>
+    <string name="space_lending_pay_online_hint">Paga %1$s amb targeta o Bizum. Completaràs el pagament al navegador.</string>
+    <string name="space_lending_pay_card">Pagar amb targeta</string>
+    <string name="space_lending_pay_bizum">Pagar amb Bizum</string>
+    <string name="space_lending_pay_waiting">Completa el pagament al navegador i comprova'l aquí.</string>
+    <string name="space_lending_pay_check">Comprovar el pagament</string>
+    <string name="space_lending_pay_unavailable">Els pagaments en línia no estan disponibles ara mateix. Torna-ho a provar més tard o paga per transferència bancària.</string>
+    <string name="space_lending_refund_online">Retornar el pagament en línia</string>
+    <string name="space_lending_refund_confirm">Els diners es tornaran a la targeta o al compte de Bizum amb què es va pagar. Continuar?</string>
+    <string name="space_lending_refund_rejected">El proveïdor de pagaments ha rebutjat la devolució. Torna-ho a provar més tard o retorna-la des del portal de Redsys.</string>
+    <string name="space_lending_refund_not_online">Aquest préstec no s'ha pagat en línia, així que no hi ha res a retornar des d'aquí.</string>
 </resources>

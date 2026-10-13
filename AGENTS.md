@@ -426,7 +426,10 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   lending's stored `totalPrice`, never recomputed). It answers a `PaymentLaunch` whose `url` is `/pay?id=...` (a web-only
   path): the app can't `POST` a provider's form, so that page (`PaymentLaunches`, in memory) submits it from a browser.
   `SpaceLendingPayments` keeps the lending's `paymentStatus` in line with its transactions (paid when one completes,
-  refunded when refunded); a manager refunds with `POST /space_lendings/{id}/refund`. `/info` lists `paymentMethods`.
+  refunded when refunded); a manager refunds with `POST /space_lendings/{id}/refund`. `/info` lists `paymentMethods`. In
+  the app, `SpaceLendingDetailsScreen` offers card (and Bizum, if listed) to the owner once the keys are back, opens the
+  returned URL with the platform's URI handler, and lets them check the result (the server also updates the lending, which
+  syncs). A 503 (`ERROR_PAYMENT_GATEWAY_UNAVAILABLE`) is shown as a message (`PaymentIssue`), never the generic error dialog.
 - Auth routes are rate-limited per client IP (`plugins/RateLimits.kt`); limits are lifted when `isTesting`.
 - In server tests, `loginAsFakeUser()`/`loginAs(user)` start a real session for the user (creating it if needed)
   and make the test client send its access token with every request; `logout()` stops that. To test the token

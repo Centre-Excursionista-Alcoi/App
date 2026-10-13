@@ -13,6 +13,8 @@ import io.ktor.http.isSuccess
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.Category
+import org.centrexcursionistalcoi.app.data.PaymentLaunch
+import org.centrexcursionistalcoi.app.data.PaymentMethod
 import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.data.SpaceLending
 import org.centrexcursionistalcoi.app.data.SpaceOccupancy
@@ -24,6 +26,7 @@ import org.centrexcursionistalcoi.app.process.Progress.Companion.monitorUploadPr
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
 import org.centrexcursionistalcoi.app.request.AttachPaymentProofRequest
 import org.centrexcursionistalcoi.app.request.CreateSpaceLendingRequest
+import org.centrexcursionistalcoi.app.request.PaySpaceLendingRequest
 import org.centrexcursionistalcoi.app.request.PickupSpaceLendingRequest
 import org.centrexcursionistalcoi.app.request.ReturnSpaceLendingRequest
 import org.centrexcursionistalcoi.app.request.SetSpaceLendingPaymentRequest
@@ -171,6 +174,28 @@ class SpaceLendingsRemoteRepository(
             setBody(json.encodeToString(ReturnSpaceLendingRequest.serializer(), ReturnSpaceLendingRequest(keys)))
             monitorUploadProgress(progress)
         }
+        if (!response.status.isSuccess()) throw response.bodyAsError().toThrowable()
+        refresh(lendingId, progress)
+    }
+
+    /**
+     * Starts the online payment of a lending, once its keys are back.
+     * @return Where to open, in a browser, to pay.
+     * @throws org.centrexcursionistalcoi.app.exception.ServerException with
+     * [org.centrexcursionistalcoi.app.error.Error.ERROR_PAYMENT_GATEWAY_UNAVAILABLE] if payments can't be taken now.
+     */
+    suspend fun startPayment(lendingId: Uuid, method: PaymentMethod = PaymentMethod.ANY, phone: String? = null): PaymentLaunch {
+        val response = httpClient.post(Api.SpaceLendings.Id.Pay(id(lendingId))) {
+            contentType(ContentType.Application.Json)
+            setBody(json.encodeToString(PaySpaceLendingRequest.serializer(), PaySpaceLendingRequest(method, phone)))
+        }
+        if (!response.status.isSuccess()) throw response.bodyAsError().toThrowable()
+        return json.decodeFromString(PaymentLaunch.serializer(), response.bodyAsText())
+    }
+
+    /** For managers: returns the money of a lending that was paid online. */
+    suspend fun refund(lendingId: Uuid, progress: ProgressNotifier? = null) {
+        val response = httpClient.post(Api.SpaceLendings.Id.Refund(id(lendingId)))
         if (!response.status.isSuccess()) throw response.bodyAsError().toThrowable()
         refresh(lendingId, progress)
     }
