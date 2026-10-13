@@ -740,6 +740,7 @@
     <string name="payment_status_completed">Paid</string>
     <string name="payment_status_failed">Failed</string>
     <string name="payment_status_refunded">Refunded</string>
+    <string name="payment_status_cancelled">Cancelled</string>
     <string name="space_lending_stage_created">Booked</string>
     <string name="space_lending_stage_picked_up">Keys picked up</string>
     <string name="space_lending_stage_returned">Keys returned</string>

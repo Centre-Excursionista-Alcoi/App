@@ -4,5 +4,8 @@ enum class PaymentStatus {
     PENDING,
     COMPLETED,
     FAILED,
-    REFUNDED
+    REFUNDED,
+
+    /** Voided before the money was taken (or, for methods that can't be voided, returned). */
+    CANCELLED,
 }

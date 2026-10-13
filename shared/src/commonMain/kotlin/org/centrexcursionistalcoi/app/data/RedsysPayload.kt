@@ -58,4 +58,12 @@ data class RedsysPayload(
     val merchantData: String? = null
 ) : PaymentPayload {
     override val orderId: String get() = order
+
+    override fun sanitized(): RedsysPayload = copy(cardNumber = cardNumber?.let(::maskCardNumber))
+}
+
+/** `****1234`, or `null` if there isn't a card number to keep four digits of. */
+private fun maskCardNumber(number: String): String? {
+    val digits = number.filter(Char::isDigit)
+    return if (digits.length < 4) null else "****" + digits.takeLast(4)
 }

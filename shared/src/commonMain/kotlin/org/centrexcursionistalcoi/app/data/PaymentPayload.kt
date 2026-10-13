@@ -12,4 +12,10 @@ import org.centrexcursionistalcoi.app.serializer.PaymentPayloadSerializer
 sealed interface PaymentPayload {
     /** Identifies the payment in the provider, matches `Transactions.orderId`. */
     val orderId: String
+
+    /**
+     * A copy that is safe to store: nothing that identifies the payer's card, other than its last four digits to help
+     * with support. Providers return only sanitized payloads.
+     */
+    fun sanitized(): PaymentPayload
 }

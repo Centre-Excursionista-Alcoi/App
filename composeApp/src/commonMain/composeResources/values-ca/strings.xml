@@ -675,6 +675,7 @@
     <string name="management_space_lendings_empty">No hi ha cap préstec d'espai.</string>
     <string name="spaces_price_free">Debades</string>
     <string name="payment_status_refunded">Retornat</string>
+    <string name="payment_status_cancelled">Cancel·lat</string>
     <string name="spaces_book_short">Llogar</string>
     <string name="space_lending_pickup">Donar les claus</string>
     <string name="spaces_tab">Espais</string>

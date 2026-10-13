@@ -400,6 +400,15 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   SSE and redeems the tokens once at `.../redeem`, so they never reach the browser. Requests live in memory only: this
   assumes a single server instance. The SSE server plugin is installed even with push disabled, for this. `/browser-login`
   is a web-only path (see `WEB_ONLY_PATHS`).
+- **Payments go through `PaymentProvider`** (`server/.../payment/`), never a provider's SDK or format directly. A provider
+  creates an opaque `PaymentReference` with each payment (stored in `Transactions.reference`, looked up by
+  `referenceKey`) and gets it back to refund or cancel, so callers never see its order-number format. `PaymentRequest`
+  and `Transactions` hold the amount in euro **cents** (`Int`), fixed when the payment starts: prices change over time,
+  never recalculate it. `PaymentReference` and `PaymentPayload` are stored with no type tag and told apart by their
+  fields (`PaymentReferenceSerializer`/`PaymentPayloadSerializer`: add a branch with a field only the new provider has).
+  Providers return only `sanitized()` payloads (card number reduced to its last four digits). A provider that isn't
+  configured is just not in `PaymentProviders`: the server starts anyway and anything needing one answers `503`
+  (`Error.PaymentGatewayUnavailable`, with `Retry-After`) via `PaymentGatewayUnavailableException`.
 - Auth routes are rate-limited per client IP (`plugins/RateLimits.kt`); limits are lifted when `isTesting`.
 - In server tests, `loginAsFakeUser()`/`loginAs(user)` start a real session for the user (creating it if needed)
   and make the test client send its access token with every request; `logout()` stops that. To test the token
