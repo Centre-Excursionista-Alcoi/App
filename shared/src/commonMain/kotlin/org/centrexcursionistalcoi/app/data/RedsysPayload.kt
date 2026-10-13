@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.data
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/** The notification Redsys sends about a payment. Recognised by [PaymentPayloadSerializer] by its `Ds_*` fields. */
 @Serializable
 data class RedsysPayload(
     @SerialName("Ds_Order")
@@ -55,4 +56,6 @@ data class RedsysPayload(
 
     @SerialName("Ds_MerchantData")
     val merchantData: String? = null
-)
+) : PaymentPayload {
+    override val orderId: String get() = order
+}
