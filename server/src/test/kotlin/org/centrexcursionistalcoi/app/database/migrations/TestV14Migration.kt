@@ -17,13 +17,15 @@ class TestV14Migration : PostgresTestBase() {
         // Create the current schema, then simulate a pre-V14 database: the column is named after Redsys.
         Database.init()
         Database.exec("""ALTER TABLE transactions RENAME COLUMN payload TO "redsysPayload"""").assertTrue()
-        Database.exec(
-            """
-                INSERT INTO transactions (id, "orderId", amount, status, "redsysPayload")
-                VALUES (gen_random_uuid(), '1234', 10, 'COMPLETED',
-                    '{"Ds_Order":"1234","Ds_Response":"0000","Ds_Amount":"1000","Ds_Currency":"978","Ds_MerchantCode":"1","Ds_Terminal":"1","Ds_TransactionType":"0"}')
-            """.trimIndent()
-        ).assertTrue()
+        Database {
+            exec(
+                """
+                    INSERT INTO transactions (id, "orderId", amount, status, "redsysPayload")
+                    VALUES (gen_random_uuid(), '1234', 10, 'COMPLETED',
+                        '{"Ds_Order":"1234","Ds_Response":"0000","Ds_Amount":"1000","Ds_Currency":"978","Ds_MerchantCode":"1","Ds_Terminal":"1","Ds_TransactionType":"0"}')
+                """.trimIndent()
+            )
+        }
 
         Database { V14.migrate() }
 
