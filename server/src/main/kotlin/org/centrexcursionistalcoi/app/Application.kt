@@ -24,6 +24,7 @@ import org.centrexcursionistalcoi.app.plugins.configureRateLimits
 import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.configureSSE
 import org.centrexcursionistalcoi.app.plugins.configureSentryTracing
+import org.centrexcursionistalcoi.app.payment.configurePayments
 import org.centrexcursionistalcoi.app.plugins.configureStatusPages
 import org.centrexcursionistalcoi.app.plugins.configureUploadsCleanup
 import org.centrexcursionistalcoi.app.security.crypto.AES
@@ -128,6 +129,9 @@ fun main() {
 
     // Migrate PDFs if needed
     PdfGeneratorService.updateMemoriesIfNeeded()
+
+    // Payment providers (Redsys). Never blocks the start: without one, payments answer 503
+    configurePayments()
 
     // Initialize Push Notification service - Firebase Cloud Messaging
     Push.initFCM()

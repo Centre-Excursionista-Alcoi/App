@@ -39,6 +39,14 @@ object Api {
         }
     }
 
+    /** Called by payment providers, not by the app. */
+    @Resource("/payments")
+    class Payments {
+        /** Redsys reports the result of a payment here (form-encoded, signed). */
+        @Resource("redsys/notification")
+        class RedsysNotification(val parent: Payments = Payments())
+    }
+
     @Resource("/register")
     class Register {
         /** Emails the code that proves the email is the user's, needed to register. */

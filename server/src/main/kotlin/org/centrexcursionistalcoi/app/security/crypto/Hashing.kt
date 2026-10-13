@@ -1,6 +1,8 @@
 package org.centrexcursionistalcoi.app.security.crypto
 
 import java.security.MessageDigest
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 /**
  * Message digests and comparing them. Passwords have their own, slow hash: see [Passwords].
@@ -14,6 +16,10 @@ object Hashing {
 
     /** A SHA-256 digest to feed with [MessageDigest.update], for what can't be held in memory at once. */
     fun newSha256(): MessageDigest = MessageDigest.getInstance(SHA_256)
+
+    /** The HMAC-SHA512 of [data] with [key]. */
+    fun hmacSha512(key: ByteArray, data: ByteArray): ByteArray =
+        Mac.getInstance("HmacSHA512").apply { init(SecretKeySpec(key, "HmacSHA512")) }.doFinal(data)
 
     /**
      * Whether [a] and [b] are equal, in a time that doesn't depend on where they differ: use it, rather than `==`,
