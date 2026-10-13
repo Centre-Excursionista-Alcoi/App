@@ -39,6 +39,13 @@ object Api {
         }
     }
 
+    /**
+     * The page that sends the user to pay (`GET /pay?id=...`), opened in a browser: the form of a provider can't be
+     * sent from the app. Not an API route, a web page (see `WEB_ONLY_PATHS`).
+     */
+    @Resource("/pay")
+    class PaymentLaunch(val id: String? = null)
+
     /** Called by payment providers, not by the app. */
     @Resource("/payments")
     class Payments {
@@ -307,6 +314,14 @@ object Api {
 
             @Resource("payment")
             class Payment(val parent: Id)
+
+            /** The user pays the lending online: starts a payment and answers where to open to complete it. */
+            @Resource("pay")
+            class Pay(val parent: Id)
+
+            /** A manager returns the money of a lending that was paid online. */
+            @Resource("refund")
+            class Refund(val parent: Id)
 
             /** A manager hands the keys over: from then on the lending cannot be changed. */
             @Resource("pickup")

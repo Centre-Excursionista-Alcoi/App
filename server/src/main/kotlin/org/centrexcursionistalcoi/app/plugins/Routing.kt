@@ -16,6 +16,7 @@ import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
+import org.centrexcursionistalcoi.app.payment.PaymentProviders
 import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.routes.appLinkFallbackRoutes
 import org.centrexcursionistalcoi.app.routes.departmentsRoutes
@@ -129,6 +130,7 @@ fun Application.configureRouting() {
                 ),
                 lastCEASync = lastCEASync,
                 lastFEMECVSync = lastFEMECVSync,
+                paymentMethods = PaymentProviders.methods(),
             ))
         }
     }

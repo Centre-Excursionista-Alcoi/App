@@ -1,5 +1,32 @@
 package org.centrexcursionistalcoi.app.plugins
 
+import org.centrexcursionistalcoi.app.translation.locale
+import org.centrexcursionistalcoi.app.translation.DocumentRedactor
+import org.centrexcursionistalcoi.app.routes.WebTemplate
+import org.centrexcursionistalcoi.app.payment.PaymentSession
+import org.centrexcursionistalcoi.app.payment.PaymentLaunches
+import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
+import kotlinx.html.title
+import kotlinx.html.script
+import kotlinx.html.p
+import kotlinx.html.meta
+import kotlinx.html.link
+import kotlinx.html.input
+import kotlinx.html.img
+import kotlinx.html.id
+import kotlinx.html.head
+import kotlinx.html.h1
+import kotlinx.html.form
+import kotlinx.html.div
+import kotlinx.html.button
+import kotlinx.html.body
+import kotlinx.html.InputType
+import kotlinx.html.FormMethod
+import kotlinx.html.ButtonType
+import io.ktor.server.response.respondText
+import io.ktor.server.response.respondRedirect
+import io.ktor.server.resources.get
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.resources.post
@@ -19,9 +46,72 @@ import org.slf4j.LoggerFactory
 private val logger = LoggerFactory.getLogger("PaymentRoutes")
 
 /**
+ * The page the app opens in a browser to send the user to pay. A provider whose payment is a form (Redsys) needs a
+ * `POST` the app can't make, so the form is on this page and submitted by `payment-launch.js`; the button is there
+ * for when JavaScript is off.
+ */
+@OptIn(ExperimentalXmlUtilApi::class)
+private object PaymentLaunchPage : WebTemplate("pay") {
+    override fun DocumentRedactor.render(args: Map<String, String?>): String = html {
+        head {
+            meta(charset = "utf-8")
+            meta(name = "viewport", content = "width=device-width, initial-scale=1")
+            meta(name = "robots", content = "noindex")
+            title { +t("title") }
+            link(rel = "stylesheet", href = "/static/app-links.css")
+            link(rel = "stylesheet", href = "/static/verify.css")
+        }
+        body {
+            div("card") {
+                img(classes = "icon", src = "/static/app-icon.png", alt = "")
+                val url = args["url"]
+                if (url == null) {
+                    h1 { tr("expired_title") }
+                    p("result error") {
+                        attributes["role"] = "status"
+                        tr("expired")
+                    }
+                } else {
+                    h1 { tr("title") }
+                    p { tr("redirecting") }
+                    form(action = url, method = FormMethod.post) {
+                        id = "pay"
+                        for ((name, value) in launchFields(args)) {
+                            input(type = InputType.hidden, name = name) { this.value = value }
+                        }
+                        button(type = ButtonType.submit, classes = "cta") { tr("button") }
+                    }
+                    script(src = "/static/payment-launch.js") { defer = true }
+                }
+            }
+        }
+    }
+
+    private fun launchFields(args: Map<String, String?>): List<Pair<String, String>> =
+        args.filterKeys { it.startsWith(FIELD_PREFIX) }.mapNotNull { (key, value) -> value?.let { key.removePrefix(FIELD_PREFIX) to it } }
+
+    val FIELD_PREFIX = "field:"
+}
+
+/**
  * What payment providers call. Public: a notification is trusted by its signature, never by who sent it.
  */
 fun Route.paymentRoutes() {
+    get<Api.PaymentLaunch> { resource ->
+        val launch = resource.id?.let { PaymentLaunches[it] }
+        when (val session = launch?.session) {
+            is PaymentSession.Redirect -> call.respondRedirect(session.url)
+            is PaymentSession.Form -> call.respondText(
+                PaymentLaunchPage.render(
+                    call.request.locale(),
+                    mapOf("url" to session.url) + session.fields.mapKeys { PaymentLaunchPage.FIELD_PREFIX + it.key },
+                ),
+                ContentType.Text.Html,
+            )
+            null -> call.respondText(PaymentLaunchPage.render(call.request.locale(), emptyMap()), ContentType.Text.Html, HttpStatusCode.NotFound)
+        }
+    }
+
     post<Api.Payments.RedsysNotification> {
         val provider = PaymentProviders[RedsysReference.PROVIDER]
             ?: throw PaymentGatewayUnavailableException("Redsys is not configured")

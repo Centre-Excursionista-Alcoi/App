@@ -422,6 +422,11 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   endpoint (`PaymentTransactions.refund`/`cancel`): a payment that can't be voided (Bizum) is refunded instead, and a
   Redsys outage is `PaymentGatewayUnavailableException` (503), not a refusal. Both need the amount, which the provider
   doesn't remember: it comes from the transaction.
+- **Space lendings are paid online once their keys are back** (`POST /space_lendings/{id}/pay`, owner only; the price is the
+  lending's stored `totalPrice`, never recomputed). It answers a `PaymentLaunch` whose `url` is `/pay?id=...` (a web-only
+  path): the app can't `POST` a provider's form, so that page (`PaymentLaunches`, in memory) submits it from a browser.
+  `SpaceLendingPayments` keeps the lending's `paymentStatus` in line with its transactions (paid when one completes,
+  refunded when refunded); a manager refunds with `POST /space_lendings/{id}/refund`. `/info` lists `paymentMethods`.
 - Auth routes are rate-limited per client IP (`plugins/RateLimits.kt`); limits are lifted when `isTesting`.
 - In server tests, `loginAsFakeUser()`/`loginAs(user)` start a real session for the user (creating it if needed)
   and make the test client send its access token with every request; `logout()` stops that. To test the token

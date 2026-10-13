@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<translations>
+    <item name="title">Pago</item>
+    <item name="redirecting">Te llevamos a la página de pago…</item>
+    <item name="button">Continuar a la página de pago</item>
+    <item name="expired_title">Este enlace de pago ha caducado</item>
+    <item name="expired">Vuelve a la aplicación e inicia el pago de nuevo.</item>
+</translations>

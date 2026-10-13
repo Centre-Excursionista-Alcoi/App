@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<translations>
+    <item name="title">Pagament</item>
+    <item name="redirecting">Et portem a la pàgina de pagament…</item>
+    <item name="button">Continuar a la pàgina de pagament</item>
+    <item name="expired_title">Aquest enllaç de pagament ha caducat</item>
+    <item name="expired">Torna a l'aplicació i inicia el pagament de nou.</item>
+</translations>

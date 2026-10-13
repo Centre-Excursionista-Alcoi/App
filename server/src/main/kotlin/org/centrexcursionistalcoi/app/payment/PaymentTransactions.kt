@@ -20,6 +20,16 @@ import org.slf4j.LoggerFactory
 object PaymentTransactions {
     private val logger = LoggerFactory.getLogger("PaymentTransactions")
 
+    private val listeners = java.util.concurrent.ConcurrentHashMap<String, suspend (Applied) -> Unit>()
+
+    /**
+     * Calls [listener] whenever a transaction changes status, for whatever links it to what is being paid. Registering
+     * again under the same [name] replaces the listener.
+     */
+    fun listen(name: String, listener: suspend (Applied) -> Unit) {
+        listeners[name] = listener
+    }
+
     /** A payment that was started: send the user to [session]. */
     data class Started(val transactionId: Uuid, val session: PaymentSession)
 
@@ -64,7 +74,22 @@ object PaymentTransactions {
      * nothing, so it's safe to receive it more than once.
      * @return `null` if there is no transaction for the reference.
      */
-    fun apply(result: PaymentResult): Applied? = Database {
+    suspend fun apply(result: PaymentResult): Applied? {
+        val applied = record(result) ?: return null
+        if (applied.changed) {
+            for ((name, listener) in listeners) {
+                try {
+                    listener(applied)
+                } catch (e: Exception) {
+                    // The transaction is recorded: a listener failing must not make the provider retry or the refund fail
+                    logger.error("Listener $name failed for transaction ${applied.transactionId}", e)
+                }
+            }
+        }
+        return applied
+    }
+
+    private fun record(result: PaymentResult): Applied? = Database {
         val row = Transactions.selectAll().where { Transactions.referenceKey eq result.reference.key }.singleOrNull()
             ?: return@Database null
         val id = row[Transactions.id].value
@@ -87,7 +112,7 @@ object PaymentTransactions {
      */
     suspend fun refund(transactionId: Uuid): PaymentResult {
         val (reference, amountCents) = load(transactionId, PaymentStatus.COMPLETED)
-        return PaymentProviders.of(reference).refund(reference, amountCents).also(::apply)
+        return PaymentProviders.of(reference).refund(reference, amountCents).also { apply(it) }
     }
 
     /**
@@ -96,7 +121,7 @@ object PaymentTransactions {
      */
     suspend fun cancel(transactionId: Uuid): PaymentResult {
         val (reference, amountCents) = load(transactionId, PaymentStatus.PENDING, PaymentStatus.COMPLETED)
-        return PaymentProviders.of(reference).cancel(reference, amountCents).also(::apply)
+        return PaymentProviders.of(reference).cancel(reference, amountCents).also { apply(it) }
     }
 
     private fun load(transactionId: Uuid, vararg allowed: PaymentStatus): Pair<PaymentReference, Int> = Database {
