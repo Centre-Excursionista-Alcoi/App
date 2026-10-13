@@ -1,7 +1,7 @@
 package org.centrexcursionistalcoi.app.database.migrations
 
 import java.util.Base64
-import org.centrexcursionistalcoi.app.security.AES
+import org.centrexcursionistalcoi.app.security.crypto.AES
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcConnectionImpl
 

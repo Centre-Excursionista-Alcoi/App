@@ -1,4 +1,4 @@
-package org.centrexcursionistalcoi.app.security
+package org.centrexcursionistalcoi.app.security.crypto
 
 import kotlin.test.Test
 import kotlin.test.assertFalse

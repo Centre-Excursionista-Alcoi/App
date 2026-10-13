@@ -40,11 +40,11 @@ import org.centrexcursionistalcoi.app.plugins.RateLimits
 import org.centrexcursionistalcoi.app.plugins.recordAuthEvent
 import org.centrexcursionistalcoi.app.plugins.respondAuthError
 import org.centrexcursionistalcoi.app.security.AssertionVerification
-import org.centrexcursionistalcoi.app.security.Passwords
+import org.centrexcursionistalcoi.app.security.crypto.Passwords
 import org.centrexcursionistalcoi.app.security.UserSession
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.generateWebAuthnChallenge
-import org.centrexcursionistalcoi.app.security.toBase64Url
+import org.centrexcursionistalcoi.app.security.crypto.toBase64Url
 import org.centrexcursionistalcoi.app.security.verifyAssertion
 import org.centrexcursionistalcoi.app.security.verifyRegistration
 import org.centrexcursionistalcoi.app.security.webAuthnRpId

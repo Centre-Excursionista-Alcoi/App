@@ -1,7 +1,14 @@
 package org.centrexcursionistalcoi.app.auth
 
 import com.diamondedge.logging.logging
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.firstOrNull
+import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.sse.SSE
+import io.ktor.client.plugins.sse.sse
+import io.ktor.client.request.header
 import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.setBody
@@ -10,6 +17,12 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.http.parameters
+import org.centrexcursionistalcoi.app.BuildKonfig
+import org.centrexcursionistalcoi.app.data.BROWSER_LOGIN_APPROVED_EVENT
+import org.centrexcursionistalcoi.app.data.BROWSER_LOGIN_EXPIRED_EVENT
+import org.centrexcursionistalcoi.app.data.BROWSER_LOGIN_SECRET_HEADER
+import org.centrexcursionistalcoi.app.data.BrowserLoginRequest
+import org.centrexcursionistalcoi.app.data.BrowserLoginStartRequest
 import org.centrexcursionistalcoi.app.data.PasskeyRegistrationOptionsRequest
 import org.centrexcursionistalcoi.app.data.PasskeyRegistrationRequest
 import org.centrexcursionistalcoi.app.data.RefreshTokenRequest
@@ -18,6 +31,7 @@ import org.centrexcursionistalcoi.app.data.RestoreKeyVerificationRequest
 import org.centrexcursionistalcoi.app.data.TokenResponse
 import org.centrexcursionistalcoi.app.database.AppDatabase
 import org.centrexcursionistalcoi.app.error.bodyAsError
+import org.centrexcursionistalcoi.app.network.configureLogging
 import org.centrexcursionistalcoi.app.network.getHttpClient
 import org.centrexcursionistalcoi.app.network.resource
 import org.centrexcursionistalcoi.app.push.FCMTokenManager
@@ -25,6 +39,8 @@ import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.settings.SettingsStore
 import org.centrexcursionistalcoi.app.storage.fs.FileSystem
 import org.koin.core.annotation.Singleton
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 @Singleton
 class AuthBackend(
@@ -156,6 +172,71 @@ class AuthBackend(
         }
         if (response.status.isSuccess()) {
             log.d { "Passkey login successful." }
+            onLoggedIn(response.body<TokenResponse>())
+        } else {
+            throw response.bodyAsError().toThrowable()
+        }
+    }
+
+    /**
+     * Starts signing in with a passkey in the user's browser (see [PlatformBrowserLogin]): the caller opens
+     * [BrowserLoginRequest.url], and then [awaitBrowserLogin]s the result.
+     */
+    suspend fun startBrowserLogin(deviceName: String): BrowserLoginRequest {
+        val response = getHttpClient().post(Api.Auth.Browser()) {
+            skipSessionAuth()
+            contentType(ContentType.Application.Json)
+            setBody(BrowserLoginStartRequest(deviceName))
+        }
+        if (!response.status.isSuccess()) throw response.bodyAsError().toThrowable()
+        return response.body<BrowserLoginRequest>()
+    }
+
+    // Own client: only this one listens for server events (SSE), and it doesn't use the session.
+    private val browserLoginClient by lazy {
+        HttpClient {
+            defaultRequest { url(BuildKonfig.SERVER_URL) }
+            install(SSE)
+            configureLogging()
+        }
+    }
+
+    /**
+     * Waits, without polling, for the server to tell the user signed in in their browser: it sends an event through
+     * SSE as soon as they do. Reconnects if the connection drops, until the request expires.
+     * @return `true` if the user signed in; `false` if the request expired first.
+     * @throws io.ktor.client.plugins.sse.SSEClientException if the server can't be reached or refuses the request.
+     */
+    suspend fun awaitBrowserLogin(request: BrowserLoginRequest): Boolean {
+        val deadline = TimeSource.Monotonic.markNow() + request.expiresIn.seconds
+        while (deadline.hasNotPassedNow()) {
+            var approved: Boolean? = null
+            browserLoginClient.sse(
+                "/auth/browser/${request.id}/events",
+                request = { header(BROWSER_LOGIN_SECRET_HEADER, request.secret) },
+            ) {
+                approved = incoming
+                    .firstOrNull { it.event == BROWSER_LOGIN_APPROVED_EVENT || it.event == BROWSER_LOGIN_EXPIRED_EVENT }
+                    ?.let { it.event == BROWSER_LOGIN_APPROVED_EVENT }
+            }
+            approved?.let { return it }
+            log.w { "The browser login events stream ended before the login did. Reconnecting..." }
+            delay(1.seconds)
+        }
+        return false
+    }
+
+    /** Gets the tokens of a browser login the user approved (see [awaitBrowserLogin]), and logs in with them. */
+    suspend fun finishBrowserLogin(request: BrowserLoginRequest) {
+        // Clear storage before logging in, so nothing from a previous account is left behind
+        settings.clear()
+
+        val response = getHttpClient().post(Api.Auth.Browser.Redeem(request.id)) {
+            skipSessionAuth()
+            header(BROWSER_LOGIN_SECRET_HEADER, request.secret)
+        }
+        if (response.status.isSuccess()) {
+            log.d { "Browser login successful." }
             onLoggedIn(response.body<TokenResponse>())
         } else {
             throw response.bodyAsError().toThrowable()

@@ -50,7 +50,7 @@ import org.centrexcursionistalcoi.app.routes.WebTemplate.Companion.respondTempla
 import org.centrexcursionistalcoi.app.routes.assertContentType
 import org.centrexcursionistalcoi.app.security.AuthTokens
 import org.centrexcursionistalcoi.app.security.EmailValidation
-import org.centrexcursionistalcoi.app.security.Passwords
+import org.centrexcursionistalcoi.app.security.crypto.Passwords
 import org.centrexcursionistalcoi.app.security.RegistrationCodes
 import org.centrexcursionistalcoi.app.security.UserSession.Companion.getUserSessionOrFail
 import org.centrexcursionistalcoi.app.security.webAuthnRoutes

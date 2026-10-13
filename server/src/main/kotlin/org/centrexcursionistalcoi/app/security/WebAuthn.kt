@@ -1,5 +1,8 @@
 package org.centrexcursionistalcoi.app.security
 
+import org.centrexcursionistalcoi.app.security.crypto.toBase64Url
+import org.centrexcursionistalcoi.app.security.crypto.fromBase64Url
+import org.centrexcursionistalcoi.app.security.crypto.RandomValues
 import com.webauthn4j.WebAuthnManager
 import com.webauthn4j.credential.CredentialRecordImpl
 import com.webauthn4j.data.AuthenticationParameters
@@ -19,8 +22,6 @@ import org.centrexcursionistalcoi.app.database.table.UserCredentialRecords
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.routes.WellKnownConfigProvider
 import org.centrexcursionistalcoi.app.storage.RedisStoreMap
-import java.security.SecureRandom
-import java.util.Base64
 import kotlin.time.Clock
 
 // Use the non-strict manager to bypass hardware attestation certificate checks -- this app doesn't need to know
@@ -52,23 +53,10 @@ val webAuthnRpId: String get() = AppLinks.host
  */
 val webAuthnOrigins: Set<Origin> get() = WellKnownConfigProvider.sha256CertFingerprints.map { fingerprint ->
     val bytes = fingerprint.replace(":", "").hexToByteArray()
-    val base64Url = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
-    Origin.create("android:apk-key-hash:$base64Url")
+    Origin.create("android:apk-key-hash:${bytes.toBase64Url()}")
 }.toSet() + Origin.create("https://$webAuthnRpId")
 
-private val secureRandom = SecureRandom()
-
-fun generateWebAuthnChallenge(): DefaultChallenge {
-    // Generate 32 random bytes
-    val randomBytes = ByteArray(32)
-    secureRandom.nextBytes(randomBytes)
-
-    // Wrap it in WebAuthn4J's DefaultChallenge
-    return DefaultChallenge(randomBytes)
-}
-
-/** Base64Url without padding: the encoding WebAuthn uses throughout. */
-fun ByteArray.toBase64Url(): String = Base64.getUrlEncoder().withoutPadding().encodeToString(this)
+fun generateWebAuthnChallenge(): DefaultChallenge = DefaultChallenge(RandomValues.bytes(32))
 
 /** A credential whose registration has been verified, ready to be stored in [UserCredentialRecords]. */
 class RegisteredCredential(
@@ -97,7 +85,7 @@ fun verifyRegistration(
     val serverProperty = ServerProperty.builder()
         .rpId(webAuthnRpId)
         .origins(webAuthnOrigins)
-        .challenge(DefaultChallenge(Base64.getUrlDecoder().decode(challengeBase64Url)))
+        .challenge(DefaultChallenge(challengeBase64Url.fromBase64Url()))
         .build()
 
     val parsed = webAuthnManager.parseRegistrationResponseJSON(registrationResponseJson)

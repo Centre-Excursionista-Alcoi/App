@@ -48,9 +48,14 @@
     <string name="login_existing_account_message">You already have an account saved on this device (%1$s). Log out from it before adding a different one?</string>
     <string name="login_existing_account_logout">Log out</string>
     <string name="login_saved_credential_action">Sign in with a passkey or saved password</string>
+    <string name="login_browser_action">Sign in with your browser</string>
+    <string name="login_browser_title">Finish in your browser</string>
+    <string name="login_browser_message">We opened your browser. Check that the code it shows is the one below, and sign in with your passkey. This window will continue by itself.</string>
+    <string name="login_browser_code">Code</string>
+    <string name="login_error_browser_expired">The sign-in in the browser expired. Try again.</string>
     <string name="login_or_type">Or type your email and password</string>
     <string name="login_error_password_not_set">This account signs in with a passkey, not a password. Tap "Sign in with a passkey or saved password" above.</string>
-    <string name="login_error_password_not_set_desktop">This account signs in with a passkey, which can't be used on this computer. To sign in here, add a password from Security &amp; Privacy in the app on your phone.</string>
+    <string name="login_error_password_not_set_desktop">This account signs in with a passkey. Use “Sign in with your browser” to use it, or add a password from Security &amp; Privacy in the app on your phone.</string>
     <string name="login_error_passkey">The passkey couldn't be used: %1$s</string>
 
     <string name="register_title">Register an Account</string>

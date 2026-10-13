@@ -7,7 +7,7 @@ import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.PostgresTestBase
 import org.centrexcursionistalcoi.app.database.table.CredentialKind
 import org.centrexcursionistalcoi.app.database.table.UserCredentialRecords
-import org.centrexcursionistalcoi.app.security.AES
+import org.centrexcursionistalcoi.app.security.crypto.AES
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction

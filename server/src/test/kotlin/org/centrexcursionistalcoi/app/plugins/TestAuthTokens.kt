@@ -39,7 +39,7 @@ import org.centrexcursionistalcoi.app.mockTime
 import org.centrexcursionistalcoi.app.module
 import org.centrexcursionistalcoi.app.routes.Api
 import org.centrexcursionistalcoi.app.security.AuthTokens
-import org.centrexcursionistalcoi.app.security.Passwords
+import org.centrexcursionistalcoi.app.security.crypto.Passwords
 import org.centrexcursionistalcoi.app.security.SessionsKeys
 import org.centrexcursionistalcoi.app.security.WebDavSession
 import org.centrexcursionistalcoi.app.test.FakeAdminUser

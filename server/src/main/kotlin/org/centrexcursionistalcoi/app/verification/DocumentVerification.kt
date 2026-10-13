@@ -1,7 +1,8 @@
 package org.centrexcursionistalcoi.app.verification
 
-import java.security.MessageDigest
-import java.security.SecureRandom
+import org.centrexcursionistalcoi.app.security.crypto.toHex
+import org.centrexcursionistalcoi.app.security.crypto.RandomValues
+import org.centrexcursionistalcoi.app.security.crypto.Hashing
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.AppLinks
@@ -38,10 +39,8 @@ object DocumentVerification {
     /** 60 random bits: there's no guessing one. */
     private const val LENGTH = 12
 
-    private val random = SecureRandom()
-
     /** A new, random code, unformatted. */
-    fun newCode(): String = buildString { repeat(LENGTH) { append(ALPHABET[random.nextInt(ALPHABET.length)]) } }
+    fun newCode(): String = RandomValues.string(LENGTH, ALPHABET)
 
     /** [code] in groups of four, as printed: `ABCD-EFGH-JKMN`. */
     fun format(code: String): String = code.chunked(4).joinToString("-")
@@ -67,9 +66,7 @@ object DocumentVerification {
     /** The page that verifies the document with [code]. */
     fun url(code: String): String = "${AppLinks.baseUrl}/verify?code=${format(code)}"
 
-    fun sha256(bytes: ByteArray): String = MessageDigest.getInstance("SHA-256").digest(bytes).toHex()
-
-    fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
+    fun sha256(bytes: ByteArray): String = Hashing.sha256(bytes).toHex()
 
     /** Records that the document generated with [code] is [bytes]. */
     context(_: JdbcTransaction)

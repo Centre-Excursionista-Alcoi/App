@@ -19,6 +19,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
@@ -40,8 +41,11 @@ import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalAutofillManager
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -53,6 +57,11 @@ import cea_app.composeapp.generated.resources.close
 import cea_app.composeapp.generated.resources.confirm_password
 import cea_app.composeapp.generated.resources.email
 import cea_app.composeapp.generated.resources.login_action
+import cea_app.composeapp.generated.resources.login_browser_action
+import cea_app.composeapp.generated.resources.login_browser_code
+import cea_app.composeapp.generated.resources.login_browser_message
+import cea_app.composeapp.generated.resources.login_browser_title
+import cea_app.composeapp.generated.resources.login_error_browser_expired
 import cea_app.composeapp.generated.resources.login_error_invalid_credentials
 import cea_app.composeapp.generated.resources.login_error_passkey
 import cea_app.composeapp.generated.resources.login_error_password_not_set
@@ -103,6 +112,8 @@ import org.centrexcursionistalcoi.app.ui.reusable.ColumnWidthWrapper
 import org.centrexcursionistalcoi.app.ui.reusable.PasskeyExplanationCard
 import org.centrexcursionistalcoi.app.ui.reusable.form.PasswordFormField
 import org.centrexcursionistalcoi.app.ui.utils.unknown
+import org.centrexcursionistalcoi.app.data.BrowserLoginRequest
+import org.centrexcursionistalcoi.app.viewmodel.BrowserLoginExpiredException
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.centrexcursionistalcoi.app.viewmodel.RegistrationStep
 import org.jetbrains.compose.resources.getString
@@ -120,6 +131,8 @@ fun AuthScreen(
     val error by model.error.collectAsState()
     val existingAccountEmail by model.existingAccountEmail.collectAsState()
     val registrationStep by model.registrationStep.collectAsState()
+    val browserLogin by model.browserLogin.collectAsState()
+    val uriHandler = LocalUriHandler.current
 
     // Tells the platform's autofill the form was submitted successfully, so it offers to save the password.
     val autofillManager = LocalAutofillManager.current
@@ -136,6 +149,10 @@ fun AuthScreen(
         canUseSavedCredentials = model.canUseSavedCredentials,
         onForgetExistingAccount = model::forgetExistingAccount,
         onSavedCredentialRequest = { model.signInWithSavedCredential(onLoginSuccess) },
+        canSignInWithBrowser = model.canSignInWithBrowser,
+        browserLogin = browserLogin,
+        onBrowserLoginRequest = { model.signInWithBrowser(uriHandler::openUri, onLoginSuccess) },
+        onBrowserLoginCancel = model::cancelBrowserLogin,
         onLoginRequest = { email, password -> model.login(email, password, afterLogin = afterLogin) },
         registrationStep = registrationStep,
         canRegisterWithPasskey = model.canRegisterWithPasskey,
@@ -159,6 +176,10 @@ private fun AuthScreen(
     canUseSavedCredentials: Boolean = false,
     onForgetExistingAccount: () -> Unit = {},
     onSavedCredentialRequest: () -> Unit = {},
+    canSignInWithBrowser: Boolean = false,
+    browserLogin: BrowserLoginRequest? = null,
+    onBrowserLoginRequest: () -> Unit = {},
+    onBrowserLoginCancel: () -> Unit = {},
     onLoginRequest: (email: String, password: String) -> Unit,
     registrationStep: RegistrationStep = RegistrationStep.Email,
     canRegisterWithPasskey: Boolean = false,
@@ -210,6 +231,34 @@ private fun AuthScreen(
         )
     }
 
+    if (browserLogin != null) {
+        AlertDialog(
+            onDismissRequest = onBrowserLoginCancel,
+            title = { Text(stringResource(Res.string.login_browser_title)) },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(Res.string.login_browser_message))
+                    Text(
+                        text = stringResource(Res.string.login_browser_code),
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(top = 16.dp),
+                    )
+                    Text(
+                        text = browserLogin.code,
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 8.dp),
+                    )
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onBrowserLoginCancel) { Text(stringResource(Res.string.cancel)) }
+            },
+        )
+    }
+
     Scaffold { paddingValues ->
         HorizontalPager(
             state = state,
@@ -227,6 +276,8 @@ private fun AuthScreen(
                         error = error,
                         canUseSavedCredentials = canUseSavedCredentials,
                         onSavedCredentialRequest = onSavedCredentialRequest,
+                        canSignInWithBrowser = canSignInWithBrowser,
+                        onBrowserLoginRequest = onBrowserLoginRequest,
                         onLoginRequest = { email, password ->
                             onLoginRequest(email.toString(), password.toString())
                         },
@@ -339,6 +390,8 @@ private fun AuthScreen_Form(
                         )
                         else -> stringResource(Res.string.login_error_unknown, serverException.message ?: unknown())
                     }
+                } else if (error is BrowserLoginExpiredException) {
+                    stringResource(Res.string.login_error_browser_expired)
                 } else if (error is PasskeyException) {
                     stringResource(Res.string.login_error_passkey, error.message ?: unknown())
                 } else {
@@ -378,6 +431,8 @@ private fun AuthScreen_Login(
     error: Throwable? = null,
     canUseSavedCredentials: Boolean = false,
     onSavedCredentialRequest: () -> Unit = {},
+    canSignInWithBrowser: Boolean = false,
+    onBrowserLoginRequest: () -> Unit = {},
     onLoginRequest: (email: CharSequence, password: CharSequence) -> Unit,
     onRegisterRequest: () -> Unit,
     onForgotPassword: (email: CharSequence) -> Job,
@@ -437,6 +492,22 @@ private fun AuthScreen_Login(
         onAux = { showingForgotPasswordDialog = true },
         isPasskeysSupported = canUseSavedCredentials,
     ) {
+        if (canSignInWithBrowser) {
+            Button(
+                enabled = !isLoading,
+                onClick = onBrowserLoginRequest,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            ) {
+                Icon(MaterialSymbols.Passkey, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                Text(stringResource(Res.string.login_browser_action))
+            }
+            Text(
+                text = stringResource(Res.string.login_or_type),
+                style = MaterialTheme.typography.labelLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 4.dp),
+            )
+        }
         if (canUseSavedCredentials) {
             Button(
                 enabled = !isLoading,

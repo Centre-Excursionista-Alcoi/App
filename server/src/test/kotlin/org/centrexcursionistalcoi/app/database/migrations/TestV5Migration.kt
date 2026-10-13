@@ -8,7 +8,7 @@ import kotlin.test.assertTrue
 import org.centrexcursionistalcoi.app.assertTrue
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.PostgresTestBase
-import org.centrexcursionistalcoi.app.security.AES
+import org.centrexcursionistalcoi.app.security.crypto.AES
 
 class TestV5Migration : PostgresTestBase() {
     @Test

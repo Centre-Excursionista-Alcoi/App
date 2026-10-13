@@ -601,9 +601,14 @@
     <string name="insurance_status_upcoming">Se inicia el %1$s</string>
     <string name="insurance_status_expired">Expiró el %1$s</string>
     <string name="login_saved_credential_action">Inicia sesión con una passkey o contraseña guardada</string>
+    <string name="login_browser_action">Iniciar sesión con el navegador</string>
+    <string name="login_browser_title">Termina en el navegador</string>
+    <string name="login_browser_message">Hemos abierto tu navegador. Comprueba que el código que muestra es el de abajo, e inicia sesión con tu passkey. Esta ventana continuará sola.</string>
+    <string name="login_browser_code">Código</string>
+    <string name="login_error_browser_expired">El inicio de sesión en el navegador ha caducado. Inténtalo de nuevo.</string>
     <string name="login_or_type">O introduce tu correo electrónico y contraseña</string>
     <string name="login_error_password_not_set">Esta cuenta inicia sesión con una passkey, no con contraseña. Toca Iniciar sesión con una passkey o contraseña guardada.</string>
-    <string name="login_error_password_not_set_desktop">Esta cuenta inicia sesión con una passkey, que no se puede usar en este ordenador. Para iniciar sesión aquí, establece una contraseña en Seguridad y Privacidad de tu móvil.</string>
+    <string name="login_error_password_not_set_desktop">Esta cuenta inicia sesión con una passkey. Usa «Iniciar sesión con el navegador» para utilizarla, o añade una contraseña en Seguridad y Privacidad de la app de tu móvil.</string>
     <string name="login_error_passkey">La passkey no se ha podido usar: %1$s</string>
     <string name="register_continue">Continua</string>
     <string name="register_back">Volver</string>

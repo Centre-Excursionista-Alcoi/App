@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<translations>
+    <item name="title">Sign in to the CEA App</item>
+    <item name="intro">The CEA App on %s is asking to sign in to your account.</item>
+    <item name="code_label">Check that this code is the one shown in the app:</item>
+    <item name="warning">If you didn't just ask to sign in from the app, close this page.</item>
+    <item name="button">Continue with my passkey</item>
+    <item name="working">Waiting for your passkey…</item>
+    <item name="done">Done! You are signed in. You can close this page and go back to the app.</item>
+    <item name="failed">We couldn't sign you in with that passkey. Try again.</item>
+    <item name="cancelled">The passkey request was cancelled. Try again when you are ready.</item>
+    <item name="unsupported">This browser doesn't support passkeys. Open this page in another browser.</item>
+    <item name="js_required">This page needs JavaScript to ask for your passkey. Enable JavaScript in your browser, or open this page in another one.</item>
+    <item name="expired_title">This sign-in has expired</item>
+    <item name="expired">This sign-in request has expired or was already used. Go back to the app and start it again.</item>
+</translations>

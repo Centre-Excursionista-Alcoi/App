@@ -1,5 +1,7 @@
 package org.centrexcursionistalcoi.app.routes
 
+import org.centrexcursionistalcoi.app.security.crypto.toHex
+import org.centrexcursionistalcoi.app.security.crypto.Hashing
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
@@ -13,7 +15,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.utils.io.discard
 import io.ktor.utils.io.readAvailable
-import java.security.MessageDigest
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -26,7 +27,6 @@ import org.centrexcursionistalcoi.app.translation.locale
 import org.centrexcursionistalcoi.app.utils.escapeHtml
 import org.centrexcursionistalcoi.app.verification.DocumentType
 import org.centrexcursionistalcoi.app.verification.DocumentVerification
-import org.centrexcursionistalcoi.app.verification.DocumentVerification.toHex
 import org.centrexcursionistalcoi.app.verification.VerifiedDocument
 
 /** Uploads larger than this can't be a generated document: they're much smaller. */
@@ -186,7 +186,7 @@ fun Route.verifyRoutes() {
                 when {
                     part is PartData.FormItem && part.name == "code" -> input = part.value
                     part is PartData.FileItem && part.name == "file" -> {
-                        val digest = MessageDigest.getInstance("SHA-256")
+                        val digest = Hashing.newSha256()
                         val channel = part.provider()
                         val buffer = ByteArray(64 * 1024)
                         var size = 0L

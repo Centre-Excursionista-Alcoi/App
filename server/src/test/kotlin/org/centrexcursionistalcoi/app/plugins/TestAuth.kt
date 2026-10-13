@@ -12,7 +12,7 @@ import org.centrexcursionistalcoi.app.assertSuccess
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.href
 import org.centrexcursionistalcoi.app.routes.Api
-import org.centrexcursionistalcoi.app.security.Passwords
+import org.centrexcursionistalcoi.app.security.crypto.Passwords
 import org.centrexcursionistalcoi.app.test.FakeUser
 import org.centrexcursionistalcoi.app.security.RegistrationCodes
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction

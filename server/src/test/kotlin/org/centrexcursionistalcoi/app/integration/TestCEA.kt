@@ -7,7 +7,7 @@ import org.centrexcursionistalcoi.app.database.entity.MemberEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.integration.CEA.Member
 import org.centrexcursionistalcoi.app.integration.CEA.filterInvalid
-import org.centrexcursionistalcoi.app.security.AES
+import org.centrexcursionistalcoi.app.security.crypto.AES
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

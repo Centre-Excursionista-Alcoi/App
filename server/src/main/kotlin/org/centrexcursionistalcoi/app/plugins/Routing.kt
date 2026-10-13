@@ -81,6 +81,7 @@ fun Application.configureRouting() {
         }
 
         authTokenRoutes()
+        browserLoginRoutes()
         rateLimit(RateLimits.AUTHENTICATION) {
             configureAuthRoutes()
         }

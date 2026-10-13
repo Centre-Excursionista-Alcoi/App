@@ -619,9 +619,14 @@
     <string name="insurance_documents">Documents</string>
     <string name="insurance_view_document_number">Veure Document %1$d</string>
     <string name="login_saved_credential_action">Inicia sessió amb una passkey o contrasenya desada</string>
+    <string name="login_browser_action">Inicia sessió amb el navegador</string>
+    <string name="login_browser_title">Acaba al navegador</string>
+    <string name="login_browser_message">Hem obert el teu navegador. Comprova que el codi que mostra és el de sota, i inicia sessió amb la teua passkey. Aquesta finestra continuarà soleta.</string>
+    <string name="login_browser_code">Codi</string>
+    <string name="login_error_browser_expired">L'inici de sessió al navegador ha caducat. Torna-ho a provar.</string>
     <string name="login_or_type">O introdueix el teu correu i contrasenya</string>
     <string name="login_error_password_not_set">Aquest compte inicia la sessió amb una passkey, no una contrasenya. Toca Accedir amb una passkey o contrasenya desada.</string>
-    <string name="login_error_password_not_set_desktop">Aquest compte accedeix amb una passkey, que no es pot fer-se servir en aquest ordinador. Per accedir ací, afegeix una contrasenya des de Seguretat i Privacitat en l'app del teu mòbil.</string>
+    <string name="login_error_password_not_set_desktop">Aquest compte accedeix amb una passkey. Fes servir «Inicia sessió amb el navegador» per utilitzar-la, o afegeix una contrasenya des de Seguretat i Privacitat en l'app del teu mòbil.</string>
     <string name="login_error_passkey">La passkey no es pot fer servir: %1$s</string>
     <string name="register_continue">Continua</string>
     <string name="register_back">Torna</string>

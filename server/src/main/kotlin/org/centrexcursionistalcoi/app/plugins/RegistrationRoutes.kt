@@ -41,7 +41,7 @@ import org.centrexcursionistalcoi.app.security.EmailValidation
 import org.centrexcursionistalcoi.app.security.RegistrationCodes
 import org.centrexcursionistalcoi.app.security.generateWebAuthnChallenge
 import org.centrexcursionistalcoi.app.security.registrationChallenge
-import org.centrexcursionistalcoi.app.security.toBase64Url
+import org.centrexcursionistalcoi.app.security.crypto.toBase64Url
 import org.centrexcursionistalcoi.app.security.verifyRegistration
 import org.centrexcursionistalcoi.app.security.webAuthnRpId
 import org.centrexcursionistalcoi.app.storage.RedisStoreMap

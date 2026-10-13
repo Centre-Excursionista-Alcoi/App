@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.security
 
+import org.centrexcursionistalcoi.app.security.crypto.toBase64Url
 import org.centrexcursionistalcoi.app.translation.UserLanguage
 import com.webauthn4j.verifier.exception.VerificationException
 import io.ktor.http.HttpHeaders
@@ -187,7 +188,7 @@ data class UserSession(val sub: String, val fullName: String, val email: String,
     /**
      * Gets the Base64Url-encoded version of the `sub` field, which is used as the user ID in WebAuthn.
      */
-    fun subBase64Url(): String = Base64.getUrlEncoder().withoutPadding().encodeToString(sub.toByteArray())
+    fun subBase64Url(): String = sub.toByteArray().toBase64Url()
 }
 
 /**
@@ -236,7 +237,7 @@ fun Route.webAuthnRoutes() {
 
         val challenge = generateWebAuthnChallenge()
         // WebAuthn requires Base64Url (no padding) throughout.
-        val challengeBase64Url = Base64.getUrlEncoder().withoutPadding().encodeToString(challenge.value)
+        val challengeBase64Url = challenge.value.toBase64Url()
 
         // Keyed by sub: one in-flight registration at a time per user, which is all this needs.
         RedisStoreMap.default.put("webauthn_challenge:${user.sub}", challengeBase64Url, 300)
@@ -257,7 +258,7 @@ fun Route.webAuthnRoutes() {
     // App requests options to redeem a credential on a NEW device, before it has any session at all.
     post<Api.GenerateAuthChallenge> {
         val challenge = generateWebAuthnChallenge()
-        val challengeBase64Url = Base64.getUrlEncoder().withoutPadding().encodeToString(challenge.value)
+        val challengeBase64Url = challenge.value.toBase64Url()
 
         // Keyed by the challenge itself, not by user -- the server doesn't know who's asking yet; whichever
         // credential the platform surfaces for this request tells it that (see verifyRestoreKey below).

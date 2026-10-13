@@ -1,5 +1,9 @@
 package org.centrexcursionistalcoi.app.security
 
+import org.centrexcursionistalcoi.app.security.crypto.toHex
+import org.centrexcursionistalcoi.app.security.crypto.toBase64Url
+import org.centrexcursionistalcoi.app.security.crypto.RandomValues
+import org.centrexcursionistalcoi.app.security.crypto.Hashing
 import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
@@ -30,8 +34,6 @@ import java.io.File
 import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyPairGenerator
-import java.security.MessageDigest
-import java.security.SecureRandom
 import java.security.interfaces.ECPrivateKey
 import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
@@ -98,8 +100,6 @@ object AuthTokens {
     private const val PRIVATE_KEY_FILE = "jwt-es256.key"
     private const val PUBLIC_KEY_FILE = "jwt-es256.pub"
 
-    private val secureRandom = SecureRandom()
-
     private var keyPair: KeyPair? = null
 
     private val keys: KeyPair
@@ -117,7 +117,7 @@ object AuthTokens {
 
     /** Identifies the signing key, so a rotated key is told apart from a forged signature in logs. */
     private val keyId: String by lazy {
-        base64Url(sha256(keys.public.encoded)).take(16)
+        Hashing.sha256(keys.public.encoded).toBase64Url().take(16)
     }
 
     /** Honors [now], so that tests can mock the time. */
@@ -168,7 +168,7 @@ object AuthTokens {
     }
 
     private fun generateKeyPair(): KeyPair = KeyPairGenerator.getInstance("EC")
-        .apply { initialize(ECGenParameterSpec("secp256r1"), secureRandom) }
+        .apply { initialize(ECGenParameterSpec("secp256r1"), RandomValues.secureRandom) }
         .generateKeyPair()
 
     /**
@@ -304,8 +304,7 @@ object AuthTokens {
 
     context(_: JdbcTransaction)
     private fun insertRefreshToken(sessionId: Uuid, now: Instant): String {
-        val bytes = ByteArray(32).also(secureRandom::nextBytes)
-        val token = REFRESH_TOKEN_PREFIX + base64Url(bytes)
+        val token = REFRESH_TOKEN_PREFIX + RandomValues.token()
         AuthRefreshTokens.insert {
             it[id] = hashRefreshToken(token)
             it[session] = sessionId
@@ -338,9 +337,5 @@ object AuthTokens {
         accountEmail = email,
     )
 
-    private fun hashRefreshToken(token: String): String = sha256(token.toByteArray()).toHexString()
-
-    private fun sha256(bytes: ByteArray): ByteArray = MessageDigest.getInstance("SHA-256").digest(bytes)
-
-    private fun base64Url(bytes: ByteArray): String = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
+    private fun hashRefreshToken(token: String): String = Hashing.sha256(token).toHex()
 }
