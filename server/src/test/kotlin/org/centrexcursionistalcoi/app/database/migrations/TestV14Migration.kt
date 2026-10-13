@@ -2,36 +2,64 @@ package org.centrexcursionistalcoi.app.database.migrations
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import org.centrexcursionistalcoi.app.assertTrue
-import org.centrexcursionistalcoi.app.data.PaymentStatus
-import org.centrexcursionistalcoi.app.data.RedsysPayload
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.PostgresTestBase
-import org.centrexcursionistalcoi.app.database.table.Transactions
-import org.jetbrains.exposed.v1.jdbc.selectAll
 
-/** Tests that the payload of a transaction, stored as `redsysPayload`, is kept when the column becomes `payload`. */
+/**
+ * Tests that the payload of a transaction, stored as `redsysPayload`, is kept when the column becomes `payload`.
+ *
+ * Doesn't depend on the current schema: it creates the `transactions` table as it was before V14, with only what the
+ * migration touches, and reads it back with plain SQL.
+ */
 class TestV14Migration : PostgresTestBase() {
+    private val payload =
+        """{"Ds_Order":"1234","Ds_Response":"0000","Ds_Amount":"1000","Ds_Currency":"978","Ds_MerchantCode":"1","Ds_Terminal":"1","Ds_TransactionType":"0"}"""
+
+    private fun columns() = Database.execQuery(
+        "SELECT column_name FROM information_schema.columns WHERE table_name = 'transactions'"
+    ).let { rs -> buildSet { while (rs.next()) add(rs.getString("column_name")) } }
+
     @Test
     fun test() {
-        // Create the current schema, then simulate a pre-V14 database: the column is named after Redsys.
-        Database.init()
-        Database.exec("""ALTER TABLE transactions RENAME COLUMN payload TO "redsysPayload"""").assertTrue()
         Database {
             exec(
                 """
-                    INSERT INTO transactions (id, "orderId", amount, status, "redsysPayload")
-                    VALUES (gen_random_uuid(), '1234', 10, 'COMPLETED',
-                        '{"Ds_Order":"1234","Ds_Response":"0000","Ds_Amount":"1000","Ds_Currency":"978","Ds_MerchantCode":"1","Ds_Terminal":"1","Ds_TransactionType":"0"}')
+                    CREATE TABLE transactions (
+                        id uuid PRIMARY KEY,
+                        "orderId" text NOT NULL,
+                        amount double precision NOT NULL,
+                        status varchar(20) NOT NULL,
+                        "redsysPayload" jsonb NULL
+                    )
                 """.trimIndent()
             )
+            exec("""INSERT INTO transactions VALUES (gen_random_uuid(), '1234', 10, 'COMPLETED', '$payload')""")
+            exec("""INSERT INTO transactions VALUES (gen_random_uuid(), '5678', 10, 'PENDING', NULL)""")
         }
 
         Database { V14.migrate() }
 
-        val row = Database { Transactions.selectAll().single() }
-        assertEquals(PaymentStatus.COMPLETED, row[Transactions.status])
-        val payload = row[Transactions.payload]
-        assertEquals(RedsysPayload("1234", "0000", "1000", "978", "1", "1", "0"), payload)
+        assertEquals(setOf("id", "orderId", "amount", "status", "payload"), columns())
+        val rs = Database.execQuery("""SELECT "orderId", payload::text AS payload FROM transactions ORDER BY "orderId"""")
+        assertEquals(true, rs.next())
+        assertEquals("1234", rs.getString("orderId"))
+        // jsonb normalises the whitespace, so compare it as it comes back
+        assertEquals(
+            Database.execQuery("SELECT '$payload'::jsonb::text").let { it.next(); it.getString(1) },
+            rs.getString("payload"),
+        )
+        assertEquals(true, rs.next())
+        assertEquals(null, rs.getString("payload"))
+    }
+
+    @Test
+    fun test_alreadyMigrated_doesNothing() {
+        Database {
+            exec("""CREATE TABLE transactions (id uuid PRIMARY KEY, "orderId" text NOT NULL, payload jsonb NULL)""")
+        }
+
+        Database { V14.migrate() }
+
+        assertEquals(setOf("id", "orderId", "payload"), columns())
     }
 }

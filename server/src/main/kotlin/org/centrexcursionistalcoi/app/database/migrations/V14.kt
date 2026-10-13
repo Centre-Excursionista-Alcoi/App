@@ -14,7 +14,7 @@ object V14 : DatabaseMigration {
 
     context(tr: JdbcTransaction)
     override fun migrate() {
-        // A database created by an older migration test starts from the current schema, which already has `payload`
+        // Idempotent, like V12 and V13: a database created with the current schema (new, or in tests) already has `payload`
         tr.exec(
             """
                 DO $$
