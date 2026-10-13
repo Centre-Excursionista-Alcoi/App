@@ -17,7 +17,6 @@ import org.centrexcursionistalcoi.app.data.RedsysPayload
 import org.centrexcursionistalcoi.app.data.RedsysReference
 import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.payment.InvalidPaymentNotificationException
-import org.centrexcursionistalcoi.app.payment.PaymentProviderException
 import org.centrexcursionistalcoi.app.payment.PaymentRequest
 import org.centrexcursionistalcoi.app.payment.PaymentSession
 import org.centrexcursionistalcoi.app.payment.RawPaymentNotification
@@ -147,9 +146,4 @@ class TestRedsysPaymentProvider {
         assertEquals(PaymentStatus.FAILED, status("0900", "9"))
     }
 
-    @Test
-    fun `refunds are not available yet and foreign references are refused`() = runTest {
-        assertFailsWith<PaymentProviderException> { provider().refund(RedsysReference("1234ABCD")) }
-        assertFailsWith<PaymentProviderException> { provider().cancel(RedsysReference("1234ABCD")) }
-    }
 }

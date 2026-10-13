@@ -2,6 +2,7 @@ package org.centrexcursionistalcoi.app.payment
 
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
+import org.centrexcursionistalcoi.app.data.PaymentReference
 import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.table.Transactions
@@ -77,6 +78,32 @@ object PaymentTransactions {
             }
         }
         Applied(id, previous, next)
+    }
+
+    /**
+     * Returns the money of the completed transaction [transactionId] through its provider, and records it.
+     * @throws IllegalStateException if it isn't completed, or there is no such transaction.
+     * @throws PaymentProviderException if the provider refuses (or [PaymentGatewayUnavailableException] if it is down).
+     */
+    suspend fun refund(transactionId: Uuid): PaymentResult {
+        val (reference, amountCents) = load(transactionId, PaymentStatus.COMPLETED)
+        return PaymentProviders.of(reference).refund(reference, amountCents).also(::apply)
+    }
+
+    /**
+     * Voids the pending or completed transaction [transactionId] through its provider (which may return the money
+     * instead, if it can't void), and records it. Same errors as [refund].
+     */
+    suspend fun cancel(transactionId: Uuid): PaymentResult {
+        val (reference, amountCents) = load(transactionId, PaymentStatus.PENDING, PaymentStatus.COMPLETED)
+        return PaymentProviders.of(reference).cancel(reference, amountCents).also(::apply)
+    }
+
+    private fun load(transactionId: Uuid, vararg allowed: PaymentStatus): Pair<PaymentReference, Int> = Database {
+        val row = Transactions.selectAll().where { Transactions.id eq transactionId }.singleOrNull()
+            ?: throw IllegalStateException("There is no transaction $transactionId")
+        check(row[Transactions.status] in allowed) { "The transaction $transactionId is ${row[Transactions.status]}" }
+        row[Transactions.reference] to row[Transactions.amountCents]
     }
 
     private fun PaymentStatus.mayBecome(next: PaymentStatus): Boolean = when (next) {

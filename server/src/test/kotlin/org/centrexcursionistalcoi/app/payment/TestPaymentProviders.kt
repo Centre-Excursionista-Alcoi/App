@@ -35,12 +35,12 @@ class TestPaymentProviders {
         override suspend fun handleNotification(notification: RawPaymentNotification) =
             PaymentResult(RedsysReference("1234"), PaymentStatus.COMPLETED, 100, payload)
 
-        override suspend fun refund(reference: PaymentReference, amountCents: Int?): PaymentResult {
+        override suspend fun refund(reference: PaymentReference, amountCents: Int): PaymentResult {
             requireOwn(reference)
             return PaymentResult(reference, PaymentStatus.REFUNDED, amountCents, payload)
         }
 
-        override suspend fun cancel(reference: PaymentReference): PaymentResult {
+        override suspend fun cancel(reference: PaymentReference, amountCents: Int): PaymentResult {
             requireOwn(reference)
             return PaymentResult(reference, PaymentStatus.CANCELLED, null, payload)
         }
@@ -68,8 +68,8 @@ class TestPaymentProviders {
     @Test
     fun `a provider rejects references of another`() = kotlinx.coroutines.test.runTest {
         val other = FakeProvider(id = "other")
-        assertFailsWith<PaymentProviderException> { other.refund(RedsysReference("1234")) }
-        assertFailsWith<PaymentProviderException> { other.cancel(RedsysReference("1234")) }
+        assertFailsWith<PaymentProviderException> { other.refund(RedsysReference("1234"), 100) }
+        assertFailsWith<PaymentProviderException> { other.cancel(RedsysReference("1234"), 100) }
     }
 
     @Test

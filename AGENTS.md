@@ -418,7 +418,10 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   `REDSYS_BIZUM=true` (only once the bank enabled Bizum on the terminal). Missing or wrong values never stop the server
   (see `configurePayments`). The public sandbox key (`RedsysConfig.SANDBOX_KEY`) is refused in production. Start a payment
   with `PaymentTransactions.start`, which records it as pending; notifications move it forward through
-  `PaymentTransactions.apply` and are idempotent.
+  `PaymentTransactions.apply` and are idempotent. Refunds and cancellations go server to server through Redsys's REST
+  endpoint (`PaymentTransactions.refund`/`cancel`): a payment that can't be voided (Bizum) is refunded instead, and a
+  Redsys outage is `PaymentGatewayUnavailableException` (503), not a refusal. Both need the amount, which the provider
+  doesn't remember: it comes from the transaction.
 - Auth routes are rate-limited per client IP (`plugins/RateLimits.kt`); limits are lifted when `isTesting`.
 - In server tests, `loginAsFakeUser()`/`loginAs(user)` start a real session for the user (creating it if needed)
   and make the test client send its access token with every request; `logout()` stops that. To test the token
