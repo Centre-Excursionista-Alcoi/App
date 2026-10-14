@@ -51,4 +51,12 @@ class TestError {
             }
         }
     }
+
+    @Test
+    fun `payment gateway unavailable is a 503 that decodes by its code`() {
+        val text = json.encodeToString(Error.serializer(), Error.PaymentGatewayUnavailable())
+        val decoded = json.decodeFromString(ErrorPolymorphicSerializer, text)
+        assertEquals(Error.ERROR_PAYMENT_GATEWAY_UNAVAILABLE, decoded.code)
+        assertEquals(503, decoded.statusCode.value)
+    }
 }

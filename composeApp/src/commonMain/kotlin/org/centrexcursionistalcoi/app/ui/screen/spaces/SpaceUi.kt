@@ -35,6 +35,7 @@ fun PaymentStatus.label(): String = stringResource(
         PaymentStatus.COMPLETED -> Res.string.payment_status_completed
         PaymentStatus.FAILED -> Res.string.payment_status_failed
         PaymentStatus.REFUNDED -> Res.string.payment_status_refunded
+        PaymentStatus.CANCELLED -> Res.string.payment_status_cancelled
     }
 )
 

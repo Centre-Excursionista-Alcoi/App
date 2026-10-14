@@ -649,6 +649,20 @@ sealed interface Error {
      * There aren't enough keys of a type for a space lending: the club has fewer than the ones the lendings of those
      * dates ask for.
      */
+    /**
+     * Payments can't be taken now: the payment provider isn't configured or can't be reached. Usually transient, so
+     * the app should offer to try again later rather than treat it as a failed payment.
+     */
+    @Serializable
+    @SerialName("PaymentGatewayUnavailable")
+    class PaymentGatewayUnavailable() : Error {
+        override val code: Int = ERROR_PAYMENT_GATEWAY_UNAVAILABLE
+        override val description: String = "The payment gateway is not available right now. Try again later."
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.ServiceUnavailable
+    }
+
     @Serializable
     @SerialName("SpaceKeysUnavailable")
     class SpaceKeysUnavailable(val keyType: String) : Error {
@@ -719,6 +733,7 @@ sealed interface Error {
         const val ERROR_PREVIOUS_SPACE_LENDING_NOT_PAID = 56
         const val ERROR_INVALID_SPACE_LENDING_STATE = 57
         const val ERROR_SPACE_KEYS_UNAVAILABLE = 58
+        const val ERROR_PAYMENT_GATEWAY_UNAVAILABLE = 59
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -780,6 +795,7 @@ sealed interface Error {
             ERROR_PREVIOUS_SPACE_LENDING_NOT_PAID -> PreviousSpaceLendingNotPaid.serializer()
             ERROR_INVALID_SPACE_LENDING_STATE -> InvalidSpaceLendingState.serializer()
             ERROR_SPACE_KEYS_UNAVAILABLE -> SpaceKeysUnavailable.serializer()
+            ERROR_PAYMENT_GATEWAY_UNAVAILABLE -> PaymentGatewayUnavailable.serializer()
             else -> null
         }
     }
