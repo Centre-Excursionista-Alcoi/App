@@ -422,6 +422,12 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   endpoint (`PaymentTransactions.refund`/`cancel`): a payment that can't be voided (Bizum) is refunded instead, and a
   Redsys outage is `PaymentGatewayUnavailableException` (503), not a refusal. Both need the amount, which the provider
   doesn't remember: it comes from the transaction.
+- **Everything that happens with the payments gateway is kept in `payment_audit_log`** (`PaymentAuditLog`, written through
+  `PaymentAudit`): payments started, every result a provider reports (sanitized payload), status changes, ignored repeats,
+  unknown references, rejected notifications, refund/cancel requests and failures, and failing listeners. It is append-only
+  (never update or delete rows) and has no foreign keys, so it outlives transactions; trace with `forTransaction` or
+  `forReference`. `PaymentTransactions` writes it, in the same database transaction as the change it records; pass the
+  `actor` (`PaymentAudit.userActor(sub)`) to `start`/`refund`/`cancel`. Any new payment code path must record its events.
 - **Space lendings are paid online once their keys are back** (`POST /space_lendings/{id}/pay`, owner only; the price is the
   lending's stored `totalPrice`, never recomputed). It answers a `PaymentLaunch` whose `url` is `/pay?id=...` (a web-only
   path): the app can't `POST` a provider's form, so that page (`PaymentLaunches`, in memory) submits it from a browser.

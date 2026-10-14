@@ -36,6 +36,8 @@ import org.centrexcursionistalcoi.app.data.RedsysReference
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.payment.InvalidPaymentNotificationException
+import org.centrexcursionistalcoi.app.payment.PaymentAudit
+import org.centrexcursionistalcoi.app.payment.PaymentAuditEvent
 import org.centrexcursionistalcoi.app.payment.PaymentGatewayUnavailableException
 import org.centrexcursionistalcoi.app.payment.PaymentProviders
 import org.centrexcursionistalcoi.app.payment.PaymentTransactions
@@ -121,6 +123,10 @@ fun Route.paymentRoutes() {
             provider.handleNotification(RawPaymentNotification(parameters = parameters))
         } catch (e: InvalidPaymentNotificationException) {
             logger.warn("Rejected a Redsys notification: ${e.message}")
+            PaymentAudit.tryRecord(
+                PaymentAuditEvent.NOTIFICATION_REJECTED, PaymentAudit.ACTOR_PROVIDER,
+                provider = RedsysReference.PROVIDER, detail = PaymentAudit.errorDetail(e),
+            )
             return@post respondError(Error.MalformedRequest())
         }
 

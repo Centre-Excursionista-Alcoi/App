@@ -41,6 +41,7 @@ import org.centrexcursionistalcoi.app.database.table.SpaceKeys
 import org.centrexcursionistalcoi.app.database.table.SpaceLendingKeyRequests
 import org.centrexcursionistalcoi.app.database.table.SpaceLendingFiles
 import org.centrexcursionistalcoi.app.database.table.SpaceLendingKeys
+import org.centrexcursionistalcoi.app.database.table.PaymentAuditLog
 import org.centrexcursionistalcoi.app.database.table.SpaceLendingTransactions
 import org.centrexcursionistalcoi.app.database.table.SpaceLendings
 import org.centrexcursionistalcoi.app.database.table.Spaces
@@ -111,6 +112,7 @@ object Database {
         SpaceLendingKeys,
         Transactions,
         SpaceLendingTransactions,
+        PaymentAuditLog,
     ).let { sortTablesByReferences(it) }
     private var database: JdbcDatabase? = null
 

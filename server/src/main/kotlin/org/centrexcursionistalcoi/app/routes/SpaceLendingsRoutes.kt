@@ -4,6 +4,7 @@ import kotlin.math.roundToInt
 import org.centrexcursionistalcoi.app.translation.locale
 import org.centrexcursionistalcoi.app.request.PaySpaceLendingRequest
 import org.centrexcursionistalcoi.app.payment.SpaceLendingPayments
+import org.centrexcursionistalcoi.app.payment.PaymentAudit
 import org.centrexcursionistalcoi.app.payment.PaymentTransactions
 import org.centrexcursionistalcoi.app.payment.PaymentRequest
 import org.centrexcursionistalcoi.app.payment.PaymentProviders
@@ -493,6 +494,7 @@ fun Route.spaceLendingsRoutes() {
                 payerPhone = request.phone,
             ),
             provider,
+            PaymentAudit.userActor(session.sub),
         )
         SpaceLendingPayments.link(lending.id.value, started.transactionId)
 
@@ -507,7 +509,7 @@ fun Route.spaceLendingsRoutes() {
         val transaction = SpaceLendingPayments.completedTransaction(lending.id.value)
             ?: return@postWithLock respondError(Error.InvalidSpaceLendingState("The lending was not paid online"))
         try {
-            PaymentTransactions.refund(transaction)
+            PaymentTransactions.refund(transaction, PaymentAudit.userActor(session.sub))
         } catch (e: PaymentGatewayUnavailableException) {
             throw e
         } catch (e: PaymentProviderException) {
