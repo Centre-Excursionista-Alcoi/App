@@ -479,6 +479,9 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
 - **`RedisStoreMap` (If-Modified-Since caching) is a process-lifetime singleton.** Tests that don't isolate
   it can leak cached state between test cases that otherwise look independent — see the fix in
   `server/src/test/.../ApplicationTestBase.kt` if this resurfaces as a flaky/order-dependent test failure.
+- **Logs must not carry personal data.** The server logs at `INFO` by default (`LOG_LEVEL=DEBUG|TRACE` for diagnosing only:
+  they log every SQL statement and HTTP exchange). Don't put NIFs, emails or credentials in a log message, and don't log
+  an `ExposedSQLException` whole (its message holds the statement's values): log the member number or `sub`, and the SQL state.
 - **Stacked PRs**: PRs that build on an unmerged base branch are managed with the `gh stack` extension. **Check it is
   installed first** (`gh stack --help`); if not, ask the user to install it (`gh extension install github/gh-stack`) rather
   than stacking by hand with ordinary base branches. Use `gh stack init`/`add` to create the branches, `gh stack submit` to

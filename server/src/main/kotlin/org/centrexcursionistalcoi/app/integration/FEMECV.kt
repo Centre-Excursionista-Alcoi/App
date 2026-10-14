@@ -70,7 +70,7 @@ object FEMECV : PeriodicWorker(
     }
 
     suspend fun login(username: String, password: String, client: HttpClient = newClient()) {
-        logger.debug("Logging in to FEMECV as $username...")
+        logger.debug("Logging in to FEMECV...")
         val response = client.submitForm(
             url = "/FormLogin.php",
             formParameters = parameters {
@@ -81,14 +81,14 @@ object FEMECV : PeriodicWorker(
         )
         if (response.status == HttpStatusCode.Found) {
             // Login successful, session has been stored in cookies
-            logger.debug("Logged in to FEMECV as $username")
+            logger.debug("Logged in to FEMECV")
         } else {
             val body = response.bodyAsText()
             val document = Ksoup.parse(body)
             val errorBox = document.selectFirst(".errorBox")
             val errorMessage = errorBox?.text()
 
-            logger.error("Could not log in to FEMECV as $username: $errorMessage")
+            logger.error("Could not log in to FEMECV: $errorMessage")
             throw FEMECVException(errorMessage)
         }
     }
@@ -173,7 +173,7 @@ object FEMECV : PeriodicWorker(
                     ?.substringAfter('=')
                     ?.toIntOrNull()
             }?.toSet().orEmpty()
-            logger.info("Retrieved ${licenseIds.size} licenses for user $username")
+            logger.info("Retrieved ${licenseIds.size} licenses")
             // For demonstration purposes, we just log the URLs
             return licenseIds.map { id -> getLicense(client, id) }
         } else {

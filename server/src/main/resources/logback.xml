@@ -4,7 +4,9 @@
             <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-    <root level="trace">
+    <!-- INFO by default: DEBUG and TRACE log every SQL statement and HTTP exchange, with members' data. Set LOG_LEVEL to
+         DEBUG to diagnose something, and back afterwards. -->
+    <root level="${LOG_LEVEL:-INFO}">
         <appender-ref ref="STDOUT"/>
     </root>
     <logger name="org.eclipse.jetty" level="INFO"/>

@@ -110,7 +110,7 @@ object CEA : PeriodicWorker(period = 1.days) {
             val letter = NIFValidation.calculateLetter(member.nif)
             if (letter != null) {
                 val cleanedNif = member.nif!!.dropLast(1) + letter
-                logger.info("Corrected NIF for member #${member.number}: ${member.nif} -> $cleanedNif")
+                logger.info("Corrected the NIF of member #${member.number}")
                 member.copy(nif = cleanedNif)
             } else {
                 member
@@ -140,7 +140,7 @@ object CEA : PeriodicWorker(period = 1.days) {
                         existingEntity.email = member.email
                     }
                     memberNumbers.add(member.number)
-                    logger.debug("Updated member NIF=${member.nif}, number=${member.number}, status=${member.status}")
+                    logger.debug("Updated member number=${member.number}, status=${member.status}")
                 } else {
                     // Create new member
                     Database {
@@ -153,12 +153,13 @@ object CEA : PeriodicWorker(period = 1.days) {
                         }
                     }
                     memberNumbers.add(member.number)
-                    logger.debug("Created new member NIF=${member.nif}, number=${member.number}, status=${member.status}")
+                    logger.debug("Created new member number=${member.number}, status=${member.status}")
                 }
             } catch (e: ExposedSQLException) {
-                logger.error("Database error while processing member NIF=${member.nif}, number=${member.number}", e)
+                // Neither the message nor the stack: the statement and the constraint detail carry the member's data
+                logger.error("Database error while processing member number=${member.number} (SQL state ${e.sqlState})")
             } catch (e: Exception) {
-                logger.error("Unexpected error while processing member NIF=${member.nif}, number=${member.number}", e)
+                logger.error("Unexpected error while processing member number=${member.number}: ${e::class.simpleName}")
             }
         }
 
