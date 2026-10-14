@@ -260,4 +260,67 @@ class TestDatabaseMigrations {
             database.close()
         }
     }
+
+    /** Every `CREATE TABLE`/`CREATE INDEX` from `AppDatabase/6.json`. */
+    private val v6SchemaSql = listOf(
+        "CREATE TABLE IF NOT EXISTS `Departments` (`id` TEXT NOT NULL, `displayName` TEXT NOT NULL, `imageFile` TEXT, `members` TEXT, `qualifications` TEXT, `qualificationGrants` TEXT, PRIMARY KEY(`id`))",
+        "CREATE INDEX IF NOT EXISTS `idx_Departments_displayName` ON `Departments` (`displayName`)",
+        "CREATE TABLE IF NOT EXISTS `Events` (`id` TEXT NOT NULL, `start` INTEGER NOT NULL, `end` INTEGER, `place` TEXT NOT NULL, `title` TEXT NOT NULL, `description` TEXT, `maxPeople` INTEGER, `requiresConfirmation` INTEGER NOT NULL, `requiresInsurance` INTEGER NOT NULL, `department` TEXT, `image` TEXT, `qualificationRequirements` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "CREATE TABLE IF NOT EXISTS `EventUsers` (`eventId` TEXT NOT NULL, `userSub` TEXT NOT NULL, PRIMARY KEY(`eventId`, `userSub`), FOREIGN KEY(`eventId`) REFERENCES `Events`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "CREATE INDEX IF NOT EXISTS `index_EventUsers_userSub` ON `EventUsers` (`userSub`)",
+        "CREATE TABLE IF NOT EXISTS `InventoryItemTypes` (`id` TEXT NOT NULL, `displayName` TEXT NOT NULL, `description` TEXT, `categories` TEXT, `department` TEXT, `image` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`department`) REFERENCES `Departments`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "CREATE INDEX IF NOT EXISTS `index_InventoryItemTypes_department` ON `InventoryItemTypes` (`department`)",
+        "CREATE TABLE IF NOT EXISTS `InventoryItems` (`id` TEXT NOT NULL, `variation` TEXT, `type` TEXT NOT NULL, `nfcId` BLOB, `manufacturerTraceabilityCode` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`type`) REFERENCES `InventoryItemTypes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "CREATE INDEX IF NOT EXISTS `index_InventoryItems_type` ON `InventoryItems` (`type`)",
+        "CREATE TABLE IF NOT EXISTS `Lendings` (`id` TEXT NOT NULL, `userSub` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `fromDate` TEXT NOT NULL, `toDate` TEXT NOT NULL, `confirmed` INTEGER NOT NULL, `taken` INTEGER NOT NULL, `givenBy` TEXT, `givenAt` INTEGER, `returned` INTEGER NOT NULL, `memorySubmitted` INTEGER NOT NULL, `memorySubmittedAt` INTEGER, `memoryReviewed` INTEGER NOT NULL, `notes` TEXT, PRIMARY KEY(`id`))",
+        "CREATE TABLE IF NOT EXISTS `LendingItems` (`lendingId` TEXT NOT NULL, `itemId` TEXT NOT NULL, PRIMARY KEY(`lendingId`, `itemId`), FOREIGN KEY(`lendingId`) REFERENCES `Lendings`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`itemId`) REFERENCES `InventoryItems`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "CREATE INDEX IF NOT EXISTS `index_LendingItems_itemId` ON `LendingItems` (`itemId`)",
+        "CREATE TABLE IF NOT EXISTS `Members` (`memberNumber` INTEGER NOT NULL, `status` TEXT, `fullName` TEXT NOT NULL, `nif` TEXT, `email` TEXT, PRIMARY KEY(`memberNumber`))",
+        "CREATE TABLE IF NOT EXISTS `Memories` (`id` TEXT NOT NULL, `place` TEXT, `externalUsers` TEXT, `text` TEXT NOT NULL, `sport` TEXT, `department` TEXT, `attachments` TEXT, `submittedBy` TEXT NOT NULL, `fromDate` TEXT NOT NULL, `toDate` TEXT NOT NULL, `pdf` TEXT, `lending` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`department`) REFERENCES `Departments`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`lending`) REFERENCES `Lendings`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "CREATE INDEX IF NOT EXISTS `index_Memories_department` ON `Memories` (`department`)",
+        "CREATE INDEX IF NOT EXISTS `index_Memories_lending` ON `Memories` (`lending`)",
+        "CREATE TABLE IF NOT EXISTS `MemoryMembers` (`memoryId` TEXT NOT NULL, `memberNumber` INTEGER NOT NULL, PRIMARY KEY(`memoryId`, `memberNumber`), FOREIGN KEY(`memoryId`) REFERENCES `Memories`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "CREATE INDEX IF NOT EXISTS `index_MemoryMembers_memberNumber` ON `MemoryMembers` (`memberNumber`)",
+        "CREATE TABLE IF NOT EXISTS `Posts` (`id` TEXT NOT NULL, `date` INTEGER NOT NULL, `title` TEXT NOT NULL, `content` TEXT NOT NULL, `department` TEXT, `link` TEXT, `files` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`department`) REFERENCES `Departments`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "CREATE INDEX IF NOT EXISTS `index_Posts_department` ON `Posts` (`department`)",
+        "CREATE TABLE IF NOT EXISTS `ReceivedItems` (`id` TEXT NOT NULL, `lending` TEXT NOT NULL, `item` TEXT NOT NULL, `notes` TEXT, `receivedBy` TEXT NOT NULL, `receivedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`lending`) REFERENCES `Lendings`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`item`) REFERENCES `InventoryItems`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`receivedBy`) REFERENCES `Users`(`sub`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "CREATE INDEX IF NOT EXISTS `index_ReceivedItems_lending` ON `ReceivedItems` (`lending`)",
+        "CREATE INDEX IF NOT EXISTS `index_ReceivedItems_item` ON `ReceivedItems` (`item`)",
+        "CREATE INDEX IF NOT EXISTS `index_ReceivedItems_receivedBy` ON `ReceivedItems` (`receivedBy`)",
+        "CREATE TABLE IF NOT EXISTS `Spaces` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `conditionsOfUse` TEXT, `requiresKeys` INTEGER NOT NULL, `prices` TEXT NOT NULL, `isClosed` INTEGER NOT NULL, `closedSince` INTEGER, `closedUntil` INTEGER, `closedReason` TEXT, PRIMARY KEY(`id`))",
+        "CREATE TABLE IF NOT EXISTS `SpaceKeys` (`id` TEXT NOT NULL, `type` TEXT NOT NULL, `label` TEXT, `nfcId` BLOB, PRIMARY KEY(`id`), FOREIGN KEY(`type`) REFERENCES `SpaceKeyTypes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "CREATE INDEX IF NOT EXISTS `index_SpaceKeys_type` ON `SpaceKeys` (`type`)",
+        "CREATE TABLE IF NOT EXISTS `SpaceKeyTypes` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `description` TEXT, `spaces` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "CREATE TABLE IF NOT EXISTS `SpaceLendings` (`id` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `space` TEXT NOT NULL, `userSub` TEXT, `checkIn` TEXT NOT NULL, `checkOut` TEXT NOT NULL, `attendees` TEXT NOT NULL, `acceptedConditionsAt` INTEGER, `cancelled` INTEGER NOT NULL, `notes` TEXT, `pickedUpAt` INTEGER, `pickedUpBy` TEXT, `returnedAt` INTEGER, `returnedBy` TEXT, `requestedKeys` TEXT NOT NULL, `keys` TEXT NOT NULL, `totalPrice` REAL NOT NULL, `paymentStatus` TEXT NOT NULL, `reportNotes` TEXT, `reportIssues` TEXT, `reportSubmittedAt` INTEGER, `reportNotesFiles` TEXT NOT NULL, `reportIssuesFiles` TEXT NOT NULL, `paymentProofs` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`space`) REFERENCES `Spaces`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "CREATE INDEX IF NOT EXISTS `index_SpaceLendings_space` ON `SpaceLendings` (`space`)",
+        "CREATE TABLE IF NOT EXISTS `Users` (`sub` TEXT NOT NULL, `memberNumber` INTEGER NOT NULL, `fullName` TEXT NOT NULL, `email` TEXT NOT NULL, `groups` TEXT NOT NULL, `departments` TEXT NOT NULL, `lendingUser` TEXT, `insurances` TEXT NOT NULL, `isDisabled` INTEGER NOT NULL, PRIMARY KEY(`sub`))",
+        "CREATE INDEX IF NOT EXISTS `idx_users_isDisabled` ON `Users` (`isDisabled`)",
+    )
+
+    @Test
+    fun migratingFromV6_keepsLendings_andAddsTheManualPaymentMethod() = runTest {
+        val lendingId = "33333333-3333-3333-3333-333333333333"
+        val path = buildDatabaseFile(version = 6, schemaSql = v6SchemaSql) {
+            execSQL("INSERT INTO Spaces (id, name, description, conditionsOfUse, requiresKeys, prices, isClosed) VALUES ('44444444-4444-4444-4444-444444444444', 'Casa', 'A house', NULL, 0, '[]', 0)")
+            execSQL(
+                "INSERT INTO SpaceLendings (id, timestamp, space, userSub, checkIn, checkOut, attendees, acceptedConditionsAt, cancelled, notes, pickedUpAt, pickedUpBy, returnedAt, returnedBy, requestedKeys, keys, totalPrice, paymentStatus, reportNotes, reportIssues, reportSubmittedAt, reportNotesFiles, reportIssuesFiles, paymentProofs) VALUES " +
+                    "('$lendingId', 0, '44444444-4444-4444-4444-444444444444', NULL, '2026-10-09', '2026-10-10', '{}', NULL, 0, NULL, NULL, NULL, NULL, NULL, '{}', '[]', 6.0, 'COMPLETED', NULL, NULL, NULL, '[]', '[]', '[]')"
+            )
+        }
+
+        val database = getRoomDatabase(Room.databaseBuilder<AppDatabase>(name = path), Dispatchers.IO)
+        try {
+            assertEquals(1, database.spaceLendingDao().selectAll().size)
+        } finally {
+            database.close()
+        }
+
+        BundledSQLiteDriver().open(path).use { connection ->
+            assertEquals(DATABASE_VERSION.toLong(), connection.userVersion())
+            assertTrue("manualPaymentMethod" in connection.columnNames("SpaceLendings"))
+            // Not a destructive wipe: the lending survived, with no method (it was not recorded by hand)
+            assertEquals("COMPLETED", connection.textColumn("SpaceLendings", "paymentStatus", lendingId))
+            assertNull(connection.textColumn("SpaceLendings", "manualPaymentMethod", lendingId))
+        }
+    }
 }

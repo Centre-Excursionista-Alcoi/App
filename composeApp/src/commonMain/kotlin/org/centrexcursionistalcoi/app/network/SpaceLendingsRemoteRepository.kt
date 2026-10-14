@@ -17,6 +17,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.PaymentAuditEntry
 import org.centrexcursionistalcoi.app.data.PaymentLaunch
 import org.centrexcursionistalcoi.app.data.PaymentMethod
+import org.centrexcursionistalcoi.app.data.ManualPaymentMethod
 import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.data.SpaceLending
 import org.centrexcursionistalcoi.app.data.SpaceOccupancy
@@ -209,11 +210,14 @@ class SpaceLendingsRemoteRepository(
         refresh(lendingId, progress)
     }
 
-    /** For managers: sets the payment status. It's paid once the keys are back. */
-    suspend fun setPayment(lendingId: Uuid, status: PaymentStatus, progress: ProgressNotifier? = null) {
+    /**
+     * For managers: records a payment made outside the gateway ([PaymentStatus.COMPLETED] with the [method] it was
+     * received by, once the keys are back), or undoes it ([PaymentStatus.PENDING]).
+     */
+    suspend fun setPayment(lendingId: Uuid, status: PaymentStatus, method: ManualPaymentMethod? = null, progress: ProgressNotifier? = null) {
         val response = httpClient.post(Api.SpaceLendings.Id.Payment(id(lendingId))) {
             contentType(ContentType.Application.Json)
-            setBody(json.encodeToString(SetSpaceLendingPaymentRequest.serializer(), SetSpaceLendingPaymentRequest(status)))
+            setBody(json.encodeToString(SetSpaceLendingPaymentRequest.serializer(), SetSpaceLendingPaymentRequest(status, method)))
             monitorUploadProgress(progress)
         }
         if (!response.status.isSuccess()) throw response.bodyAsError().toThrowable()

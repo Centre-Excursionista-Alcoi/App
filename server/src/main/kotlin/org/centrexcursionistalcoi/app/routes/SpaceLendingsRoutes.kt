@@ -13,6 +13,8 @@ import org.centrexcursionistalcoi.app.payment.PaymentProviderException
 import org.centrexcursionistalcoi.app.payment.PaymentLaunches
 import org.centrexcursionistalcoi.app.payment.PaymentGatewayUnavailableException
 import org.centrexcursionistalcoi.app.data.PaymentMethod
+import org.centrexcursionistalcoi.app.data.ManualPaymentMethod
+import org.centrexcursionistalcoi.app.data.PaymentAuditEvent
 import org.centrexcursionistalcoi.app.data.PaymentLaunch
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -449,14 +451,46 @@ fun Route.spaceLendingsRoutes() {
         call.respond(HttpStatusCode.NoContent)
     }
 
+    // A manager records a payment made outside the gateway (cash...), or undoes one they recorded
     postWithLock<Api.SpaceLendings.Id.Payment>(spaceLendingsMutex) { resource ->
         val session = getUserSessionOrFail() ?: return@postWithLock
         val lending = spaceLendingFor(session, resource.parent.id, managerOnly = true) ?: return@postWithLock
         val request = receiveJson(SetSpaceLendingPaymentRequest.serializer()) ?: return@postWithLock
-        if (request.status in settledPayments && Database { lending.returnedAt == null }) {
-            return@postWithLock respondError(Error.InvalidSpaceLendingState("The lending is paid once the keys have been returned"))
+        val problem = Database {
+            val current = lending.paymentStatus
+            when (request.status) {
+                PaymentStatus.COMPLETED -> when {
+                    lending.returnedAt == null -> "The lending is paid once the keys have been returned"
+                    current in settledPayments -> "The lending is already paid"
+                    else -> null
+                }
+                // Only what was recorded by hand: a payment through the gateway is refunded instead
+                PaymentStatus.PENDING -> when {
+                    lending.manualPaymentMethod == null -> "Only a payment recorded by hand can be undone, refund the others"
+                    current != PaymentStatus.COMPLETED -> "The lending is not paid"
+                    else -> null
+                }
+                else -> "A payment can only be recorded as completed or undone"
+            }
         }
-        Database { lending.paymentStatus = request.status }
+        if (problem != null) return@postWithLock respondError(Error.InvalidSpaceLendingState(problem))
+
+        Database {
+            val previous = lending.paymentStatus
+            val previousMethod = lending.manualPaymentMethod
+            val method = if (request.status == PaymentStatus.COMPLETED) request.method ?: ManualPaymentMethod.OTHER else null
+            lending.paymentStatus = request.status
+            lending.manualPaymentMethod = method
+            PaymentAudit.record(
+                event = if (request.status == PaymentStatus.COMPLETED) PaymentAuditEvent.MANUAL_PAYMENT_SET else PaymentAuditEvent.MANUAL_PAYMENT_UNDONE,
+                actor = PaymentAudit.userActor(session.sub),
+                previousStatus = previous,
+                newStatus = request.status,
+                amountCents = Math.round(lending.totalPrice * 100).toInt(),
+                detail = PaymentAudit.detailOf("method" to (method ?: previousMethod)?.name),
+                subject = PaymentAudit.spaceLendingSubject(lending.id.value),
+            )
+        }
         lending.updated()
         call.respond(HttpStatusCode.NoContent)
     }
@@ -507,7 +541,9 @@ fun Route.spaceLendingsRoutes() {
     get<Api.SpaceLendings.Id.PaymentAudit> { resource ->
         val session = assertAdmin() ?: return@get
         val lending = spaceLendingFor(session, resource.parent.id, managerOnly = true) ?: return@get
-        call.respond(PaymentAudit.forTransactions(SpaceLendingPayments.transactionsOf(lending.id.value)))
+        val entries = PaymentAudit.forTransactions(SpaceLendingPayments.transactionsOf(lending.id.value)) +
+            PaymentAudit.forSubject(PaymentAudit.spaceLendingSubject(lending.id.value))
+        call.respond(entries.sortedBy { it.createdAt })
     }
 
     // A manager returns the money of a lending that was paid online

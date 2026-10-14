@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.database.table
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import org.centrexcursionistalcoi.app.data.Category
+import org.centrexcursionistalcoi.app.data.ManualPaymentMethod
 import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.json
@@ -45,6 +46,9 @@ object SpaceLendings : UuidTable("space_lendings") {
 
     val totalPrice = double("totalPrice").default(0.0)
     val paymentStatus = enumerationByName<PaymentStatus>("paymentStatus", 20).default(PaymentStatus.PENDING)
+
+    // Set when a manager recorded the payment by hand (cash...): those can be undone, payments through the gateway are refunded
+    val manualPaymentMethod = enumerationByName<ManualPaymentMethod>("manualPaymentMethod", 20).nullable()
 
     // Report written after the stay: notes, and issues found
     val reportNotes = text("reportNotes").nullable()

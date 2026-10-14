@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Category
 import org.centrexcursionistalcoi.app.data.PaymentAuditEntry
 import org.centrexcursionistalcoi.app.data.PaymentMethod
+import org.centrexcursionistalcoi.app.data.ManualPaymentMethod
 import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.database.SpaceKeyTypesRepository
@@ -146,7 +147,11 @@ class SpaceLendingDetailsViewModel(
     /** For admins: loads [auditLog]. */
     fun loadAuditLog() = work { auditLog.value = remote.paymentAudit(lendingId) }
 
-    fun setPayment(status: PaymentStatus) = work { remote.setPayment(lendingId, status) }
+    /** Records that the lending was paid outside the gateway, by [method]. */
+    fun markPaid(method: ManualPaymentMethod) = work { remote.setPayment(lendingId, PaymentStatus.COMPLETED, method) }
+
+    /** Undoes a payment recorded with [markPaid]. */
+    fun undoPayment() = work { remote.setPayment(lendingId, PaymentStatus.PENDING) }
 
     fun submitReport(notes: String?, issues: String?, notesFiles: List<PlatformFile>, issuesFiles: List<PlatformFile>, onDone: () -> Unit) = work {
         remote.submitReport(lendingId, notes, issues, notesFiles, issuesFiles)

@@ -700,6 +700,16 @@
     <string name="space_lending_dates">Dates</string>
     <string name="spaces_occupied_none">Cap data està ocupada.</string>
     <string name="space_lending_payment_mark_paid">Marcar com a pagat</string>
+    <string name="space_lending_payment_mark_paid_title">Com s'ha pagat?</string>
+    <string name="space_lending_payment_mark_paid_hint">Es registrarà com a pagat, i es guarda qui ho ha registrat a l'historial de pagaments.</string>
+    <string name="space_lending_payment_undo">Desfer el pagament</string>
+    <string name="space_lending_payment_undo_confirm">El préstec tornarà a estar pendent de pagament. Continuar?</string>
+    <string name="space_lending_paid_by">Pagat amb: %1$s</string>
+    <string name="manual_payment_method_cash">Efectiu</string>
+    <string name="manual_payment_method_card">Targeta</string>
+    <string name="manual_payment_method_bizum">Bizum</string>
+    <string name="manual_payment_method_transfer">Transferència bancària</string>
+    <string name="manual_payment_method_other">Altre</string>
     <string name="space_lending_cancel">Cancel·lar préstec</string>
     <string name="space_lending_payment">Pagament</string>
     <string name="space_lending_report_available_later">Podras deixar notes i notificar de problemes quan acabe el préstec.</string>
@@ -793,7 +803,7 @@
     <string name="space_lending_pay_waiting">Completa el pagament al navegador i comprova'l aquí.</string>
     <string name="space_lending_pay_check">Comprovar el pagament</string>
     <string name="space_lending_pay_unavailable">Els pagaments en línia no estan disponibles ara mateix. Torna-ho a provar més tard o paga per transferència bancària.</string>
-    <string name="space_lending_refund_online">Retornar el pagament en línia</string>
+    <string name="space_lending_refund_online">Retornar el pagament</string>
     <string name="space_lending_refund_confirm">Els diners es tornaran a la targeta o al compte de Bizum amb què es va pagar. Continuar?</string>
     <string name="space_lending_refund_rejected">El proveïdor de pagaments ha rebutjat la devolució. Torna-ho a provar més tard o retorna-la des del portal de Redsys.</string>
     <string name="space_lending_refund_not_online">Aquest préstec no s'ha pagat en línia, així que no hi ha res a retornar des d'aquí.</string>
@@ -812,4 +822,6 @@
     <string name="payment_audit_event_cancel_requested">Cancel·lació sol·licitada</string>
     <string name="payment_audit_event_operation_failed">Ha fallat la devolució o cancel·lació</string>
     <string name="payment_audit_event_listener_failed">Ha fallat l'actualització del préstec</string>
+    <string name="payment_audit_event_manual_payment_set">Pagament registrat manualment</string>
+    <string name="payment_audit_event_manual_payment_undone">Pagament registrat manualment desfet</string>
 </resources>

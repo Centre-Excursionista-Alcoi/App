@@ -35,6 +35,9 @@ object PaymentAudit {
 
     fun userActor(sub: String) = "user:$sub"
 
+    /** The `subject` of the events about a space lending that have no transaction (payments recorded by hand). */
+    fun spaceLendingSubject(lendingId: Uuid) = "space_lending:$lendingId"
+
     /**
      * Adds an entry. Joins the transaction it is called from, if any, so the entry of a change is saved or lost with
      * the change. Throws if it can't be written: use [tryRecord] where the audit mustn't break what is being audited.
@@ -49,6 +52,7 @@ object PaymentAudit {
         newStatus: PaymentStatus? = null,
         amountCents: Int? = null,
         detail: JsonObject? = null,
+        subject: String? = null,
     ) {
         Database {
             PaymentAuditLog.insert {
@@ -61,6 +65,7 @@ object PaymentAudit {
                 it[PaymentAuditLog.newStatus] = newStatus
                 it[PaymentAuditLog.amountCents] = amountCents
                 it[PaymentAuditLog.detail] = detail
+                it[PaymentAuditLog.subject] = subject
             }
         }
     }
@@ -76,9 +81,10 @@ object PaymentAudit {
         newStatus: PaymentStatus? = null,
         amountCents: Int? = null,
         detail: JsonObject? = null,
+        subject: String? = null,
     ) {
         try {
-            record(event, actor, transactionId, referenceKey, provider, previousStatus, newStatus, amountCents, detail)
+            record(event, actor, transactionId, referenceKey, provider, previousStatus, newStatus, amountCents, detail, subject)
         } catch (e: Exception) {
             logger.error("Could not record the audit entry $event for transaction $transactionId ($referenceKey)", e)
         }
@@ -91,6 +97,14 @@ object PaymentAudit {
     fun forTransactions(transactionIds: Collection<Uuid>): List<PaymentAuditEntry> = Database {
         PaymentAuditLog.selectAll()
             .where { PaymentAuditLog.transactionId inList transactionIds }
+            .orderBy(PaymentAuditLog.createdAt to SortOrder.ASC)
+            .map { it.toPaymentAuditEntry() }
+    }
+
+    /** Everything recorded with [subject], oldest first. */
+    fun forSubject(subject: String): List<PaymentAuditEntry> = Database {
+        PaymentAuditLog.selectAll()
+            .where { PaymentAuditLog.subject eq subject }
             .orderBy(PaymentAuditLog.createdAt to SortOrder.ASC)
             .map { it.toPaymentAuditEntry() }
     }

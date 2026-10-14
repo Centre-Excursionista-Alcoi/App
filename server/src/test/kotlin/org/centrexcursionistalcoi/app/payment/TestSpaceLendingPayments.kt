@@ -37,6 +37,7 @@ import org.centrexcursionistalcoi.app.SPACE_LENDINGS_MANAGER_GROUP_NAME
 import org.centrexcursionistalcoi.app.assertStatusCode
 import org.centrexcursionistalcoi.app.data.Category
 import org.centrexcursionistalcoi.app.data.CategoryPrice
+import org.centrexcursionistalcoi.app.data.ManualPaymentMethod
 import org.centrexcursionistalcoi.app.data.PaymentLaunch
 import org.centrexcursionistalcoi.app.data.PaymentMethod
 import org.centrexcursionistalcoi.app.data.PaymentStatus
@@ -260,6 +261,90 @@ class TestSpaceLendingPayments : ApplicationTestBase() {
         val location = client.returnedLending()
 
         client.post(Api.SpaceLendings.Id.Refund(Api.SpaceLendings.Id(location.substringAfterLast('/')))).assertStatusCode(HttpStatusCode.Conflict)
+    }
+
+    private suspend fun HttpClient.setPayment(location: String, body: String): HttpResponse =
+        post(Api.SpaceLendings.Id.Payment(Api.SpaceLendings.Id(location.substringAfterLast('/')))) {
+            contentType(ContentType.Application.Json)
+            setBody(body)
+        }
+
+    private fun manualMethod(location: String): ManualPaymentMethod? = Database {
+        SpaceLendingEntity[Uuid.parse(location.substringAfterLast('/'))].manualPaymentMethod
+    }
+
+    @Test
+    fun `a payment recorded by hand keeps its method, is audited and can be undone`() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN, databaseInitBlock = { createSpace() }, mockDate = today,
+    ) {
+        val location = client.returnedLending()
+
+        client.setPayment(location, """{"status":"COMPLETED","method":"CASH"}""").assertStatusCode(HttpStatusCode.NoContent)
+        assertEquals(PaymentStatus.COMPLETED, lendingStatus(location))
+        assertEquals(ManualPaymentMethod.CASH, manualMethod(location))
+
+        client.setPayment(location, """{"status":"PENDING"}""").assertStatusCode(HttpStatusCode.NoContent)
+        assertEquals(PaymentStatus.PENDING, lendingStatus(location))
+        assertEquals(null, manualMethod(location))
+
+        val audit = client.auditOf(location)
+        assertEquals(listOf(PaymentAuditEvent.MANUAL_PAYMENT_SET, PaymentAuditEvent.MANUAL_PAYMENT_UNDONE), audit.map { it.event })
+        assertContains(audit.first().actor, "user:")
+        assertEquals(PaymentStatus.PENDING, audit.first().previousStatus)
+        assertEquals(PaymentStatus.COMPLETED, audit.first().newStatus)
+        assertEquals(600, audit.first().amountCents)
+        assertEquals("CASH", audit.first().detail!!.getValue("method").jsonPrimitive.content)
+        // Undoing says what was undone
+        assertEquals("CASH", audit.last().detail!!.getValue("method").jsonPrimitive.content)
+        assertEquals(PaymentStatus.COMPLETED, audit.last().previousStatus)
+    }
+
+    @Test
+    fun `a payment recorded without a method is recorded as other`() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN, databaseInitBlock = { createSpace() }, mockDate = today,
+    ) {
+        val location = client.returnedLending()
+
+        client.setPayment(location, """{"status":"COMPLETED"}""").assertStatusCode(HttpStatusCode.NoContent)
+
+        assertEquals(ManualPaymentMethod.OTHER, manualMethod(location))
+    }
+
+    @Test
+    fun `a payment through the gateway cannot be undone, only refunded`() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN, databaseInitBlock = { createSpace() }, mockDate = today,
+    ) {
+        register()
+        val location = client.returnedLending()
+        client.pay(location).assertStatusCode(HttpStatusCode.OK)
+        client.redsysNotifies(order()).assertStatusCode(HttpStatusCode.OK)
+
+        client.setPayment(location, """{"status":"PENDING"}""").assertStatusCode(HttpStatusCode.Conflict)
+
+        assertEquals(PaymentStatus.COMPLETED, lendingStatus(location))
+        assertEquals(null, manualMethod(location))
+        client.post(Api.SpaceLendings.Id.Refund(Api.SpaceLendings.Id(location.substringAfterLast('/')))).assertStatusCode(HttpStatusCode.NoContent)
+        assertEquals(PaymentStatus.REFUNDED, lendingStatus(location))
+    }
+
+    @Test
+    fun `a payment cannot be recorded early, twice or with any other status`() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN, databaseInitBlock = { createSpace() }, mockDate = today,
+    ) {
+        val booked = client.book()
+        client.setPayment(booked, """{"status":"COMPLETED","method":"CASH"}""").assertStatusCode(HttpStatusCode.Conflict)
+
+        client.postUrl("$booked/pickup").assertStatusCode(HttpStatusCode.NoContent)
+        client.postUrl("$booked/return").assertStatusCode(HttpStatusCode.NoContent)
+        val location = booked
+        // Nothing to undo yet
+        client.setPayment(location, """{"status":"PENDING"}""").assertStatusCode(HttpStatusCode.Conflict)
+        client.setPayment(location, """{"status":"REFUNDED"}""").assertStatusCode(HttpStatusCode.Conflict)
+        client.setPayment(location, """{"status":"COMPLETED","method":"CASH"}""").assertStatusCode(HttpStatusCode.NoContent)
+        client.setPayment(location, """{"status":"COMPLETED","method":"TRANSFER"}""").assertStatusCode(HttpStatusCode.Conflict)
+
+        assertEquals(ManualPaymentMethod.CASH, manualMethod(location))
+        assertEquals(1, client.auditOf(location).size)
     }
 
     @Test
