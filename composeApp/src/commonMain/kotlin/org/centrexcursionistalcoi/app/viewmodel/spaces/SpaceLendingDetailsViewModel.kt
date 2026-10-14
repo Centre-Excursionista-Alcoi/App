@@ -61,10 +61,9 @@ class SpaceLendingDetailsViewModel(
     val awaitingPayment: StateFlow<Boolean>
         field = MutableStateFlow(false)
 
-    private val _auditLog = MutableStateFlow<List<PaymentAuditEntry>?>(null)
-
     /** For admins: what the payments gateway recorded about the lending. `null` until loaded. */
-    val auditLog = _auditLog.asStateFlow()
+    val auditLog: StateFlow<List<PaymentAuditEntry>?>
+        field = MutableStateFlow<List<PaymentAuditEntry>?>(null)
 
     val lending = spaceLendingsRepository.getAsFlow(lendingId).stateInViewModel()
     val profile = profileRepository.profile.stateInViewModel()
@@ -145,7 +144,7 @@ class SpaceLendingDetailsViewModel(
     }
 
     /** For admins: loads [auditLog]. */
-    fun loadAuditLog() = work { _auditLog.value = remote.paymentAudit(lendingId) }
+    fun loadAuditLog() = work { auditLog.value = remote.paymentAudit(lendingId) }
 
     fun setPayment(status: PaymentStatus) = work { remote.setPayment(lendingId, status) }
 
