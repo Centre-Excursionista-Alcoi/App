@@ -29,14 +29,16 @@ extension ContentView {
     @ViewBuilder
     fileprivate var content: some View {
         #if DEBUG
-        // Shows the native screens under construction instead of the Compose app: pass `-CEANativeSettings`.
+        // `-CEANativeSettings` shows the native Settings screen alone, `-CEAComposeUI` the old all-Compose app.
         if ProcessInfo.processInfo.arguments.contains("-CEANativeSettings") {
             NavigationStack { SettingsView() }
-        } else {
+        } else if ProcessInfo.processInfo.arguments.contains("-CEAComposeUI") {
             ComposeView().ignoresSafeArea()
+        } else {
+            RootView()
         }
         #else
-        ComposeView().ignoresSafeArea()
+        RootView()
         #endif
     }
 }

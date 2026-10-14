@@ -218,6 +218,7 @@
 
     <string name="status_loading">Loading...</string>
 
+    <string name="retry">Retry</string>
     <string name="loading_screen_error">Load failed</string>
     <string name="error_unknown">An unknown error occurred. Type: %1$s</string>
     <string name="error_delete_references">This element is referenced by another entity, it cannot be removed.</string>

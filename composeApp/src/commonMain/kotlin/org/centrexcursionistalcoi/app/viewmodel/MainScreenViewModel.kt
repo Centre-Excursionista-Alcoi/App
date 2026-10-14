@@ -9,10 +9,13 @@ import org.centrexcursionistalcoi.app.database.DepartmentsRepository
 import org.centrexcursionistalcoi.app.database.LendingsRepository
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.network.DepartmentsRemoteRepository
+import org.centrexcursionistalcoi.app.nav.mainTabs
 import org.centrexcursionistalcoi.app.network.LendingsRemoteRepository
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.BackgroundJobState
 import org.centrexcursionistalcoi.app.sync.SyncAllDataBackgroundJob
+import org.centrexcursionistalcoi.app.ui.utils.departmentsCountBadge
+import org.centrexcursionistalcoi.app.ui.utils.lendingsCountBadge
 import org.koin.core.annotation.KoinViewModel
 
 @KoinViewModel
@@ -38,6 +41,16 @@ class MainScreenViewModel(
             ?.filter { it.user.sub == profileValue.sub || it.user.sub == "unknown" }
             ?.find { it.status().isPending() }
     }.stateInViewModel()
+
+    /** The tabs the user gets, `null` until their profile is loaded. See [mainTabs]. */
+    val tabs = combine(profile, departments, activeUserLending) { profile, departments, activeLending ->
+        profile?.let { mainTabs(it, departments, hasActiveLending = activeLending != null) }
+    }.stateInViewModel()
+
+    /** What the management tab's badge counts: requests to join departments and lendings waiting for a manager. */
+    val managementBadge = combine(departments, lendings) { departments, lendings ->
+        (departments.departmentsCountBadge() ?: 0) + (lendings.lendingsCountBadge() ?: 0)
+    }.stateInViewModel(0)
 
     fun sync() = launch {
         backgroundJobCoordinator.schedule<SyncAllDataBackgroundJob>(

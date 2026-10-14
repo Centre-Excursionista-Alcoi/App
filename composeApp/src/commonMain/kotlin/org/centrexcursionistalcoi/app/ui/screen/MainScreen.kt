@@ -83,7 +83,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.centrexcursionistalcoi.app.data.Department
-import org.centrexcursionistalcoi.app.data.Department.Companion.isManagerOfAny
 import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.ReferencedMemory
@@ -135,12 +134,9 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
-import org.centrexcursionistalcoi.app.FeatureFlag
-import org.centrexcursionistalcoi.app.hasFeature
-
-/** Manages spaces or their lendings, and the spaces feature is enabled for them. */
-private fun ProfileResponse.isSpacesFeatureManager() =
-    hasFeature(FeatureFlag.SPACES) && (isSpacesManager || isSpaceLendingsManager)
+import org.centrexcursionistalcoi.app.nav.MainTab
+import org.centrexcursionistalcoi.app.nav.canSeeManagement
+import org.centrexcursionistalcoi.app.nav.mainTabs
 
 @Composable
 fun MainScreen(
@@ -198,10 +194,6 @@ fun MainScreen(
     } ?: LoadingBox()
 }
 
-private enum class Page {
-    HOME, LENDINGS, LENDING, ACTIVITIES, MANAGEMENT, PROFILE
-}
-
 private class NavigationItem(
     val icon: ImageVector,
     val filledIcon: ImageVector,
@@ -221,61 +213,37 @@ private class NavigationItem(
     }
 }
 
-private fun navigationItems(isAdmin: Boolean, isManagerOfAnyDepartment: Boolean, anyActiveLending: Boolean): Map<Page, NavigationItem> {
-    return mutableMapOf<Page, NavigationItem>().apply {
-        put(
-            Page.HOME,
-            NavigationItem(
-                icon = MaterialSymbols.Home,
-                filledIcon = MaterialSymbols.HomeFilled,
-                label = Res.string.nav_home
-            )
-        )
-        if (anyActiveLending)
-            put(
-                Page.LENDING,
-                NavigationItem(
-                    icon = MaterialSymbols.Package2,
-                    filledIcon = MaterialSymbols.Package2Filled,
-                    label = Res.string.nav_lending
-                )
-            )
-        else
-            put(
-                Page.LENDINGS,
-                NavigationItem(
-                    icon = MaterialSymbols.Inventory2,
-                    filledIcon = MaterialSymbols.Inventory2Filled,
-                    label = Res.string.nav_lendings,
-                )
-            )
-        put(
-            Page.ACTIVITIES,
-            NavigationItem(
-                icon = MaterialSymbols.Hiking,
-                filledIcon = MaterialSymbols.Hiking,
-                label = Res.string.nav_activities
-            )
-        )
-        if (isAdmin || isManagerOfAnyDepartment) {
-            put(
-                Page.MANAGEMENT,
-                NavigationItem(
-                    icon = MaterialSymbols.SupervisorAccount,
-                    filledIcon = MaterialSymbols.SupervisorAccountFilled,
-                    label = Res.string.nav_management
-                )
-            )
-        }
-        put(
-            Page.PROFILE,
-            NavigationItem(
-                icon = MaterialSymbols.Face,
-                filledIcon = MaterialSymbols.FaceFilled,
-                label = Res.string.nav_profile
-            )
-        )
-    }.toMap()
+private fun navigationItem(tab: MainTab): NavigationItem = when (tab) {
+    MainTab.HOME -> NavigationItem(
+        icon = MaterialSymbols.Home,
+        filledIcon = MaterialSymbols.HomeFilled,
+        label = Res.string.nav_home
+    )
+    MainTab.LENDING -> NavigationItem(
+        icon = MaterialSymbols.Package2,
+        filledIcon = MaterialSymbols.Package2Filled,
+        label = Res.string.nav_lending
+    )
+    MainTab.LENDINGS -> NavigationItem(
+        icon = MaterialSymbols.Inventory2,
+        filledIcon = MaterialSymbols.Inventory2Filled,
+        label = Res.string.nav_lendings,
+    )
+    MainTab.ACTIVITIES -> NavigationItem(
+        icon = MaterialSymbols.Hiking,
+        filledIcon = MaterialSymbols.Hiking,
+        label = Res.string.nav_activities
+    )
+    MainTab.MANAGEMENT -> NavigationItem(
+        icon = MaterialSymbols.SupervisorAccount,
+        filledIcon = MaterialSymbols.SupervisorAccountFilled,
+        label = Res.string.nav_management
+    )
+    MainTab.PROFILE -> NavigationItem(
+        icon = MaterialSymbols.Face,
+        filledIcon = MaterialSymbols.FaceFilled,
+        label = Res.string.nav_profile
+    )
 }
 
 @Composable
@@ -313,11 +281,8 @@ private fun MainScreenContent(
     onSyncRequested: () -> Unit
 ) {
     var shoppingList by remember { mutableStateOf<ShoppingList>(emptyMap()) }
-    val isManagerOfAnyDepartment = remember(profile, departments) {
-        profile.isUsersManager || profile.isMembersManager || profile.isSpacesFeatureManager() || departments.orEmpty().isManagerOfAny(profile)
-    }
-    val navigationItems = remember(profile, activeUserLending) {
-        navigationItems(isAdmin = profile.isAdmin, isManagerOfAnyDepartment, anyActiveLending = activeUserLending != null)
+    val navigationItems = remember(profile, departments, activeUserLending) {
+        mainTabs(profile, departments, hasActiveLending = activeUserLending != null).associateWith(::navigationItem)
     }
 
     val scope = rememberCoroutineScope()
@@ -325,12 +290,12 @@ private fun MainScreenContent(
     val windowSizeClass = calculateWindowSizeClass()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val actualPage: Page = remember(pager.currentPage) {
+    val actualPage: MainTab = remember(pager.currentPage) {
         val pages = navigationItems.keys.toList()
         pages[pager.currentPage]
     }
 
-    fun scrollToPage(page: Page, animated: Boolean = false) {
+    fun scrollToPage(page: MainTab, animated: Boolean = false) {
         scope.launch {
             val page = navigationItems.keys.indexOf(page)
             if (animated)
@@ -377,7 +342,7 @@ private fun MainScreenContent(
                 onLendingCancelRequested(lending).also {
                     it.invokeOnCompletion {
                         cancellingLending = null
-                        scrollToPage(Page.HOME)
+                        scrollToPage(MainTab.HOME)
                     }
                 }
             },
@@ -398,11 +363,11 @@ private fun MainScreenContent(
         if (profile.isAdmin) {
             if (showingAdminItemTypeId != null) {
                 pager.scrollToPage(
-                    navigationItems.keys.indexOf(Page.MANAGEMENT)
+                    navigationItems.keys.indexOf(MainTab.MANAGEMENT)
                 )
             } else if (showingAdminLendingsScreen) {
                 pager.scrollToPage(
-                    navigationItems.keys.indexOf(Page.MANAGEMENT)
+                    navigationItems.keys.indexOf(MainTab.MANAGEMENT)
                 )
             }
         }
@@ -413,7 +378,7 @@ private fun MainScreenContent(
     LaunchedEffect(showingFemecvAccount) {
         if (showingFemecvAccount) {
             scrollToFemecvAccount = true
-            pager.scrollToPage(navigationItems.keys.indexOf(Page.PROFILE))
+            pager.scrollToPage(navigationItems.keys.indexOf(MainTab.PROFILE))
         }
     }
 
@@ -443,7 +408,7 @@ private fun MainScreenContent(
                                 Badge { Text(stringResource(Res.string.admin)) }
                             }
                             when (actualPage) {
-                                Page.LENDINGS, Page.LENDING -> {
+                                MainTab.LENDINGS, MainTab.LENDING -> {
                                     LendingsActionBarIcons(
                                         activeLending = activeUserLending,
                                         // Filter only the lendings owned by the logged in user
@@ -453,7 +418,7 @@ private fun MainScreenContent(
                                     )
                                 }
 
-                                Page.PROFILE -> {
+                                MainTab.PROFILE -> {
                                     IconButton(
                                         onClick = onSettingsRequested
                                     ) {
@@ -484,7 +449,7 @@ private fun MainScreenContent(
                         for ((index, entry) in navigationItems.entries.withIndex()) {
                             val (page, item) = entry
                             val isSelected = pager.currentPage == index
-                            val badgeText = if (page == Page.MANAGEMENT) {
+                            val badgeText = if (page == MainTab.MANAGEMENT) {
                                 val departmentsCount = departments.departmentsCountBadge() ?: 0
                                 val lendingsCount = lendings.lendingsCountBadge() ?: 0
                                 (departmentsCount + lendingsCount).takeIf { it > 0 }?.toString()
@@ -506,7 +471,7 @@ private fun MainScreenContent(
         },
         floatingActionButton = {
             AnimatedVisibility(
-                visible = actualPage == Page.LENDINGS && shoppingList.isNotEmpty(),
+                visible = actualPage == MainTab.LENDINGS && shoppingList.isNotEmpty(),
                 enter = slideInHorizontally { it },
                 exit = slideOutHorizontally { it },
             ) {
@@ -527,7 +492,7 @@ private fun MainScreenContent(
                 }
             }
             AnimatedVisibility(
-                visible = actualPage == Page.ACTIVITIES,
+                visible = actualPage == MainTab.ACTIVITIES,
                 enter = slideInHorizontally { it },
                 exit = slideOutHorizontally { it },
             ) {
@@ -555,7 +520,7 @@ private fun MainScreenContent(
                     scrollToFemecvAccount = scrollToFemecvAccount,
                     onFemecvAccountRequested = {
                         scrollToFemecvAccount = true
-                        scrollToPage(Page.PROFILE, animated = true)
+                        scrollToPage(MainTab.PROFILE, animated = true)
                     },
                     onFemecvAccountShown = { scrollToFemecvAccount = false },
                     snackbarHostState = snackbarHostState,
@@ -654,8 +619,8 @@ fun LendingsActionBarIcons(
 
 @Composable
 private fun MainScreenPagerContent(
-    page: Page,
-    onPageRequested: (Page) -> Unit,
+    page: MainTab,
+    onPageRequested: (MainTab) -> Unit,
     scrollToFemecvAccount: Boolean,
     onFemecvAccountRequested: () -> Unit,
     onFemecvAccountShown: () -> Unit,
@@ -687,10 +652,10 @@ private fun MainScreenPagerContent(
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         when (page) {
-            Page.HOME -> HomePage(onFemecvAccountRequested = onFemecvAccountRequested)
+            MainTab.HOME -> HomePage(onFemecvAccountRequested = onFemecvAccountRequested)
 
-            Page.LENDINGS -> LendingsPage(
-                onAddInsuranceRequested = { onPageRequested(Page.PROFILE) },
+            MainTab.LENDINGS -> LendingsPage(
+                onAddInsuranceRequested = { onPageRequested(MainTab.PROFILE) },
                 onItemTypeDetailsRequested,
                 onLendingSignUpRequested,
                 onLendingHistoryRequest,
@@ -700,19 +665,19 @@ private fun MainScreenPagerContent(
                 onSpaceLendingClick = onSpaceLendingClick,
             )
 
-            Page.LENDING if activeLending != null -> LendingPage(
+            MainTab.LENDING if activeLending != null -> LendingPage(
                 onCancelLendingRequest = onCancelLendingRequest,
                 onLendingHistoryRequest = onLendingHistoryRequest,
                 onMemoryEditorRequested = onMemoryEditorRequested,
                 snackbarHostState = snackbarHostState,
             )
             // If lending is selected, but there's no active lending, move to home
-            Page.LENDING -> LaunchedEffect(Unit) { onPageRequested(Page.HOME) }
+            MainTab.LENDING -> LaunchedEffect(Unit) { onPageRequested(MainTab.HOME) }
 
-            Page.ACTIVITIES -> ActivitiesPage(onEditMemoryRequest)
+            MainTab.ACTIVITIES -> ActivitiesPage(onEditMemoryRequest)
 
             // Management page only for admins, global managers, or department managers
-            Page.MANAGEMENT if (profile.isAdmin || profile.isUsersManager || profile.isMembersManager || profile.isSpacesFeatureManager() || departments.orEmpty().isManagerOfAny(profile)) -> ManagementPage(
+            MainTab.MANAGEMENT if profile.canSeeManagement(departments) -> ManagementPage(
                 snackbarHostState = snackbarHostState,
                 selectedItem = selectedManagementItem,
                 onGiveRequested = onOtherUserLendingClick,
@@ -720,9 +685,9 @@ private fun MainScreenPagerContent(
                 onSpaceLendingClick = onSpaceLendingClick,
             )
 
-            Page.MANAGEMENT -> Text(stringResource(Res.string.error_access_denied))
+            MainTab.MANAGEMENT -> Text(stringResource(Res.string.error_access_denied))
 
-            Page.PROFILE -> ProfilePage(scrollToFemecvAccount = scrollToFemecvAccount, onFemecvAccountShown = onFemecvAccountShown)
+            MainTab.PROFILE -> ProfilePage(scrollToFemecvAccount = scrollToFemecvAccount, onFemecvAccountShown = onFemecvAccountShown)
         }
     }
 }
@@ -731,7 +696,7 @@ private fun MainScreenPagerContent(
 @Composable
 private fun ColumnScope.NavigationRailItems(
     pager: PagerState,
-    navigationItems: Map<Page, NavigationItem>,
+    navigationItems: Map<MainTab, NavigationItem>,
     isAdmin: Boolean,
     isSyncing: Boolean,
     departments: List<Department>?,
@@ -751,7 +716,7 @@ private fun ColumnScope.NavigationRailItems(
     for ((index, entry) in navigationItems.entries.withIndex()) {
         val (page, item) = entry
         val isSelected = pager.currentPage == index
-        val badgeText = if (page == Page.MANAGEMENT) {
+        val badgeText = if (page == MainTab.MANAGEMENT) {
             val departmentsCount = departments.departmentsCountBadge() ?: 0
             val lendingsCount = lendings.lendingsCountBadge() ?: 0
             (departmentsCount + lendingsCount).takeIf { it > 0 }?.toString()
