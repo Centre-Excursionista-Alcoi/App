@@ -6,12 +6,14 @@ import kotlinx.coroutines.cancel
 import org.centrexcursionistalcoi.app.push.PlatformSSEConfiguration
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
 import org.centrexcursionistalcoi.app.viewmodel.HomePageModel
+import org.centrexcursionistalcoi.app.viewmodel.LendingsPageModel
 import org.centrexcursionistalcoi.app.viewmodel.LoadingViewModel
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.centrexcursionistalcoi.app.viewmodel.LogoutViewModel
 import org.centrexcursionistalcoi.app.viewmodel.MainScreenViewModel
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
 import org.centrexcursionistalcoi.app.viewmodel.ProfilePageModel
+import org.centrexcursionistalcoi.app.viewmodel.spaces.SpacesViewModel
 import org.centrexcursionistalcoi.app.viewmodel.SecurityViewModel
 import org.centrexcursionistalcoi.app.viewmodel.SessionExpiryViewModel
 import org.centrexcursionistalcoi.app.viewmodel.SettingsViewModel
@@ -39,6 +41,10 @@ object ViewModelFactory {
     fun loadingViewModel(): LoadingViewModel = KoinPlatform.getKoin().get()
 
     fun homePageModel(): HomePageModel = KoinPlatform.getKoin().get()
+
+    fun spacesViewModel(): SpacesViewModel = KoinPlatform.getKoin().get()
+
+    fun lendingsPageModel(): LendingsPageModel = KoinPlatform.getKoin().get()
 
     fun profilePageModel(): ProfilePageModel = KoinPlatform.getKoin().get()
 

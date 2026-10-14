@@ -64,6 +64,8 @@ import org.centrexcursionistalcoi.app.ui.page.main.LendingPage
 import org.centrexcursionistalcoi.app.ui.page.main.LendingsPage
 import org.centrexcursionistalcoi.app.ui.page.main.ManagementPage
 import org.centrexcursionistalcoi.app.ui.page.main.ProfilePage
+import org.centrexcursionistalcoi.app.ui.page.main.SpacesTab
+import org.centrexcursionistalcoi.app.viewmodel.spaces.SpacesViewModel
 import org.centrexcursionistalcoi.app.ui.screen.AuthScreen
 import org.centrexcursionistalcoi.app.ui.screen.LendingsActionBarIcons
 import org.centrexcursionistalcoi.app.ui.screen.LogoutScreen
@@ -99,6 +101,30 @@ fun composeTabViewController(
         LocalinaApp {
             TransitionHost {
                 TabIsland(tab, scrollToFemecvAccount, onNavigate, onTabRequested)
+            }
+        }
+    }
+}
+
+/** The spaces of the lending page (and the user's bookings of them), until the native UI has its own. */
+fun composeSpacesViewController(
+    hasItemsSelected: Boolean,
+    onNavigate: (Destination) -> Unit,
+): UIViewController = ComposeUIViewController {
+    AppTheme {
+        LocalinaApp {
+            TransitionHost {
+                val model: SpacesViewModel = koinViewModel()
+                val spaces by model.spaces.collectAsState()
+                val lendings by model.myLendings.collectAsState()
+                SpacesTab(
+                    spaces = spaces.orEmpty(),
+                    lendings = lendings.orEmpty(),
+                    hasItemsSelected = hasItemsSelected,
+                    onDetailsRequested = { onNavigate(Destination.SpaceDetails(it)) },
+                    onBookRequested = { onNavigate(Destination.SpaceLendingCreation(it)) },
+                    onLendingClick = { onNavigate(Destination.SpaceLendingDetails(it)) },
+                )
             }
         }
     }

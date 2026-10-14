@@ -93,6 +93,8 @@ extension TabContent {
             HomeView()
         case .profile:
             ProfileView()
+        case .lendings:
+            LendingsView()
         default:
             ComposeTabIsland(
                 tab: tab,

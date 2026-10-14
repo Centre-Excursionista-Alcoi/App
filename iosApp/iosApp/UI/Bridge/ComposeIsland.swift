@@ -43,3 +43,18 @@ struct ComposeDestinationIsland: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: UIViewController, context: UIViewControllerRepresentableContext<ComposeDestinationIsland>) {}
 }
+
+/// The spaces of the lending page, still in Compose.
+struct ComposeSpacesIsland: UIViewControllerRepresentable {
+    typealias UIViewControllerType = UIViewController
+    typealias Coordinator = Void
+
+    let hasItemsSelected: Bool
+    let onNavigate: (any Destination) -> Void
+
+    func makeUIViewController(context: UIViewControllerRepresentableContext<ComposeSpacesIsland>) -> UIViewController {
+        ComposeIslandsKt.composeSpacesViewController(hasItemsSelected: hasItemsSelected, onNavigate: onNavigate)
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: UIViewControllerRepresentableContext<ComposeSpacesIsland>) {}
+}

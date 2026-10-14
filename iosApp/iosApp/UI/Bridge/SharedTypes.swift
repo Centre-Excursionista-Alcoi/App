@@ -8,3 +8,5 @@ typealias Qualification = SharedQualification
 typealias QualificationGrant = SharedQualificationGrant
 typealias ReferencedEvent = SharedReferencedEvent
 typealias ReferencedPost = SharedReferencedPost
+typealias ReferencedInventoryItemType = SharedReferencedInventoryItemType
+typealias ReferencedLending = SharedReferencedLending
