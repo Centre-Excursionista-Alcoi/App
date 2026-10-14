@@ -460,11 +460,14 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
 - **`RedisStoreMap` (If-Modified-Since caching) is a process-lifetime singleton.** Tests that don't isolate
   it can leak cached state between test cases that otherwise look independent — see the fix in
   `server/src/test/.../ApplicationTestBase.kt` if this resurfaces as a flaky/order-dependent test failure.
-- **Stacked PRs**: this repo/workflow uses the `gh stack` extension (`gh stack init`, `gh stack add`,
-  `gh stack submit`, `gh stack view`, `gh stack checkout`) for PRs that build on an unmerged base branch.
-  When a base-branch PR in the stack gets new commits from `master` merged into it (e.g. an unrelated
-  hotfix), **you must manually re-merge `master` into each branch in the stack, bottom-up**, and re-push —
-  `gh stack sync` manages the stack's own branches, not upstream-`master` drift into the stack's base.
+- **Stacked PRs**: PRs that build on an unmerged base branch are managed with the `gh stack` extension. **Check it is
+  installed first** (`gh stack --help`); if not, ask the user to install it (`gh extension install github/gh-stack`) rather
+  than stacking by hand with ordinary base branches. Use `gh stack init`/`add` to create the branches, `gh stack submit` to
+  push and open the PRs, `gh stack view` to see the stack, and `gh stack checkout` to switch to one. To group PRs that
+  already exist, `gh stack link <pr>...` (bottom to top; a stack number as the first argument appends to that stack).
+  When a base branch changes (a lower PR gets new commits, is merged, or `master` moves), run `gh stack sync`, or
+  `gh stack rebase`, instead of re-merging `master` into each branch by hand. Check `gh stack sync --help` first when
+  unsure what a command will do to the branches.
 - **`ADMIN_GROUP_NAME` and department roles are separate systems.** Global admin (`ADMIN_GROUP_NAME = "admin"`
   in `:shared`'s `Constants.kt`, stored in `user_references.groups`) is distinct from per-department
   `DepartmentRole.ADMIN`. A global admin implicitly passes every department permission check; a department
