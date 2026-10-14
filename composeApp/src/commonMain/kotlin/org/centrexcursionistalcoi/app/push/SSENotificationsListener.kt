@@ -2,8 +2,11 @@ package org.centrexcursionistalcoi.app.push
 
 import com.diamondedge.logging.logging
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.resources.Resources
 import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.plugins.sse.SSEClientException
 import io.ktor.client.plugins.sse.sse
@@ -24,6 +27,26 @@ import org.centrexcursionistalcoi.app.sync.SyncEntityBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncLendingBackgroundJob
 import org.koin.core.annotation.Singleton
 
+/**
+ * The client that listens to the server's events. It signs its requests with the session, which refreshes the access
+ * token through [io.ktor.client.plugins.resources.Resources]: without that plugin installed, listening failed with
+ * "Resources plugin is not installed" (#753).
+ */
+internal fun createSSEClient(engine: HttpClientEngine? = null): HttpClient {
+    val configure: HttpClientConfig<*>.() -> Unit = {
+        defaultRequest {
+            url(BuildKonfig.SERVER_URL)
+        }
+        install(ContentNegotiation) {
+            json(json)
+        }
+        install(Resources)
+        install(SSE)
+        configureLogging()
+    }
+    return (if (engine != null) HttpClient(engine, configure) else HttpClient(configure)).installSessionAuth()
+}
+
 @Singleton
 class SSENotificationsListener(
     private val backgroundJobCoordinator: BackgroundJobCoordinator,
@@ -40,16 +63,7 @@ class SSENotificationsListener(
     private val _sseException = MutableStateFlow<SSEClientException?>(null)
     val sseException = _sseException.asStateFlow()
 
-    private val client = HttpClient {
-        defaultRequest {
-            url(BuildKonfig.SERVER_URL)
-        }
-        install(ContentNegotiation) {
-            json(json)
-        }
-        install(SSE)
-        configureLogging()
-    }.installSessionAuth()
+    private val client = createSSEClient()
 
     fun startListening() {
         _sseException.value = null
