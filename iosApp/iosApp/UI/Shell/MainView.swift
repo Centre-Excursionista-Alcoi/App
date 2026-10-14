@@ -23,15 +23,7 @@ struct MainView: View {
                 }
             }
             .tabViewStyle(.sidebarAdaptable)
-            .navigationDestination(for: Route.self) { route in
-                ComposeDestinationIsland(
-                    destination: route.destination,
-                    onSessionChange: shell.sessionChanged,
-                    onClose: shell.closeTop
-                )
-                .ignoresSafeArea(.container, edges: .bottom)
-                .toolbar(.hidden, for: .navigationBar)
-            }
+            .navigationDestination(for: Route.self) { RouteView(route: $0) }
         }
     }
 }
