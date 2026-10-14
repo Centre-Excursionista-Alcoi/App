@@ -41,6 +41,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.Res
@@ -76,6 +77,22 @@ import cea_app.composeapp.generated.resources.space_lending_notes
 import cea_app.composeapp.generated.resources.space_lending_payment
 import cea_app.composeapp.generated.resources.space_lending_payment_hint
 import cea_app.composeapp.generated.resources.space_lending_payment_mark_paid
+import cea_app.composeapp.generated.resources.space_lending_payment_mark_paid_hint
+import cea_app.composeapp.generated.resources.space_lending_payment_mark_paid_title
+import cea_app.composeapp.generated.resources.space_lending_payment_undo
+import cea_app.composeapp.generated.resources.space_lending_payment_undo_confirm
+import cea_app.composeapp.generated.resources.space_lending_paid_by
+import cea_app.composeapp.generated.resources.manual_payment_method_bizum
+import cea_app.composeapp.generated.resources.manual_payment_method_card
+import cea_app.composeapp.generated.resources.manual_payment_method_cash
+import cea_app.composeapp.generated.resources.manual_payment_method_other
+import cea_app.composeapp.generated.resources.manual_payment_method_transfer
+import cea_app.composeapp.generated.resources.payment_audit_event_manual_payment_set
+import cea_app.composeapp.generated.resources.payment_audit_event_manual_payment_undone
+import org.centrexcursionistalcoi.app.data.ManualPaymentMethod
+import androidx.compose.material3.RadioButton
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 import cea_app.composeapp.generated.resources.space_lending_payment_proof
 import cea_app.composeapp.generated.resources.space_lending_payment_proofs
 import cea_app.composeapp.generated.resources.space_lending_picked_up_by
@@ -139,6 +156,8 @@ fun SpaceLendingDetailsScreen(
     val auditLog by model.auditLog.collectAsState()
     val uriHandler = LocalUriHandler.current
     var showRefundConfirmation by rememberSaveable { mutableStateOf(false) }
+    var showMarkPaidDialog by rememberSaveable { mutableStateOf(false) }
+    var showUndoPaymentConfirmation by rememberSaveable { mutableStateOf(false) }
 
     var showCancelConfirmation by rememberSaveable { mutableStateOf(false) }
     var showAttendeesDialog by rememberSaveable { mutableStateOf(false) }
@@ -279,7 +298,7 @@ fun SpaceLendingDetailsScreen(
                                 Text(stringResource(Res.string.space_lending_return))
                             }
                             SpaceLendingStage.RETURNED -> Button(
-                                onClick = { model.setPayment(PaymentStatus.COMPLETED) },
+                                onClick = { showMarkPaidDialog = true },
                                 enabled = !isWorking,
                             ) {
                                 Text(stringResource(Res.string.space_lending_payment_mark_paid))
@@ -319,8 +338,30 @@ fun SpaceLendingDetailsScreen(
                     )
                 }
             }
-            // A manager can return what was paid online
-            if (isManager && lending.paymentStatus == PaymentStatus.COMPLETED) {
+            // A payment a manager recorded by hand (cash...) can be undone, but not returned: there's no provider to ask
+            val manualMethod = lending.manualPaymentMethod
+            if (manualMethod != null && lending.paymentStatus == PaymentStatus.COMPLETED) {
+                item("manual_payment") {
+                    Text(
+                        stringResource(Res.string.space_lending_paid_by, manualMethod.label()),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
+                if (isManager) {
+                    item("undo_payment") {
+                        OutlinedButton(
+                            onClick = { showUndoPaymentConfirmation = true },
+                            enabled = !isWorking,
+                            modifier = Modifier.padding(top = 8.dp),
+                        ) {
+                            Text(stringResource(Res.string.space_lending_payment_undo))
+                        }
+                    }
+                }
+            }
+            // A payment through the gateway is never undone: a manager returns the money instead
+            if (isManager && manualMethod == null && lending.totalPrice > 0 && lending.paymentStatus == PaymentStatus.COMPLETED) {
                 item("refund_online") {
                     OutlinedButton(
                         onClick = { showRefundConfirmation = true },
@@ -404,6 +445,32 @@ fun SpaceLendingDetailsScreen(
                 },
             )
         }
+        if (showMarkPaidDialog) {
+            MarkPaidDialog(
+                onDismiss = { showMarkPaidDialog = false },
+                onConfirm = {
+                    showMarkPaidDialog = false
+                    model.markPaid(it)
+                },
+            )
+        }
+        if (showUndoPaymentConfirmation) {
+            AlertDialog(
+                onDismissRequest = { showUndoPaymentConfirmation = false },
+                text = { Text(stringResource(Res.string.space_lending_payment_undo_confirm)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showUndoPaymentConfirmation = false
+                        model.undoPayment()
+                    }) { Text(stringResource(Res.string.space_lending_payment_undo)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showUndoPaymentConfirmation = false }) {
+                        Text(stringResource(Res.string.space_lending_dismiss))
+                    }
+                },
+            )
+        }
         if (showRefundConfirmation) {
             AlertDialog(
                 onDismissRequest = { showRefundConfirmation = false },
@@ -450,6 +517,51 @@ fun SpaceLendingDetailsScreen(
         }
     }
 }
+
+@Composable
+private fun MarkPaidDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (ManualPaymentMethod) -> Unit,
+) {
+    var method by rememberSaveable { mutableStateOf(ManualPaymentMethod.CASH) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.space_lending_payment_mark_paid_title)) },
+        text = {
+            Column {
+                Text(stringResource(Res.string.space_lending_payment_mark_paid_hint), style = MaterialTheme.typography.bodySmall)
+                ManualPaymentMethod.entries.forEach { option ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .selectable(selected = method == option, role = Role.RadioButton, onClick = { method = option }),
+                    ) {
+                        RadioButton(selected = method == option, onClick = null)
+                        Text(option.label(), modifier = Modifier.padding(start = 12.dp, top = 8.dp, bottom = 8.dp))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(method) }) { Text(stringResource(Res.string.space_lending_payment_mark_paid)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.space_lending_dismiss)) }
+        },
+    )
+}
+
+@Composable
+private fun ManualPaymentMethod.label(): String = stringResource(
+    when (this) {
+        ManualPaymentMethod.CASH -> Res.string.manual_payment_method_cash
+        ManualPaymentMethod.CARD -> Res.string.manual_payment_method_card
+        ManualPaymentMethod.BIZUM -> Res.string.manual_payment_method_bizum
+        ManualPaymentMethod.TRANSFER -> Res.string.manual_payment_method_transfer
+        ManualPaymentMethod.OTHER -> Res.string.manual_payment_method_other
+    }
+)
 
 @Composable
 private fun AttendeesDialog(
@@ -578,6 +690,8 @@ private fun PaymentAuditEvent.label(): String = stringResource(
         PaymentAuditEvent.CANCEL_REQUESTED -> Res.string.payment_audit_event_cancel_requested
         PaymentAuditEvent.OPERATION_FAILED -> Res.string.payment_audit_event_operation_failed
         PaymentAuditEvent.LISTENER_FAILED -> Res.string.payment_audit_event_listener_failed
+        PaymentAuditEvent.MANUAL_PAYMENT_SET -> Res.string.payment_audit_event_manual_payment_set
+        PaymentAuditEvent.MANUAL_PAYMENT_UNDONE -> Res.string.payment_audit_event_manual_payment_undone
     }
 )
 

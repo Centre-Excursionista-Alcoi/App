@@ -782,6 +782,16 @@
     <string name="space_lending_return">Take the keys back</string>
     <string name="space_lending_payment">Payment</string>
     <string name="space_lending_payment_mark_paid">Mark as paid</string>
+    <string name="space_lending_payment_mark_paid_title">How was it paid?</string>
+    <string name="space_lending_payment_mark_paid_hint">It will be recorded as paid, and who recorded it is kept in the payment history.</string>
+    <string name="space_lending_payment_undo">Undo payment</string>
+    <string name="space_lending_payment_undo_confirm">The lending will be pending payment again. Continue?</string>
+    <string name="space_lending_paid_by">Paid by: %1$s</string>
+    <string name="manual_payment_method_cash">Cash</string>
+    <string name="manual_payment_method_card">Card</string>
+    <string name="manual_payment_method_bizum">Bizum</string>
+    <string name="manual_payment_method_transfer">Bank transfer</string>
+    <string name="manual_payment_method_other">Other</string>
     <string name="space_lending_payment_hint">Pay by bank transfer and attach the confirmation.</string>
     <string name="space_lending_payment_proof">Attach payment confirmation</string>
     <string name="space_lending_payment_proofs">Payment confirmations: %1$s</string>
@@ -839,7 +849,7 @@
     <string name="space_lending_pay_waiting">Complete the payment in your browser, then check it here.</string>
     <string name="space_lending_pay_check">Check payment</string>
     <string name="space_lending_pay_unavailable">Online payments are not available right now. Try again later, or pay by bank transfer.</string>
-    <string name="space_lending_refund_online">Refund online payment</string>
+    <string name="space_lending_refund_online">Refund payment</string>
     <string name="space_lending_refund_confirm">The money will be returned to the card or Bizum account it was paid with. Continue?</string>
     <string name="space_lending_refund_rejected">The payment provider refused the refund. Try again later, or refund it from the Redsys portal.</string>
     <string name="space_lending_refund_not_online">This lending was not paid online, so there is nothing to refund from here.</string>
@@ -858,4 +868,6 @@
     <string name="payment_audit_event_cancel_requested">Cancellation requested</string>
     <string name="payment_audit_event_operation_failed">Refund or cancellation failed</string>
     <string name="payment_audit_event_listener_failed">Updating the lending failed</string>
+    <string name="payment_audit_event_manual_payment_set">Payment recorded by hand</string>
+    <string name="payment_audit_event_manual_payment_undone">Payment recorded by hand undone</string>
 </resources>

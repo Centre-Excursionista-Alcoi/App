@@ -25,6 +25,9 @@ object PaymentAuditLog : UuidTable("payment_audit_log") {
     /** `Transactions.referenceKey`, to trace what the provider reported even without a transaction. */
     val referenceKey = text("referenceKey").nullable().index("IX_PaymentAuditLog_referenceKey")
     val provider = text("provider").nullable()
+
+    /** What the event is about when it has no transaction: `space_lending:<id>` for a payment recorded by hand. */
+    val subject = text("subject").nullable().index("IX_PaymentAuditLog_subject")
     val event = enumerationByName<PaymentAuditEvent>("event", 40)
 
     /** Who or what caused it: `user:<sub>`, `provider` (a notification), `system`... */

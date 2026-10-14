@@ -37,6 +37,8 @@ data class SpaceLending(
 
     val totalPrice: Double,
     val paymentStatus: PaymentStatus,
+    /** How a manager recorded the payment, if they did. `null` for payments through the gateway, or none. */
+    val manualPaymentMethod: ManualPaymentMethod? = null,
 
     val reportNotes: String?,
     val reportIssues: String?,

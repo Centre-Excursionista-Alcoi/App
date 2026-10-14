@@ -84,3 +84,10 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
         connection.execSQL("CREATE INDEX IF NOT EXISTS `index_SpaceLendings_space` ON `SpaceLendings` (`space`)")
     }
 }
+
+/** v7 added `SpaceLendings.manualPaymentMethod`: how a manager recorded the payment of a lending, if they did. */
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE `SpaceLendings` ADD COLUMN `manualPaymentMethod` TEXT")
+    }
+}

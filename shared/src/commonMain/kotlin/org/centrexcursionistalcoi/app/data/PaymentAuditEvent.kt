@@ -37,4 +37,10 @@ enum class PaymentAuditEvent {
 
     /** Whatever reacts to a status change (a lending...) failed. The transaction itself is recorded. */
     LISTENER_FAILED,
+
+    /** A manager recorded a payment made outside the gateway (cash, a transfer...). */
+    MANUAL_PAYMENT_SET,
+
+    /** A manager undid a payment they had recorded by hand. */
+    MANUAL_PAYMENT_UNDONE,
 }

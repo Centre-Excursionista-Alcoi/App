@@ -13,6 +13,7 @@ import org.centrexcursionistalcoi.app.data.LendingUser
 import org.centrexcursionistalcoi.app.data.Member
 import org.centrexcursionistalcoi.app.data.Qualification
 import org.centrexcursionistalcoi.app.data.QualificationGrant
+import org.centrexcursionistalcoi.app.data.ManualPaymentMethod
 import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.data.SpaceKeyTypeSpace
 import org.centrexcursionistalcoi.app.data.SpaceLendingKey
@@ -185,4 +186,10 @@ class RoomConverters {
 
     @ColumnTypeConverter
     fun stringToPaymentStatus(value: String?): PaymentStatus? = value?.let { PaymentStatus.valueOf(it) }
+
+    @ColumnTypeConverter
+    fun manualPaymentMethodToString(value: ManualPaymentMethod?): String? = value?.name
+
+    @ColumnTypeConverter
+    fun stringToManualPaymentMethod(value: String?): ManualPaymentMethod? = value?.let { ManualPaymentMethod.valueOf(it) }
 }

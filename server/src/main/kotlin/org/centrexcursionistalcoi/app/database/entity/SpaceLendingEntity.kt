@@ -47,6 +47,7 @@ class SpaceLendingEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity,
 
     var totalPrice by SpaceLendings.totalPrice
     var paymentStatus by SpaceLendings.paymentStatus
+    var manualPaymentMethod by SpaceLendings.manualPaymentMethod
 
     var reportNotes by SpaceLendings.reportNotes
     var reportIssues by SpaceLendings.reportIssues
@@ -102,6 +103,7 @@ class SpaceLendingEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity,
         keys = keys(),
         totalPrice = totalPrice,
         paymentStatus = paymentStatus,
+        manualPaymentMethod = manualPaymentMethod,
         reportNotes = reportNotes,
         reportIssues = reportIssues,
         reportSubmittedAt = reportSubmittedAt,

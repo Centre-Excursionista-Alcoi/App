@@ -21,9 +21,11 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
+import org.centrexcursionistalcoi.app.data.ManualPaymentMethod
 import org.centrexcursionistalcoi.app.data.PaymentLaunch
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
 import org.centrexcursionistalcoi.app.data.PaymentMethod
+import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.data.ServerInfo
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.exception.ServerException
@@ -129,6 +131,18 @@ class TestSpaceLendingDetailsPayments {
 
         assertNull(model.paymentIssue.value)
         assertNotNull(GlobalAsyncErrorHandler.error.value)
+    }
+
+    @Test
+    fun `a payment recorded by hand sends its method, and undoing it sends pending`() {
+        coEvery { remote.setPayment(lendingId, any(), any(), any()) } returns Unit
+        val model = viewModel()
+
+        model.markPaid(ManualPaymentMethod.CASH)
+        model.undoPayment()
+
+        coVerify(exactly = 1) { remote.setPayment(lendingId, PaymentStatus.COMPLETED, ManualPaymentMethod.CASH, any()) }
+        coVerify(exactly = 1) { remote.setPayment(lendingId, PaymentStatus.PENDING, null, any()) }
     }
 
     @Test

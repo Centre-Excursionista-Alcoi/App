@@ -435,7 +435,11 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   `actor` (`PaymentAudit.userActor(sub)`) to `start`/`refund`/`cancel`. Any new payment code path must record its events.
   Admins read it at `GET /payments/audit` (`transaction`, `reference` or `limit` filters) and, per lending, at
   `GET /space_lendings/{id}/payment_audit`, shown in `SpaceLendingDetailsScreen` to admins. `PaymentAuditEntry` and
-  `PaymentAuditEvent` are in `:shared`: a new event needs its `payment_audit_event_*` string. `privacy.md` says the log is
+  `PaymentAuditEvent` are in `:shared`: a new event needs its `payment_audit_event_*` string.
+  A payment a manager records by hand (cash, transfer...: `POST /space_lendings/{id}/payment`, `ManualPaymentMethod`) has no
+  transaction, so it is audited with a `subject` (`space_lending:<id>`, `PaymentAudit.spaceLendingSubject`) and the lending
+  keeps the `manualPaymentMethod`. Only those can be undone (back to pending); the app shows "undo" for them and "refund" for
+  payments through the gateway, never both. `privacy.md` says the log is
   kept for legal reasons: update it if what is recorded or for how long changes.
 - **Space lendings are paid online once their keys are back** (`POST /space_lendings/{id}/pay`, owner only; the price is the
   lending's stored `totalPrice`, never recomputed). It answers a `PaymentLaunch` whose `url` is `/pay?id=...` (a web-only

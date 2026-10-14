@@ -64,10 +64,15 @@ data class PaySpaceLendingRequest(
     val phone: String? = null,
 )
 
-/** Admin: sets the payment status. */
+/**
+ * A manager records a payment made outside the gateway ([status] `COMPLETED`, with the [method] it was received by:
+ * [org.centrexcursionistalcoi.app.data.ManualPaymentMethod.OTHER] if missing), or undoes one they recorded ([status]
+ * `PENDING`). No other status can be set by hand.
+ */
 @Serializable
 data class SetSpaceLendingPaymentRequest(
     val status: org.centrexcursionistalcoi.app.data.PaymentStatus,
+    val method: org.centrexcursionistalcoi.app.data.ManualPaymentMethod? = null,
 )
 
 /**

@@ -6,6 +6,7 @@ import androidx.room3.Index
 import androidx.room3.PrimaryKey
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Category
+import org.centrexcursionistalcoi.app.data.ManualPaymentMethod
 import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.data.SpaceLending
 import org.centrexcursionistalcoi.app.data.SpaceLendingKey
@@ -44,6 +45,7 @@ data class SpaceLendingEntity(
     val keys: List<SpaceLendingKey>,
     val totalPrice: Double,
     val paymentStatus: PaymentStatus,
+    val manualPaymentMethod: ManualPaymentMethod?,
     val reportNotes: String?,
     val reportIssues: String?,
     val reportSubmittedAt: Instant?,
@@ -70,6 +72,7 @@ data class SpaceLendingEntity(
         keys = keys,
         totalPrice = totalPrice,
         paymentStatus = paymentStatus,
+        manualPaymentMethod = manualPaymentMethod,
         reportNotes = reportNotes,
         reportIssues = reportIssues,
         reportSubmittedAt = reportSubmittedAt,
@@ -98,6 +101,7 @@ data class SpaceLendingEntity(
             keys = keys,
             totalPrice = totalPrice,
             paymentStatus = paymentStatus,
+            manualPaymentMethod = manualPaymentMethod,
             reportNotes = reportNotes,
             reportIssues = reportIssues,
             reportSubmittedAt = reportSubmittedAt,
