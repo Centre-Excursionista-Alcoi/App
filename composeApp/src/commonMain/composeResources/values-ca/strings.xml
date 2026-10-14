@@ -184,6 +184,9 @@
     <string name="femecv_sync_title" translatable="false">Sincronització FEMECV</string>
     <string name="femecv_sync_enable" translatable="false">Iniciar Sessió en FEMECV</string>
     <string name="femecv_sync_connected" translatable="false">Sincronitzant amb la FEMECV</string>
+    <string name="femecv_credentials_invalid_title">Les teues credencials de la FEMECV són incorrectes</string>
+    <string name="femecv_credentials_invalid_message">La FEMECV ja no accepta l'usuari o la contrasenya que vas guardar, així que les teues llicències no s'estan actualitzant. Torna a iniciar sessió per mantindre-les sincronitzades.</string>
+    <string name="femecv_credentials_invalid_action">Actualitzar les credencials</string>
     <string name="femecv_sync_disable" translatable="false">Desconnectar</string>
     <string name="femecv_sync_login" translatable="false">Iniciar Sessió</string>
     <string name="femecv_username" translatable="false">Nom d'Usuari</string>
@@ -494,6 +497,8 @@
     <string name="scanner_open">Obrir Escàner</string>
     <string name="notification_department_kicked_title">T'han fet fora d'una secció</string>
     <string name="notification_department_kicked_message">Has sigut expulsat de la secció %1$s.</string>
+    <string name="notification_femecv_credentials_invalid_title">Les teues credencials de la FEMECV són incorrectes</string>
+    <string name="notification_femecv_credentials_invalid_message">Actualitza-les per mantindre les llicències sincronitzades.</string>
     <string name="notification_event_cancelled_title">Un esdeveniment ha sigut cancel·lat</string>
     <string name="notification_event_cancelled_message">L'esdeveniment %1$s ha sigut cancel·lat.</string>
     <string name="event_requires_insurance_none">Requereix un segur vàlid: no en tens cap</string>

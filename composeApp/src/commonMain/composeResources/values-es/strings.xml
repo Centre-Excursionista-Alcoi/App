@@ -204,6 +204,9 @@
     <string name="femecv_sync_title">Sincronización FEMECV</string>
     <string name="femecv_sync_enable">Iniciar Sesión en FEMECV</string>
     <string name="femecv_sync_connected">Sincronizando con la FEMECV</string>
+    <string name="femecv_credentials_invalid_title">Tus credenciales de la FEMECV son incorrectas</string>
+    <string name="femecv_credentials_invalid_message">La FEMECV ya no acepta el usuario o la contraseña que guardaste, así que tus licencias no se están actualizando. Vuelve a iniciar sesión para mantenerlas sincronizadas.</string>
+    <string name="femecv_credentials_invalid_action">Actualizar las credenciales</string>
     <string name="femecv_sync_disable">Desconectar</string>
     <string name="femecv_sync_login">Iniciar Sesión</string>
     <string name="femecv_username">Nombre de Usuario</string>
@@ -473,6 +476,8 @@
     <string name="scanner_open">Abrir Escáner</string>
     <string name="notification_department_kicked_title">Te han echado de una sección</string>
     <string name="notification_department_kicked_message">Has sido expulsado de la sección%1$s.</string>
+    <string name="notification_femecv_credentials_invalid_title">Tus credenciales de la FEMECV son incorrectas</string>
+    <string name="notification_femecv_credentials_invalid_message">Actualízalas para mantener tus licencias sincronizadas.</string>
     <string name="notification_event_cancelled_title">Un acontecimiento ha sido cancelado</string>
     <string name="notification_event_cancelled_message">El acontecimiento %1$s ha sido cancelado.</string>
     <string name="nfc_waiting">Esperando etiqueta NFC...</string>

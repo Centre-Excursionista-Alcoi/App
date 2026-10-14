@@ -36,4 +36,10 @@ object UserReferences : IdTable<String>(name = "user_references") {
     val femecvUsername = encryptedVarchar("femecvUsername", 512, AES.encryptor).nullable()
     val femecvPassword = encryptedVarchar("femecvPassword", 512, AES.encryptor).nullable()
     val femecvLastSync = timestamp("femecvLastSync").nullable()
+
+    // Since when FEMECV rejects the saved credentials. While set, they aren't tried again (FEMECV could lock the account).
+    val femecvCredentialsInvalidSince = timestamp("femecvCredentialsInvalidSince").nullable()
+
+    // When the user was last reminded that they have to enter them again
+    val femecvCredentialsReminderAt = timestamp("femecvCredentialsReminderAt").nullable()
 }

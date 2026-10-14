@@ -13,6 +13,7 @@ import org.centrexcursionistalcoi.app.database.table.LendingUsers
 import org.centrexcursionistalcoi.app.database.table.UserInsurances
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.integration.FEMECV
+import org.centrexcursionistalcoi.app.integration.femecv.FEMECVInvalidCredentialsException
 import org.centrexcursionistalcoi.app.now
 import org.centrexcursionistalcoi.app.routes.helper.notifyUpdateForEntity
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
@@ -77,6 +78,8 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
     var femecvUsername by UserReferences.femecvUsername
     var femecvPassword by UserReferences.femecvPassword
     var femecvLastSync by UserReferences.femecvLastSync
+    var femecvCredentialsInvalidSince by UserReferences.femecvCredentialsInvalidSince
+    var femecvCredentialsReminderAt by UserReferences.femecvCredentialsReminderAt
 
     fun isAdmin() = groups.contains(ADMIN_GROUP_NAME)
 
@@ -104,11 +107,39 @@ class UserReferenceEntity(id: EntityID<String>) : Entity<String>(id), LastUpdate
         departments = DepartmentMemberEntity.find { DepartmentMembers.userSub eq sub.value }.map { it.toData() }
     )
 
+    /**
+     * Saves that FEMECV rejects the credentials, so they aren't tried again until the user enters them again, and tells
+     * the user (see [FEMECV.remindInvalidCredentialsIfDue]). The profile is updated to show it in the app.
+     */
+    suspend fun markFEMECVCredentialsInvalid() {
+        Database { if (femecvCredentialsInvalidSince == null) femecvCredentialsInvalidSince = now() }
+        updated()
+        FEMECV.remindInvalidCredentialsIfDue(this)
+    }
+
+    /** Forgets that the credentials were rejected: they were entered again, or removed. */
+    context(_: JdbcTransaction)
+    fun clearFEMECVCredentialsInvalid() {
+        femecvCredentialsInvalidSince = null
+        femecvCredentialsReminderAt = null
+    }
+
+    /**
+     * Downloads the user's FEMECV licenses. Does nothing if they have no credentials saved, or FEMECV rejected them
+     * (see [markFEMECVCredentialsInvalid]).
+     * @throws org.centrexcursionistalcoi.app.integration.femecv.FEMECVInvalidCredentialsException if FEMECV rejects the credentials now.
+     */
     suspend fun refreshFEMECVData() {
         val username = femecvUsername
         val password = femecvPassword
         if (username == null || password == null) return
-        val licenses = FEMECV.getLicenses(username, password)
+        if (Database { femecvCredentialsInvalidSince } != null) return
+        val licenses = try {
+            FEMECV.getLicenses(username, password)
+        } catch (e: FEMECVInvalidCredentialsException) {
+            markFEMECVCredentialsInvalid()
+            throw e
+        }
         val existingLicenseEntities = Database { UserInsuranceEntity.find { (UserInsurances.userSub eq sub.value) and (UserInsurances.femecvLicense neq null) }.toList() }
         for ((license, certificate) in licenses) {
             val matchingEntity = existingLicenseEntities.find { it.femecvLicense?.id == license.id }

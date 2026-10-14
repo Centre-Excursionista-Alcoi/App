@@ -146,6 +146,7 @@ private fun ProfileResponse.isSpacesFeatureManager() =
 fun MainScreen(
     showingAdminItemTypeId: Uuid?,
     showingAdminLendingsScreen: Boolean,
+    showingFemecvAccount: Boolean = false,
     onShoppingListConfirmed: (ShoppingList) -> Unit,
     onLendingSignUpRequested: () -> Unit,
     onLendingClick: (ReferencedLending) -> Unit,
@@ -171,6 +172,7 @@ fun MainScreen(
         MainScreenContent(
             showingAdminItemTypeId = showingAdminItemTypeId,
             showingAdminLendingsScreen = showingAdminLendingsScreen,
+            showingFemecvAccount = showingFemecvAccount,
             onSettingsRequested = onSettingsRequested,
             profile = it,
             onLogoutRequested = onLogoutRequested,
@@ -281,6 +283,7 @@ private fun navigationItems(isAdmin: Boolean, isManagerOfAnyDepartment: Boolean,
 private fun MainScreenContent(
     showingAdminItemTypeId: Uuid?,
     showingAdminLendingsScreen: Boolean,
+    showingFemecvAccount: Boolean,
 
     onSettingsRequested: () -> Unit,
 
@@ -402,6 +405,15 @@ private fun MainScreenContent(
                     navigationItems.keys.indexOf(Page.MANAGEMENT)
                 )
             }
+        }
+    }
+
+    // The profile scrolled to the FEMECV account: from a notification, or the banner of the home page
+    var scrollToFemecvAccount by remember { mutableStateOf(showingFemecvAccount) }
+    LaunchedEffect(showingFemecvAccount) {
+        if (showingFemecvAccount) {
+            scrollToFemecvAccount = true
+            pager.scrollToPage(navigationItems.keys.indexOf(Page.PROFILE))
         }
     }
 
@@ -540,6 +552,12 @@ private fun MainScreenContent(
                 MainScreenPagerContent(
                     page = entry.key,
                     onPageRequested = ::scrollToPage,
+                    scrollToFemecvAccount = scrollToFemecvAccount,
+                    onFemecvAccountRequested = {
+                        scrollToFemecvAccount = true
+                        scrollToPage(Page.PROFILE, animated = true)
+                    },
+                    onFemecvAccountShown = { scrollToFemecvAccount = false },
                     snackbarHostState = snackbarHostState,
                     selectedManagementItem = selectedManagementItem,
                     profile = profile,
@@ -638,6 +656,9 @@ fun LendingsActionBarIcons(
 private fun MainScreenPagerContent(
     page: Page,
     onPageRequested: (Page) -> Unit,
+    scrollToFemecvAccount: Boolean,
+    onFemecvAccountRequested: () -> Unit,
+    onFemecvAccountShown: () -> Unit,
     snackbarHostState: SnackbarHostState,
 
     /**
@@ -666,7 +687,7 @@ private fun MainScreenPagerContent(
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         when (page) {
-            Page.HOME -> HomePage()
+            Page.HOME -> HomePage(onFemecvAccountRequested = onFemecvAccountRequested)
 
             Page.LENDINGS -> LendingsPage(
                 onAddInsuranceRequested = { onPageRequested(Page.PROFILE) },
@@ -701,7 +722,7 @@ private fun MainScreenPagerContent(
 
             Page.MANAGEMENT -> Text(stringResource(Res.string.error_access_denied))
 
-            Page.PROFILE -> ProfilePage()
+            Page.PROFILE -> ProfilePage(scrollToFemecvAccount = scrollToFemecvAccount, onFemecvAccountShown = onFemecvAccountShown)
         }
     }
 }

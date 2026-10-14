@@ -27,6 +27,8 @@ data class ProfileResponse(
     val insurances: List<UserInsurance>,
     val femecvSyncEnabled: Boolean,
     val femecvLastSync: Instant?,
+    /** FEMECV rejected the saved credentials: the user has to enter them again for their licenses to keep syncing. */
+    val femecvCredentialsInvalid: Boolean = false,
 ) {
     val isAdmin: Boolean get() = ADMIN_GROUP_NAME in groups
 

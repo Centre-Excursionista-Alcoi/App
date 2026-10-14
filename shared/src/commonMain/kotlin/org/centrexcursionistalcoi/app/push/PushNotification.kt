@@ -93,6 +93,11 @@ sealed interface PushNotification {
                     EventAssistanceUpdated(eventId, userSub, isConfirmed)
                 }
 
+                FemecvCredentialsInvalid.TYPE -> {
+                    userSub ?: throw IllegalArgumentException("Missing or invalid userSub field in FemecvCredentialsInvalid push notification data")
+                    FemecvCredentialsInvalid(userSub)
+                }
+
                 EntityUpdated.TYPE -> {
                     entityClass ?: throw IllegalArgumentException("Missing or invalid entityClass field in EntityUpdated push notification data")
                     entityId ?: throw IllegalArgumentException("Missing or invalid entityId field in EntityUpdated push notification data")
@@ -279,6 +284,21 @@ sealed interface PushNotification {
         override val type: String = TYPE
 
         override fun toMap(): Map<String, String> = super.toMap() + mapOf("requestId" to requestId.toString(), "departmentId" to departmentId.toString())
+    }
+
+    /**
+     * FEMECV rejected the credentials a user saved, so their licenses are no longer synced until they enter them again.
+     * Sent at most once every `FEMECV.CREDENTIALS_REMINDER_EVERY_DAYS` days while they stay wrong.
+     */
+    @Serializable
+    class FemecvCredentialsInvalid(
+        override val userSub: String,
+    ) : TargetedNotification {
+        companion object {
+            const val TYPE = "FemecvCredentialsInvalid"
+        }
+
+        override val type: String = TYPE
     }
 
     @Serializable
