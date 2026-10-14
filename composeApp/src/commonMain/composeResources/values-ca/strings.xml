@@ -797,4 +797,19 @@
     <string name="space_lending_refund_confirm">Els diners es tornaran a la targeta o al compte de Bizum amb què es va pagar. Continuar?</string>
     <string name="space_lending_refund_rejected">El proveïdor de pagaments ha rebutjat la devolució. Torna-ho a provar més tard o retorna-la des del portal de Redsys.</string>
     <string name="space_lending_refund_not_online">Aquest préstec no s'ha pagat en línia, així que no hi ha res a retornar des d'aquí.</string>
+    <string name="space_lending_audit_show">Mostrar l'historial de pagaments</string>
+    <string name="space_lending_audit_hide">Amagar l'historial de pagaments</string>
+    <string name="space_lending_audit_empty">No s'ha registrat res sobre els pagaments d'aquest préstec.</string>
+    <string name="space_lending_audit_by">per %1$s</string>
+    <string name="payment_audit_event_created">Pagament iniciat</string>
+    <string name="payment_audit_event_create_failed">No s'ha pogut iniciar el pagament</string>
+    <string name="payment_audit_event_result_received">Resultat rebut del proveïdor</string>
+    <string name="payment_audit_event_status_changed">Estat canviat</string>
+    <string name="payment_audit_event_result_ignored">Resultat repetit ignorat</string>
+    <string name="payment_audit_event_unknown_reference">Resultat d'un pagament desconegut</string>
+    <string name="payment_audit_event_notification_rejected">Notificació rebutjada</string>
+    <string name="payment_audit_event_refund_requested">Devolució sol·licitada</string>
+    <string name="payment_audit_event_cancel_requested">Cancel·lació sol·licitada</string>
+    <string name="payment_audit_event_operation_failed">Ha fallat la devolució o cancel·lació</string>
+    <string name="payment_audit_event_listener_failed">Ha fallat l'actualització del préstec</string>
 </resources>

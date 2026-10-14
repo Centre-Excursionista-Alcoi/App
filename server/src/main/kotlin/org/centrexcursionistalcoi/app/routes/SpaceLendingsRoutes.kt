@@ -4,6 +4,8 @@ import kotlin.math.roundToInt
 import org.centrexcursionistalcoi.app.translation.locale
 import org.centrexcursionistalcoi.app.request.PaySpaceLendingRequest
 import org.centrexcursionistalcoi.app.payment.SpaceLendingPayments
+import org.centrexcursionistalcoi.app.payment.PaymentAudit
+import org.centrexcursionistalcoi.app.security.UserSession.Companion.assertAdmin
 import org.centrexcursionistalcoi.app.payment.PaymentTransactions
 import org.centrexcursionistalcoi.app.payment.PaymentRequest
 import org.centrexcursionistalcoi.app.payment.PaymentProviders
@@ -493,11 +495,19 @@ fun Route.spaceLendingsRoutes() {
                 payerPhone = request.phone,
             ),
             provider,
+            PaymentAudit.userActor(session.sub),
         )
         SpaceLendingPayments.link(lending.id.value, started.transactionId)
 
         val launch = PaymentLaunches.create(started.session)
         call.respond(PaymentLaunch(url = "${AppLinks.baseUrl}/pay?id=${launch.id}", expiresIn = launch.remaining.inWholeSeconds))
+    }
+
+    // Admins: everything that happened with the payments of a lending, for support and legal questions
+    get<Api.SpaceLendings.Id.PaymentAudit> { resource ->
+        val session = assertAdmin() ?: return@get
+        val lending = spaceLendingFor(session, resource.parent.id, managerOnly = true) ?: return@get
+        call.respond(PaymentAudit.forTransactions(SpaceLendingPayments.transactionsOf(lending.id.value)))
     }
 
     // A manager returns the money of a lending that was paid online
@@ -507,7 +517,7 @@ fun Route.spaceLendingsRoutes() {
         val transaction = SpaceLendingPayments.completedTransaction(lending.id.value)
             ?: return@postWithLock respondError(Error.InvalidSpaceLendingState("The lending was not paid online"))
         try {
-            PaymentTransactions.refund(transaction)
+            PaymentTransactions.refund(transaction, PaymentAudit.userActor(session.sub))
         } catch (e: PaymentGatewayUnavailableException) {
             throw e
         } catch (e: PaymentProviderException) {

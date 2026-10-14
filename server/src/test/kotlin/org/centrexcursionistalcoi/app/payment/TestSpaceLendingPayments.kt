@@ -26,7 +26,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import org.centrexcursionistalcoi.app.data.PaymentAuditEntry
+import org.centrexcursionistalcoi.app.data.PaymentAuditEvent
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.centrexcursionistalcoi.app.ApplicationTestBase
@@ -289,5 +292,52 @@ class TestSpaceLendingPayments : ApplicationTestBase() {
         assertEquals(HttpStatusCode.Found, response.status)
         assertEquals("https://pay.example/1234", response.headers[HttpHeaders.Location])
         assertNotNull(PaymentLaunches[launch.id])
+    }
+
+    private suspend fun HttpClient.auditOf(location: String): List<PaymentAuditEntry> {
+        val response = get(Api.SpaceLendings.Id.PaymentAudit(Api.SpaceLendings.Id(location.substringAfterLast('/'))))
+        response.assertStatusCode(HttpStatusCode.OK)
+        return json.decodeFromString(ListSerializer(PaymentAuditEntry.serializer()), response.bodyAsText())
+    }
+
+    @Test
+    fun `an admin sees the audit log of a lending, and the whole gateway's`() = runApplicationTest(
+        shouldLogIn = LoginType.ADMIN, databaseInitBlock = { createSpace() }, mockDate = today,
+    ) {
+        register()
+        val location = client.returnedLending()
+        client.pay(location).assertStatusCode(HttpStatusCode.OK)
+        client.redsysNotifies(order()).assertStatusCode(HttpStatusCode.OK)
+
+        val events = client.auditOf(location).map { it.event }
+        assertEquals(
+            listOf(PaymentAuditEvent.CREATED, PaymentAuditEvent.RESULT_RECEIVED, PaymentAuditEvent.STATUS_CHANGED),
+            events,
+        )
+        // The creation names who paid
+        assertContains(client.auditOf(location).first().actor, "user:")
+
+        val all = client.get(Api.Payments.Audit(limit = 2))
+        all.assertStatusCode(HttpStatusCode.OK)
+        assertEquals(2, json.decodeFromString(ListSerializer(PaymentAuditEntry.serializer()), all.bodyAsText()).size)
+        val byReference = client.get(Api.Payments.Audit(reference = "redsys:${order()}"))
+        assertEquals(3, json.decodeFromString(ListSerializer(PaymentAuditEntry.serializer()), byReference.bodyAsText()).size)
+    }
+
+    @Test
+    fun `a manager who is not an admin cannot read the audit log`() = runApplicationTest(
+        shouldLogIn = LoginType.USER, databaseInitBlock = { createSpace() }, userEntityPatches = manager, mockDate = today,
+    ) {
+        register()
+        val location = client.returnedLending()
+
+        client.get(Api.SpaceLendings.Id.PaymentAudit(Api.SpaceLendings.Id(location.substringAfterLast('/'))))
+            .assertStatusCode(HttpStatusCode.Forbidden)
+        client.get(Api.Payments.Audit()).assertStatusCode(HttpStatusCode.Forbidden)
+    }
+
+    @Test
+    fun `the audit log rejects a malformed transaction id`() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
+        client.get(Api.Payments.Audit(transaction = "nope")).assertStatusCode(HttpStatusCode.BadRequest)
     }
 }

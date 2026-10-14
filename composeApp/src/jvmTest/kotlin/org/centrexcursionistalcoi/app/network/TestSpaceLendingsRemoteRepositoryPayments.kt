@@ -18,6 +18,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.test.runTest
+import org.centrexcursionistalcoi.app.data.PaymentAuditEvent
 import org.centrexcursionistalcoi.app.data.PaymentMethod
 import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.exception.ServerException
@@ -94,5 +95,23 @@ class TestSpaceLendingsRemoteRepositoryPayments {
         val error = assertFailsWith<ServerException> { repository().refund(lendingId) }
 
         assertEquals(Error.ERROR_PAYMENT_REJECTED, error.errorCode)
+    }
+
+    @Test
+    fun `the audit log of a lending is read from its endpoint`() = runTest {
+        val seen = mutableListOf<String>()
+        _httpClient = HttpClient(MockEngine { request ->
+            seen += request.url.encodedPath
+            respond(
+                """[{"id":"${Uuid.random()}","createdAt":1760000000000,"transactionId":null,"referenceKey":"redsys:1","provider":"redsys","event":"CREATED","actor":"user:a","previousStatus":null,"newStatus":"PENDING","amountCents":600,"detail":null}]""",
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+            )
+        }) { install(Resources) }
+
+        val entries = repository().paymentAudit(lendingId)
+
+        assertEquals("/space_lendings/$lendingId/payment_audit", seen.single())
+        assertEquals(PaymentAuditEvent.CREATED, entries.single().event)
+        assertEquals(600, entries.single().amountCents)
     }
 }

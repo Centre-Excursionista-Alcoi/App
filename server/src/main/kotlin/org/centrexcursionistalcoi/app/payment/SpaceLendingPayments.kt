@@ -34,6 +34,13 @@ object SpaceLendingPayments {
         }
     }
 
+    /** Every transaction started for the lending, whatever came of it. */
+    fun transactionsOf(lendingId: Uuid): List<Uuid> = Database {
+        SpaceLendingTransactions.selectAll()
+            .where { SpaceLendingTransactions.lending eq lendingId }
+            .map { it[SpaceLendingTransactions.transaction].value }
+    }
+
     /** The transaction of [lendingId] that was paid, if any: the latest one. */
     fun completedTransaction(lendingId: Uuid): Uuid? = Database {
         (SpaceLendingTransactions innerJoin Transactions).selectAll()

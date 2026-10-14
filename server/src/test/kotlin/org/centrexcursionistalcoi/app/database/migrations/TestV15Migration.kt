@@ -73,4 +73,27 @@ class TestV15Migration : PostgresTestBase() {
 
         assertEquals(setOf("id", "provider", "amountCents"), columns())
     }
+
+    @Test
+    fun test_createsAuditLog_andKeepsItOnRepeat() {
+        Database { exec("""CREATE TABLE transactions (id uuid PRIMARY KEY, provider text NOT NULL)""") }
+
+        Database { V15.migrate() }
+        Database { exec("""INSERT INTO payment_audit_log (event, actor) VALUES ('CREATED', 'system')""") }
+        Database { V15.migrate() }
+
+        val columns = Database.execQuery(
+            "SELECT column_name FROM information_schema.columns WHERE table_name = 'payment_audit_log'"
+        ).let { rs -> buildSet { while (rs.next()) add(rs.getString("column_name")) } }
+        assertEquals(
+            setOf(
+                "id", "createdAt", "transactionId", "referenceKey", "provider", "event", "actor",
+                "previousStatus", "newStatus", "amountCents", "detail",
+            ),
+            columns,
+        )
+        val rs = Database.execQuery("SELECT count(*) FROM payment_audit_log")
+        rs.next()
+        assertEquals(1, rs.getInt(1))
+    }
 }
