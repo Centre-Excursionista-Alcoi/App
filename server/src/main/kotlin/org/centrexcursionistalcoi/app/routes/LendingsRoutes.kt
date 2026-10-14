@@ -142,6 +142,21 @@ private suspend fun RoutingContext.lendingRequest(session: UserSession): Lending
 }
 
 /**
+ * Whether [session] can see this lending, by the same rule as [lendingsFor]: admins, its owner, and the manager of the
+ * department its items belong to.
+ */
+internal fun LendingEntity.isVisibleTo(session: UserSession): Boolean {
+    if (session.isAdmin()) return true
+    return Database {
+        if (userSub.sub.value == session.sub) return@Database true
+        val departments = items.mapNotNull { it.type.department }.distinctBy { it.id.value }
+        val department = departments.singleOrNull() ?: return@Database false
+        DepartmentMemberEntity.getUserDepartments(session.sub, isConfirmed = true)
+            .any { it.hasRole(DepartmentRole.LENDING_MANAGER) && it.department.id.value == department.id.value }
+    }
+}
+
+/**
  * The lendings [session] can see: all for admins; for everyone else their own, plus those of the departments they
  * hold LENDING_MANAGER in.
  *

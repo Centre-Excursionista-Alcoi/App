@@ -27,6 +27,8 @@ import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import org.centrexcursionistalcoi.app.security.FileReadWriteRules
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
+import org.centrexcursionistalcoi.app.routes.isVisibleTo
+import org.centrexcursionistalcoi.app.security.UserSession
 
 class MemoryEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, EntityDataConverter<Memory, Uuid>, EntityPatcher<UpdateMemoryRequest> {
     companion object : UuidEntityClass<MemoryEntity>(Memories)
@@ -93,6 +95,19 @@ class MemoryEntity(id: EntityID<Uuid>) : UuidEntity(id), LastUpdateEntity, Entit
         pdf = Memories.pdf.lookup()?.value,
         lending = Memories.lending.lookup()?.value,
     )
+
+    /**
+     * Like [toData], but the memory comes without its [Memory.lending] if [session] couldn't see that lending: a
+     * participant tagged in someone else's memory (or a memory manager of its department) gets the memory, but not the
+     * lending it belongs to, and the app can't store a memory that points to a lending it doesn't have.
+     */
+    context(_: JdbcTransaction)
+    override fun toData(session: UserSession?): Memory {
+        val data = toData()
+        val lending = lending ?: return data
+        if (session == null || lending.isVisibleTo(session)) return data
+        return data.copy(lending = null)
+    }
 
     context(_: JdbcTransaction)
     override fun patch(request: UpdateMemoryRequest) {
