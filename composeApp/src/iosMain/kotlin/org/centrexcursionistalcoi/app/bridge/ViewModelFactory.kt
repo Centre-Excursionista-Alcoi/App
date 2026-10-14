@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.cancel
 import org.centrexcursionistalcoi.app.push.PlatformSSEConfiguration
 import org.centrexcursionistalcoi.app.push.SSENotificationsListener
+import org.centrexcursionistalcoi.app.viewmodel.HomePageModel
 import org.centrexcursionistalcoi.app.viewmodel.LoadingViewModel
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.centrexcursionistalcoi.app.viewmodel.LogoutViewModel
@@ -35,6 +36,8 @@ object ViewModelFactory {
         KoinPlatform.getKoin().get { parametersOf(null, null) }
 
     fun loadingViewModel(): LoadingViewModel = KoinPlatform.getKoin().get()
+
+    fun homePageModel(): HomePageModel = KoinPlatform.getKoin().get()
 
     fun securityViewModel(): SecurityViewModel = KoinPlatform.getKoin().get()
 
