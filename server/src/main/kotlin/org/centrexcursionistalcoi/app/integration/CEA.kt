@@ -60,6 +60,18 @@ object CEA : PeriodicWorker(period = 1.days) {
         val email: String? = null,
     )
 
+    /** What the CEA export has in the NIF column of a member with none. */
+    private const val NO_NIF = "--"
+
+    /**
+     * The member with no NIF if the source leaves it blank or as [NO_NIF]. Stored as is, those placeholders would
+     * collide with each other in the unique index of `members.nif`, and the members after the first couldn't be created.
+     */
+    fun Member.withoutPlaceholderNif(): Member {
+        val clean = nif?.trim()?.takeUnless { it.isEmpty() || it == NO_NIF }
+        return if (clean == nif) this else copy(nif = clean)
+    }
+
     fun List<Member>.filterInvalid() = filter { member ->
         if (member.number == null) {
             logger.warn("Member has no number. Skipping.")
@@ -85,7 +97,7 @@ object CEA : PeriodicWorker(period = 1.days) {
         return Csv {
             hasHeaderRecord = true
             ignoreUnknownColumns = true
-        }.decodeFromString(Member.serializer().list(), data)
+        }.decodeFromString(Member.serializer().list(), data).map { it.withoutPlaceholderNif() }
     }
 
     /**
@@ -112,7 +124,7 @@ object CEA : PeriodicWorker(period = 1.days) {
         logger.info("Synchronizing ${members.size} members with database...")
         logger.debug("Fetching all existing members...")
         val memberNumbers = mutableListOf<UInt>()
-        for (member in members.filterInvalid()) {
+        for (member in members.map { it.withoutPlaceholderNif() }.filterInvalid()) {
             try {
                 member.number!!
                 member.fullName!!
