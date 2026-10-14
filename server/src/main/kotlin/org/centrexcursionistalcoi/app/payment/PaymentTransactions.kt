@@ -1,0 +1,89 @@
+package org.centrexcursionistalcoi.app.payment
+
+import kotlin.time.Clock
+import kotlin.uuid.Uuid
+import org.centrexcursionistalcoi.app.data.PaymentStatus
+import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.table.Transactions
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
+import org.slf4j.LoggerFactory
+
+/**
+ * Keeps the `Transactions` of the payments started through a [PaymentProvider] and what the provider reports about
+ * them. Whatever links a transaction to what is being paid (a lending...) is up to the caller.
+ */
+object PaymentTransactions {
+    private val logger = LoggerFactory.getLogger("PaymentTransactions")
+
+    /** A payment that was started: send the user to [session]. */
+    data class Started(val transactionId: Uuid, val session: PaymentSession)
+
+    /** What recording a [PaymentResult] did to its transaction. */
+    data class Applied(val transactionId: Uuid, val previous: PaymentStatus, val current: PaymentStatus) {
+        val changed: Boolean get() = previous != current
+    }
+
+    /**
+     * Starts a payment of [request] with [provider] and records it as pending.
+     * @throws PaymentGatewayUnavailableException if there is no provider, or it can't be reached.
+     */
+    suspend fun start(
+        request: PaymentRequest,
+        provider: PaymentProvider = PaymentProviders.default(),
+    ): Started {
+        var attempt = 0
+        while (true) {
+            val session = provider.createPayment(request)
+            try {
+                val id = Database {
+                    Transactions.insertAndGetId {
+                        it[Transactions.provider] = provider.id
+                        it[reference] = session.reference
+                        it[referenceKey] = session.reference.key
+                        it[amountCents] = request.amountCents
+                        it[status] = PaymentStatus.PENDING
+                    }.value
+                }
+                return Started(id, session)
+            } catch (e: ExposedSQLException) {
+                // The reference of a payment is random: a repeated one is a collision, which another try avoids
+                if (++attempt >= MAX_ATTEMPTS) throw e
+                logger.warn("Payment reference ${session.reference.key} could not be recorded, trying again", e)
+            }
+        }
+    }
+
+    /**
+     * Records what the provider reported, if it moves the transaction forward: a pending one is completed or failed,
+     * and a pending or completed one can be refunded or cancelled. Anything else (a repeated notification...) changes
+     * nothing, so it's safe to receive it more than once.
+     * @return `null` if there is no transaction for the reference.
+     */
+    fun apply(result: PaymentResult): Applied? = Database {
+        val row = Transactions.selectAll().where { Transactions.referenceKey eq result.reference.key }.singleOrNull()
+            ?: return@Database null
+        val id = row[Transactions.id].value
+        val previous = row[Transactions.status]
+        val next = result.status.takeIf { previous.mayBecome(it) } ?: previous
+        if (next != previous) {
+            Transactions.update({ Transactions.id eq id }) {
+                it[status] = next
+                it[payload] = result.payload
+                it[updatedAt] = Clock.System.now()
+            }
+        }
+        Applied(id, previous, next)
+    }
+
+    private fun PaymentStatus.mayBecome(next: PaymentStatus): Boolean = when (next) {
+        PaymentStatus.COMPLETED, PaymentStatus.FAILED -> this == PaymentStatus.PENDING
+        PaymentStatus.REFUNDED, PaymentStatus.CANCELLED -> this == PaymentStatus.PENDING || this == PaymentStatus.COMPLETED
+        PaymentStatus.PENDING -> false
+    }
+
+    private const val MAX_ATTEMPTS = 3
+}

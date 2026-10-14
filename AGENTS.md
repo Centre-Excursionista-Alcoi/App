@@ -409,6 +409,16 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   Providers return only `sanitized()` payloads (card number reduced to its last four digits). A provider that isn't
   configured is just not in `PaymentProviders`: the server starts anyway and anything needing one answers `503`
   (`Error.PaymentGatewayUnavailable`, with `Retry-After`) via `PaymentGatewayUnavailableException`.
+- **Redsys** (`payment/redsys/`) charges through its hosted page, so no card or bank data touches the server: the user is
+  sent to a signed form (`PaymentSession.Form`) and Redsys reports the result to `POST /payments/redsys/notification`,
+  the only thing trusted (never the `URLOK`/`URLKO` return). Signatures are `HMAC_SHA512_V2` (`RedsysSignature`): the
+  operation key is the terminal key (first 16 chars) AES-CBC/PKCS5 (zero IV) over the order, and the HMAC is keyed with
+  the **Base64 text** of that key (tested against the manual's example). Configure with `REDSYS_MERCHANT_CODE`,
+  `REDSYS_TERMINAL`, `REDSYS_SECRET_KEY`, and optionally `REDSYS_ENVIRONMENT` (`test` by default, `production`) and
+  `REDSYS_BIZUM=true` (only once the bank enabled Bizum on the terminal). Missing or wrong values never stop the server
+  (see `configurePayments`). The public sandbox key (`RedsysConfig.SANDBOX_KEY`) is refused in production. Start a payment
+  with `PaymentTransactions.start`, which records it as pending; notifications move it forward through
+  `PaymentTransactions.apply` and are idempotent.
 - Auth routes are rate-limited per client IP (`plugins/RateLimits.kt`); limits are lifted when `isTesting`.
 - In server tests, `loginAsFakeUser()`/`loginAs(user)` start a real session for the user (creating it if needed)
   and make the test client send its access token with every request; `logout()` stops that. To test the token
