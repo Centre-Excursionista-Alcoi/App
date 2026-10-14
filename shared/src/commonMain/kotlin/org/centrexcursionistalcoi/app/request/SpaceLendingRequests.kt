@@ -55,6 +55,15 @@ data class UpdateSpaceLendingRequest(
     val notes: String? = null,
 )
 
+/** The user pays their lending online. */
+@Serializable
+data class PaySpaceLendingRequest(
+    /** How they want to pay, [org.centrexcursionistalcoi.app.data.PaymentMethod.ANY] to choose in the provider's page. */
+    val method: org.centrexcursionistalcoi.app.data.PaymentMethod = org.centrexcursionistalcoi.app.data.PaymentMethod.ANY,
+    /** Their phone with prefix (`+34...`), to prefill it for Bizum. */
+    val phone: String? = null,
+)
+
 /** Admin: sets the payment status. */
 @Serializable
 data class SetSpaceLendingPaymentRequest(

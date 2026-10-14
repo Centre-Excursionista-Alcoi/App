@@ -663,6 +663,17 @@ sealed interface Error {
         override val statusCode: HttpStatusCode = HttpStatusCode.ServiceUnavailable
     }
 
+    /** The payment provider refused an operation (e.g. a refund). Not transient: see [PaymentGatewayUnavailable]. */
+    @Serializable
+    @SerialName("PaymentRejected")
+    class PaymentRejected(val reason: String) : Error {
+        override val code: Int = ERROR_PAYMENT_REJECTED
+        override val description: String = "The payment provider refused the operation: $reason"
+
+        @Serializable(HttpStatusCodeSerializer::class)
+        override val statusCode: HttpStatusCode = HttpStatusCode.Conflict
+    }
+
     @Serializable
     @SerialName("SpaceKeysUnavailable")
     class SpaceKeysUnavailable(val keyType: String) : Error {
@@ -734,6 +745,7 @@ sealed interface Error {
         const val ERROR_INVALID_SPACE_LENDING_STATE = 57
         const val ERROR_SPACE_KEYS_UNAVAILABLE = 58
         const val ERROR_PAYMENT_GATEWAY_UNAVAILABLE = 59
+        const val ERROR_PAYMENT_REJECTED = 60
 
         fun serializer(code: Int): KSerializer<out Error>? = when (code) {
             0 -> Unknown.serializer()
@@ -796,6 +808,7 @@ sealed interface Error {
             ERROR_INVALID_SPACE_LENDING_STATE -> InvalidSpaceLendingState.serializer()
             ERROR_SPACE_KEYS_UNAVAILABLE -> SpaceKeysUnavailable.serializer()
             ERROR_PAYMENT_GATEWAY_UNAVAILABLE -> PaymentGatewayUnavailable.serializer()
+            ERROR_PAYMENT_REJECTED -> PaymentRejected.serializer()
             else -> null
         }
     }

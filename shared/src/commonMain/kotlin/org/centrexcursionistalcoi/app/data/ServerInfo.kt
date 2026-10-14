@@ -15,6 +15,9 @@ class ServerInfo(
      * Timestamp (in milliseconds) of the last successful synchronization with the FEMECV database.
      */
     val lastFEMECVSync: Long,
+
+    /** The ways of paying online the server offers. Empty if it can't take payments. */
+    val paymentMethods: List<PaymentMethod> = emptyList(),
 ) {
     @Serializable
     data class Version(

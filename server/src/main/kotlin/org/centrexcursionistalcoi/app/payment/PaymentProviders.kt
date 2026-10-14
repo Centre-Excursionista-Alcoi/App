@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.payment
 
 import java.util.concurrent.ConcurrentHashMap
+import org.centrexcursionistalcoi.app.data.PaymentMethod
 import org.centrexcursionistalcoi.app.data.PaymentReference
 
 /**
@@ -25,6 +26,9 @@ object PaymentProviders {
 
     /** The provider with [id], if configured. */
     operator fun get(id: String): PaymentProvider? = providers[id]
+
+    /** The ways of paying the configured providers offer. Empty if there is none. */
+    fun methods(): List<PaymentMethod> = providers.values.flatMap { it.methods }.distinct().sortedBy { it.ordinal }
 
     /** The provider that handles [reference]. */
     fun of(reference: PaymentReference): PaymentProvider =

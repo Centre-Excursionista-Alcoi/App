@@ -24,6 +24,7 @@ import org.centrexcursionistalcoi.app.plugins.configureRateLimits
 import org.centrexcursionistalcoi.app.plugins.configureRouting
 import org.centrexcursionistalcoi.app.plugins.configureSSE
 import org.centrexcursionistalcoi.app.plugins.configureSentryTracing
+import org.centrexcursionistalcoi.app.payment.SpaceLendingPayments
 import org.centrexcursionistalcoi.app.payment.configurePayments
 import org.centrexcursionistalcoi.app.plugins.configureStatusPages
 import org.centrexcursionistalcoi.app.plugins.configureUploadsCleanup
@@ -171,5 +172,6 @@ fun Application.module(isTesting: Boolean = false, isDevelopment: Boolean = fals
     configureRateLimits(isTesting)
     configureRouting()
     configureStatusPages()
+    SpaceLendingPayments.register()
     configureAuthentication(isTesting, isDevelopment)
 }

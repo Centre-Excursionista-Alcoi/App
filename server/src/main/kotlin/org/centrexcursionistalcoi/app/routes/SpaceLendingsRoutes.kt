@@ -1,5 +1,17 @@
 package org.centrexcursionistalcoi.app.routes
 
+import kotlin.math.roundToInt
+import org.centrexcursionistalcoi.app.translation.locale
+import org.centrexcursionistalcoi.app.request.PaySpaceLendingRequest
+import org.centrexcursionistalcoi.app.payment.SpaceLendingPayments
+import org.centrexcursionistalcoi.app.payment.PaymentTransactions
+import org.centrexcursionistalcoi.app.payment.PaymentRequest
+import org.centrexcursionistalcoi.app.payment.PaymentProviders
+import org.centrexcursionistalcoi.app.payment.PaymentProviderException
+import org.centrexcursionistalcoi.app.payment.PaymentLaunches
+import org.centrexcursionistalcoi.app.payment.PaymentGatewayUnavailableException
+import org.centrexcursionistalcoi.app.data.PaymentMethod
+import org.centrexcursionistalcoi.app.data.PaymentLaunch
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -444,6 +456,63 @@ fun Route.spaceLendingsRoutes() {
         }
         Database { lending.paymentStatus = request.status }
         lending.updated()
+        call.respond(HttpStatusCode.NoContent)
+    }
+
+    // Online payment: the user pays once the keys are back and the price is final
+    postWithLock<Api.SpaceLendings.Id.Pay>(spaceLendingsMutex) { resource ->
+        val session = getUserSessionOrFail() ?: return@postWithLock
+        val lending = spaceLendingFor(session, resource.parent.id, ownerOnly = true) ?: return@postWithLock
+        val request = receiveOptionalJson(PaySpaceLendingRequest.serializer()) ?: return@postWithLock
+        val (state, amountCents, description) = Database {
+            val problem = when {
+                lending.cancelled -> "The lending is cancelled"
+                lending.returnedAt == null -> "The lending can be paid once the keys have been returned"
+                lending.paymentStatus in settledPayments -> "The lending is already paid"
+                else -> null
+            }
+            Triple(problem, (lending.totalPrice * 100).roundToInt(), "${lending.space.name} (${lending.checkIn} - ${lending.checkOut})")
+        }
+        if (state != null) return@postWithLock respondError(Error.InvalidSpaceLendingState(state))
+        if (amountCents <= 0) return@postWithLock respondError(Error.InvalidSpaceLendingState("There is nothing to pay"))
+
+        // Unavailable (no provider) answers 503 through the status pages
+        val provider = PaymentProviders.default()
+        if (request.method != PaymentMethod.ANY && request.method !in provider.methods) {
+            return@postWithLock respondError(Error.InvalidArgument("method"))
+        }
+        val returnUrl = AppLinks.spaceLending(lending.id.value)
+        val started = PaymentTransactions.start(
+            PaymentRequest(
+                amountCents = amountCents,
+                description = description,
+                successUrl = returnUrl,
+                failureUrl = returnUrl,
+                method = request.method,
+                language = call.request.locale().language,
+                payerPhone = request.phone,
+            ),
+            provider,
+        )
+        SpaceLendingPayments.link(lending.id.value, started.transactionId)
+
+        val launch = PaymentLaunches.create(started.session)
+        call.respond(PaymentLaunch(url = "${AppLinks.baseUrl}/pay?id=${launch.id}", expiresIn = launch.remaining.inWholeSeconds))
+    }
+
+    // A manager returns the money of a lending that was paid online
+    postWithLock<Api.SpaceLendings.Id.Refund>(spaceLendingsMutex) { resource ->
+        val session = getUserSessionOrFail() ?: return@postWithLock
+        val lending = spaceLendingFor(session, resource.parent.id, managerOnly = true) ?: return@postWithLock
+        val transaction = SpaceLendingPayments.completedTransaction(lending.id.value)
+            ?: return@postWithLock respondError(Error.InvalidSpaceLendingState("The lending was not paid online"))
+        try {
+            PaymentTransactions.refund(transaction)
+        } catch (e: PaymentGatewayUnavailableException) {
+            throw e
+        } catch (e: PaymentProviderException) {
+            return@postWithLock respondError(Error.PaymentRejected(e.message ?: "Refused"))
+        }
         call.respond(HttpStatusCode.NoContent)
     }
 

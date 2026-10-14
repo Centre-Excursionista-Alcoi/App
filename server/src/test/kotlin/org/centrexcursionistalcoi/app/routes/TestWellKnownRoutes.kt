@@ -70,13 +70,13 @@ class TestWellKnownRoutes : ApplicationTestBase() {
         // The first match wins: the web-only pages (password reset, document verification) have to be excluded
         // before "everything" claims them. Android makes the same exception (MainActivity.WEB_ONLY_PATHS), since
         // those pages have no screen in the app.
-        assertEquals(4, components.size)
-        for ((i, path) in listOf("/reset_password", "/verify", "/browser-login").withIndex()) {
+        assertEquals(5, components.size)
+        for ((i, path) in listOf("/reset_password", "/verify", "/browser-login", "/pay").withIndex()) {
             assertEquals(path, components[i].getValue("/").jsonPrimitive.content)
             assertTrue(components[i].getValue("exclude").jsonPrimitive.boolean)
         }
-        assertEquals("*", components[3].getValue("/").jsonPrimitive.content)
-        assertTrue("exclude" !in components[3])
+        assertEquals("*", components[4].getValue("/").jsonPrimitive.content)
+        assertTrue("exclude" !in components[4])
     }
 
     @Test
