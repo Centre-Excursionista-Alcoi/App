@@ -832,4 +832,15 @@
     <string name="management_spaces_save">Save</string>
     <string name="management_spaces_cancel">Cancel</string>
     <string name="management_space_lendings_empty">There are no space lendings.</string>
+    <string name="space_lending_pay_online">Pay online</string>
+    <string name="space_lending_pay_online_hint">Pay %1$s with your card or Bizum. You will complete the payment in your browser.</string>
+    <string name="space_lending_pay_card">Pay with card</string>
+    <string name="space_lending_pay_bizum">Pay with Bizum</string>
+    <string name="space_lending_pay_waiting">Complete the payment in your browser, then check it here.</string>
+    <string name="space_lending_pay_check">Check payment</string>
+    <string name="space_lending_pay_unavailable">Online payments are not available right now. Try again later, or pay by bank transfer.</string>
+    <string name="space_lending_refund_online">Refund online payment</string>
+    <string name="space_lending_refund_confirm">The money will be returned to the card or Bizum account it was paid with. Continue?</string>
+    <string name="space_lending_refund_rejected">The payment provider refused the refund. Try again later, or refund it from the Redsys portal.</string>
+    <string name="space_lending_refund_not_online">This lending was not paid online, so there is nothing to refund from here.</string>
 </resources>
