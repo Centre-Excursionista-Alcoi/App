@@ -39,6 +39,7 @@ clean up their own entries, leaving app credentials untouched.
 - `DB_USER`: `postgres`
 - `DB_PASS`: `1234567890abcdef`
 - `ENV`: `development`
+- `LOG_LEVEL` (optional, default `INFO`): `DEBUG` or `TRACE` log every SQL statement and HTTP exchange, including members' data (NIFs, emails): use only to diagnose something, and set it back
 
 Files are stored in Cloudflare R2 (or any S3-compatible storage) when these are set, and in the local directory
 `FILES_PATH` (default `./files`) otherwise. Only development servers (`ENV=development`) may store files locally:
