@@ -5,6 +5,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.PostgresTestBase
+import org.centrexcursionistalcoi.app.database.table.Transactions
 
 /**
  * Tests that transactions, as V14 left them (Redsys-only, in euros), become provider-neutral ones.

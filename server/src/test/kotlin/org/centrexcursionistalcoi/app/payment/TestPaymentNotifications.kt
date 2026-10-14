@@ -1,6 +1,16 @@
 package org.centrexcursionistalcoi.app.payment
 
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
+import io.ktor.client.engine.mock.toByteArray
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.headersOf
+import kotlin.test.assertFailsWith
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import io.ktor.client.plugins.resources.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -158,5 +168,76 @@ class TestPaymentNotifications : ApplicationTestBase() {
     fun `notifications while the gateway is not configured are answered with 503`() = runApplicationTest {
         client.notify("1234ABCD").assertStatusCode(HttpStatusCode.ServiceUnavailable)
         assertTrue(PaymentProviders["redsys"] == null)
+    }
+
+    /** A Redsys that accepts every operation, answering [response] with the type it was asked for. */
+    private fun registerWithRest(response: String, asked: MutableList<String> = mutableListOf()) {
+        PaymentProviders.register(
+            RedsysPaymentProvider(
+                RedsysConfig("999008881", "1", key),
+                httpClient = HttpClient(MockEngine { request ->
+                    val body = Json.parseToJsonElement(String(request.body.toByteArray())).jsonObject
+                    val encoded = body.getValue("Ds_MerchantParameters").jsonPrimitive.content
+                    val sent = Json.parseToJsonElement(String(Base64.getUrlDecoder().decode(encoded))).jsonObject
+                    val type = sent.getValue("DS_MERCHANT_TRANSACTIONTYPE").jsonPrimitive.content
+                    val order = sent.getValue("DS_MERCHANT_ORDER").jsonPrimitive.content
+                    asked += "$type:${sent.getValue("DS_MERCHANT_AMOUNT").jsonPrimitive.content}"
+                    val payload = Base64.getUrlEncoder().withoutPadding().encodeToString(
+                        """{"Ds_Order":"$order","Ds_Response":"$response","Ds_Amount":"600","Ds_Currency":"978","Ds_MerchantCode":"999008881","Ds_Terminal":"1","Ds_TransactionType":"$type"}""".toByteArray()
+                    )
+                    respond(
+                        """{"Ds_SignatureVersion":"HMAC_SHA512_V2","Ds_MerchantParameters":"$payload","Ds_Signature":"${RedsysSignature.sign(key, order, payload)}"}""",
+                        HttpStatusCode.OK,
+                        headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                }),
+            )
+        )
+    }
+
+    @Test
+    fun `refunding a completed transaction returns the amount agreed and records it`() = runApplicationTest {
+        val started = start()
+        client.notify(orderOf(started)).assertStatusCode(HttpStatusCode.OK)
+        val asked = mutableListOf<String>()
+        registerWithRest("0900", asked)
+
+        val result = PaymentTransactions.refund(started.transactionId)
+
+        assertEquals(PaymentStatus.REFUNDED, result.status)
+        assertEquals(listOf("3:600"), asked)
+        assertEquals(PaymentStatus.REFUNDED, row(started.transactionId)[Transactions.status])
+    }
+
+    @Test
+    fun `only completed transactions are refunded`() = runApplicationTest {
+        val started = start()
+
+        assertFailsWith<IllegalStateException> { PaymentTransactions.refund(started.transactionId) }
+        assertFailsWith<IllegalStateException> { PaymentTransactions.refund(Uuid.random()) }
+    }
+
+    @Test
+    fun `cancelling a payment that cannot be voided leaves it refunded`() = runApplicationTest {
+        val started = start()
+        client.notify(orderOf(started)).assertStatusCode(HttpStatusCode.OK)
+        // Answers 0900 to everything: a refund, which is what a Bizum payment is cancelled with
+        registerWithRest("0900")
+
+        val result = PaymentTransactions.cancel(started.transactionId)
+
+        assertEquals(PaymentStatus.REFUNDED, result.status)
+        assertEquals(PaymentStatus.REFUNDED, row(started.transactionId)[Transactions.status])
+    }
+
+    @Test
+    fun `a refused refund leaves the transaction as it was`() = runApplicationTest {
+        val started = start()
+        client.notify(orderOf(started)).assertStatusCode(HttpStatusCode.OK)
+        registerWithRest("0190")
+
+        assertFailsWith<PaymentProviderException> { PaymentTransactions.refund(started.transactionId) }
+
+        assertEquals(PaymentStatus.COMPLETED, row(started.transactionId)[Transactions.status])
     }
 }

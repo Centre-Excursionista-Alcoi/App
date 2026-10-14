@@ -36,17 +36,18 @@ interface PaymentProvider {
     suspend fun handleNotification(notification: RawPaymentNotification): PaymentResult
 
     /**
-     * Returns [amountCents] of the payment [reference] to the user, all of it if `null`.
+     * Returns [amountCents] of the payment [reference] to the user. [amountCents] is what was paid (or part of it): the
+     * provider can't be assumed to remember it.
      * @throws PaymentProviderException if the provider refuses, or [reference] isn't one of its payments.
      */
-    suspend fun refund(reference: PaymentReference, amountCents: Int? = null): PaymentResult
+    suspend fun refund(reference: PaymentReference, amountCents: Int): PaymentResult
 
     /**
-     * Voids the payment [reference], e.g. when its result is unknown. A provider that can't void a payment returns the
-     * money instead: [PaymentResult.status] tells which happened.
+     * Voids the payment [reference], of [amountCents], before the money moves. A provider that can't void a payment
+     * returns the money instead: [PaymentResult.status] tells which happened.
      * @throws PaymentProviderException if the provider refuses, or [reference] isn't one of its payments.
      */
-    suspend fun cancel(reference: PaymentReference): PaymentResult
+    suspend fun cancel(reference: PaymentReference, amountCents: Int): PaymentResult
 
     /** Checks [reference] is one of this provider's. */
     fun requireOwn(reference: PaymentReference) {
