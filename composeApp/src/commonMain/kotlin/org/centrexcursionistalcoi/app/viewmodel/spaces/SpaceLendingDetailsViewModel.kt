@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -54,13 +54,12 @@ class SpaceLendingDetailsViewModel(
     /** The ways of paying online the server offers, empty if it doesn't take online payments. */
     val paymentMethods: List<PaymentMethod> = serverInfo.info?.paymentMethods.orEmpty()
 
-    private val _paymentIssue = MutableStateFlow<PaymentIssue?>(null)
-    val paymentIssue = _paymentIssue.asStateFlow()
-
-    private val _awaitingPayment = MutableStateFlow(false)
+    val paymentIssue: StateFlow<PaymentIssue?>
+        field = MutableStateFlow<PaymentIssue?>(null)
 
     /** A payment was opened in the browser, and its result isn't known yet. */
-    val awaitingPayment = _awaitingPayment.asStateFlow()
+    val awaitingPayment: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     private val _auditLog = MutableStateFlow<List<PaymentAuditEntry>?>(null)
 
@@ -85,15 +84,15 @@ class SpaceLendingDetailsViewModel(
         .map { lendings -> lendings.flatMap { it.keys }.filter { it.isOut }.map { it.key }.toSet() }
         .stateInViewModel()
 
-    private val _isWorking = MutableStateFlow(false)
-    val isWorking = _isWorking.asStateFlow()
+    val isWorking: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     private fun work(block: suspend () -> Unit) = launch {
-        _isWorking.value = true
+        isWorking.value = true
         try {
             block()
         } finally {
-            _isWorking.value = false
+            isWorking.value = false
         }
     }
 
@@ -112,31 +111,31 @@ class SpaceLendingDetailsViewModel(
      * @param openUrl Opens the page of the payment in a browser.
      */
     fun pay(method: PaymentMethod, openUrl: (String) -> Unit) = work {
-        _paymentIssue.value = null
+        paymentIssue.value = null
         val launch = try {
             remote.startPayment(lendingId, method)
         } catch (e: ServerException) {
             if (e.errorCode != Error.ERROR_PAYMENT_GATEWAY_UNAVAILABLE) throw e
-            _paymentIssue.value = PaymentIssue.GATEWAY_UNAVAILABLE
+            paymentIssue.value = PaymentIssue.GATEWAY_UNAVAILABLE
             return@work
         }
-        _awaitingPayment.value = true
+        awaitingPayment.value = true
         openUrl(launch.url)
     }
 
     /** Fetches the lending again, to see whether the payment went through. */
     fun checkPayment() = work {
         remote.update(lendingId, ignoreIfModifiedSince = true)
-        if (lending.value?.paymentStatus != PaymentStatus.PENDING) _awaitingPayment.value = false
+        if (lending.value?.paymentStatus != PaymentStatus.PENDING) awaitingPayment.value = false
     }
 
     /** For managers: returns the money of a lending that was paid online. */
     fun refundOnline() = work {
-        _paymentIssue.value = null
+        paymentIssue.value = null
         try {
             remote.refund(lendingId)
         } catch (e: ServerException) {
-            _paymentIssue.value = when (e.errorCode) {
+            paymentIssue.value = when (e.errorCode) {
                 Error.ERROR_PAYMENT_REJECTED -> PaymentIssue.REFUND_REJECTED
                 Error.ERROR_INVALID_SPACE_LENDING_STATE -> PaymentIssue.NOT_PAID_ONLINE
                 Error.ERROR_PAYMENT_GATEWAY_UNAVAILABLE -> PaymentIssue.GATEWAY_UNAVAILABLE
