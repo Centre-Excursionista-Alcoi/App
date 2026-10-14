@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import org.centrexcursionistalcoi.app.data.Category
+import org.centrexcursionistalcoi.app.data.PaymentAuditEntry
 import org.centrexcursionistalcoi.app.data.PaymentMethod
 import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.database.ProfileRepository
@@ -60,6 +61,11 @@ class SpaceLendingDetailsViewModel(
 
     /** A payment was opened in the browser, and its result isn't known yet. */
     val awaitingPayment = _awaitingPayment.asStateFlow()
+
+    private val _auditLog = MutableStateFlow<List<PaymentAuditEntry>?>(null)
+
+    /** For admins: what the payments gateway recorded about the lending. `null` until loaded. */
+    val auditLog = _auditLog.asStateFlow()
 
     val lending = spaceLendingsRepository.getAsFlow(lendingId).stateInViewModel()
     val profile = profileRepository.profile.stateInViewModel()
@@ -138,6 +144,9 @@ class SpaceLendingDetailsViewModel(
             }
         }
     }
+
+    /** For admins: loads [auditLog]. */
+    fun loadAuditLog() = work { _auditLog.value = remote.paymentAudit(lendingId) }
 
     fun setPayment(status: PaymentStatus) = work { remote.setPayment(lendingId, status) }
 

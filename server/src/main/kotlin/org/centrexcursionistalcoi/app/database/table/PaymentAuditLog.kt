@@ -1,9 +1,9 @@
 package org.centrexcursionistalcoi.app.database.table
 
+import org.centrexcursionistalcoi.app.data.PaymentAuditEvent
 import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.json
-import org.centrexcursionistalcoi.app.payment.PaymentAuditEvent
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.json.jsonb

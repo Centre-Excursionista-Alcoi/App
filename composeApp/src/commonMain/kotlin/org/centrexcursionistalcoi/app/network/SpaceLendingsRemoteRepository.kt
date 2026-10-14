@@ -13,6 +13,8 @@ import io.ktor.http.isSuccess
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.Category
+import kotlinx.serialization.builtins.ListSerializer
+import org.centrexcursionistalcoi.app.data.PaymentAuditEntry
 import org.centrexcursionistalcoi.app.data.PaymentLaunch
 import org.centrexcursionistalcoi.app.data.PaymentMethod
 import org.centrexcursionistalcoi.app.data.PaymentStatus
@@ -191,6 +193,13 @@ class SpaceLendingsRemoteRepository(
         }
         if (!response.status.isSuccess()) throw response.bodyAsError().toThrowable()
         return json.decodeFromString(PaymentLaunch.serializer(), response.bodyAsText())
+    }
+
+    /** For admins: everything recorded about the online payments of the lending, oldest first. */
+    suspend fun paymentAudit(lendingId: Uuid): List<PaymentAuditEntry> {
+        val response = httpClient.get(Api.SpaceLendings.Id.PaymentAudit(Api.SpaceLendings.Id(lendingId.toString())))
+        if (!response.status.isSuccess()) throw response.bodyAsError().toThrowable()
+        return json.decodeFromString(ListSerializer(PaymentAuditEntry.serializer()), response.bodyAsText())
     }
 
     /** For managers: returns the money of a lending that was paid online. */

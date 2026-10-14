@@ -843,4 +843,19 @@
     <string name="space_lending_refund_confirm">The money will be returned to the card or Bizum account it was paid with. Continue?</string>
     <string name="space_lending_refund_rejected">The payment provider refused the refund. Try again later, or refund it from the Redsys portal.</string>
     <string name="space_lending_refund_not_online">This lending was not paid online, so there is nothing to refund from here.</string>
+    <string name="space_lending_audit_show">Show payment history</string>
+    <string name="space_lending_audit_hide">Hide payment history</string>
+    <string name="space_lending_audit_empty">Nothing has been recorded about the payments of this lending.</string>
+    <string name="space_lending_audit_by">by %1$s</string>
+    <string name="payment_audit_event_created">Payment started</string>
+    <string name="payment_audit_event_create_failed">Could not start the payment</string>
+    <string name="payment_audit_event_result_received">Result received from the provider</string>
+    <string name="payment_audit_event_status_changed">Status changed</string>
+    <string name="payment_audit_event_result_ignored">Repeated result ignored</string>
+    <string name="payment_audit_event_unknown_reference">Result for an unknown payment</string>
+    <string name="payment_audit_event_notification_rejected">Notification rejected</string>
+    <string name="payment_audit_event_refund_requested">Refund requested</string>
+    <string name="payment_audit_event_cancel_requested">Cancellation requested</string>
+    <string name="payment_audit_event_operation_failed">Refund or cancellation failed</string>
+    <string name="payment_audit_event_listener_failed">Updating the lending failed</string>
 </resources>

@@ -1,6 +1,6 @@
 # **Privacy Policy — CEA App**
 
-**Effective date:** 11 December 2025<br/>
+**Effective date:** 14 October 2026<br/>
 **Developer and Distributor:**<br/>
 Arnau Mora Gras<br/>
 Carrer Ibi, 14<br/>
@@ -101,6 +101,14 @@ Data sent to Sentry may include:
 
 You can **opt out** of this data collection at any time from the App’s **settings menu**.
 
+### **e. Online Payments and Payment Records**
+
+Some services (such as the lending of spaces) can be paid online through **Redsys**, a Spanish payment platform, by card or **Bizum**.<br/>
+Payment is made on **Redsys’s own secure page**: your **card number, expiry date, security code and bank details are never seen or stored by the App or our servers**.<br/>
+We keep a **record of each payment attempt**: its amount, date, status (pending, completed, failed, refunded or cancelled), the identifier Redsys assigned to it, the **last four digits of your card** (to help us identify a payment if you contact us), and the result code Redsys reported.
+
+**Payment audit log.** We also keep an **audit log of everything that happens with the payments gateway**: when a payment is started and by whom, every result reported by the payment provider, every change of status, and every refund or cancellation requested, with who requested it and when, as well as any errors. This log is kept **for legal and accounting reasons** (to be able to justify and trace any charge or refund, to comply with tax and accounting obligations, and to resolve claims and disputes), and to detect and investigate fraud and errors. It is **only accessible to administrators** of the Centre Excursionista d’Alcoi and is never used for any other purpose.
+
 ---
 
 ## **6. Legal Basis for Processing**
@@ -108,7 +116,8 @@ You can **opt out** of this data collection at any time from the App’s **setti
 Your data is processed based on the following legal grounds:
 
 * **Contractual necessity:** to provide access and functionality of the App.
-* **Legitimate interest:** to maintain and improve the App’s performance and security.
+* **Legitimate interest:** to maintain and improve the App’s performance and security, and to prevent and investigate payment fraud and errors.
+* **Legal obligation:** to keep the payment records and audit log that tax, accounting and consumer regulations require.
 * **Consent:** for optional features such as Sentry analytics and FEMECV integration.
 
 You may withdraw your consent at any time without affecting the lawfulness of prior processing.
@@ -120,6 +129,8 @@ You may withdraw your consent at any time without affecting the lawfulness of pr
 We retain your personal data only for as long as necessary to provide the App’s services or as required by law.<br/>
 If you delete your account, all associated data will be permanently removed from our systems within a reasonable timeframe, except where legal obligations require retention.
 
+**Payment records and the payment audit log are kept even if you delete your account**, for as long as the law requires us to keep accounting and tax records (currently up to **six years** under the Spanish Commercial Code, and up to **four years** for tax purposes), and for longer if they are needed to resolve a claim or dispute that has already started. They are kept restricted to administrators and deleted once that period ends. They contain no card number beyond its last four digits.
+
 ---
 
 ## **8. Data Sharing and Disclosure**
@@ -128,6 +139,7 @@ We do not sell or share your data with third parties, except:
 
 * **Authentik:** for user authentication.
 * **Sentry:** for crash/error reporting (opt-out).
+* **Redsys** (and your bank or Bizum): to process payments, under their own privacy policies. We only share what is needed to take the payment: the amount, a payment description and a reference. Your card or bank details are given directly to Redsys, never to us.
 * **CEA administrators:** for managing the material lending feature and club-related activities.
 
 All partners and processors operate under **GDPR-compliant agreements**.
@@ -187,10 +199,11 @@ You can request the removal of your personal data directly from the App. This wi
 
 * This does **not** remove your membership or data from the **Centre Excursionista d’Alcoi (CEA)** club itself.
 * Some third-party providers, such as **Firebase Cloud Messaging**, may still hold some of your data. You may contact them directly to request removal.
+* **Payment records and the payment audit log are not removed**, as we are legally required to keep them (see section 7). They are removed when that obligation ends.
 * Error and performance reports, if previously accepted, were reported to **Sentry** and may be held for longer periods of time.
 * Information that may have been collected by your preferred app store (Apple App Store, Google Play Store, etc.) is out of our control and follows their respective privacy policies.
 * You may appear in documents or records maintained by other members or administrators of the organization, which is outside the scope of this data removal option.
 
 ---
 
-### **Last updated:** 11 December 2025
+### **Last updated:** 14 October 2026

@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.plugins
 
+import org.centrexcursionistalcoi.app.data.PaymentAuditEvent
 import org.centrexcursionistalcoi.app.translation.locale
 import org.centrexcursionistalcoi.app.translation.DocumentRedactor
 import org.centrexcursionistalcoi.app.routes.WebTemplate
@@ -37,13 +38,14 @@ import org.centrexcursionistalcoi.app.error.Error
 import org.centrexcursionistalcoi.app.error.respondError
 import org.centrexcursionistalcoi.app.payment.InvalidPaymentNotificationException
 import org.centrexcursionistalcoi.app.payment.PaymentAudit
-import org.centrexcursionistalcoi.app.payment.PaymentAuditEvent
 import org.centrexcursionistalcoi.app.payment.PaymentGatewayUnavailableException
 import org.centrexcursionistalcoi.app.payment.PaymentProviders
 import org.centrexcursionistalcoi.app.payment.PaymentTransactions
 import org.centrexcursionistalcoi.app.payment.RawPaymentNotification
 import org.centrexcursionistalcoi.app.routes.Api
+import org.centrexcursionistalcoi.app.security.UserSession.Companion.assertAdmin
 import org.slf4j.LoggerFactory
+import kotlin.uuid.Uuid
 
 private val logger = LoggerFactory.getLogger("PaymentRoutes")
 
@@ -138,4 +140,23 @@ fun Route.paymentRoutes() {
         logger.info("Transaction ${applied.transactionId}: ${applied.previous} -> ${applied.current}")
         call.respond(HttpStatusCode.OK)
     }
+
+    // Admins only: the trace of everything that happened with the gateway, for support and legal questions
+    get<Api.Payments.Audit> { resource ->
+        assertAdmin() ?: return@get
+        val limit = (resource.limit ?: DEFAULT_AUDIT_LIMIT).coerceIn(1, MAX_AUDIT_LIMIT)
+        val entries = when {
+            resource.transaction != null -> {
+                val id = runCatching { Uuid.parse(resource.transaction!!) }.getOrNull()
+                    ?: return@get respondError(Error.InvalidArgument("transaction"))
+                PaymentAudit.forTransaction(id)
+            }
+            resource.reference != null -> PaymentAudit.forReference(resource.reference!!)
+            else -> PaymentAudit.latest(limit)
+        }
+        call.respond(entries.takeLast(limit))
+    }
 }
+
+private const val DEFAULT_AUDIT_LIMIT = 100
+private const val MAX_AUDIT_LIMIT = 1000

@@ -45,6 +45,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.back
+import cea_app.composeapp.generated.resources.space_lending_audit_show
+import cea_app.composeapp.generated.resources.space_lending_audit_hide
+import cea_app.composeapp.generated.resources.space_lending_audit_empty
+import cea_app.composeapp.generated.resources.space_lending_audit_by
+import cea_app.composeapp.generated.resources.payment_audit_event_created
+import cea_app.composeapp.generated.resources.payment_audit_event_create_failed
+import cea_app.composeapp.generated.resources.payment_audit_event_result_received
+import cea_app.composeapp.generated.resources.payment_audit_event_status_changed
+import cea_app.composeapp.generated.resources.payment_audit_event_result_ignored
+import cea_app.composeapp.generated.resources.payment_audit_event_unknown_reference
+import cea_app.composeapp.generated.resources.payment_audit_event_notification_rejected
+import cea_app.composeapp.generated.resources.payment_audit_event_refund_requested
+import cea_app.composeapp.generated.resources.payment_audit_event_cancel_requested
+import cea_app.composeapp.generated.resources.payment_audit_event_operation_failed
+import cea_app.composeapp.generated.resources.payment_audit_event_listener_failed
+import org.centrexcursionistalcoi.app.data.PaymentAuditEntry
+import org.centrexcursionistalcoi.app.data.PaymentAuditEvent
 import cea_app.composeapp.generated.resources.space_lending_attendees
 import cea_app.composeapp.generated.resources.space_lending_attendees_edit
 import cea_app.composeapp.generated.resources.space_lending_attendees_hint
@@ -119,6 +136,7 @@ fun SpaceLendingDetailsScreen(
     val isWorking by model.isWorking.collectAsState()
     val paymentIssue by model.paymentIssue.collectAsState()
     val awaitingPayment by model.awaitingPayment.collectAsState()
+    val auditLog by model.auditLog.collectAsState()
     val uriHandler = LocalUriHandler.current
     var showRefundConfirmation by rememberSaveable { mutableStateOf(false) }
 
@@ -314,6 +332,17 @@ fun SpaceLendingDetailsScreen(
                 }
             }
 
+            // Admins can trace everything that happened with the payments
+            if (profile.isAdmin) {
+                item("payment_audit") {
+                    PaymentAuditSection(
+                        entries = auditLog,
+                        isWorking = isWorking,
+                        onLoad = { model.loadAuditLog() },
+                    )
+                }
+            }
+
             // Payment: by bank transfer, attaching the confirmation
             if ((isOwner || isManager) && stage != SpaceLendingStage.CANCELLED && stage != SpaceLendingStage.PAID && lending.totalPrice > 0) {
                 item("payment") {
@@ -491,6 +520,66 @@ private fun OnlinePaymentSection(
         }
     }
 }
+
+@Composable
+private fun PaymentAuditSection(
+    entries: List<PaymentAuditEntry>?,
+    isWorking: Boolean,
+    onLoad: () -> Unit,
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    Column(modifier = Modifier.padding(top = 16.dp)) {
+        OutlinedButton(
+            onClick = {
+                expanded = !expanded
+                if (expanded) onLoad()
+            },
+            enabled = !isWorking,
+        ) {
+            Text(stringResource(if (expanded) Res.string.space_lending_audit_hide else Res.string.space_lending_audit_show))
+        }
+        if (expanded && entries != null) {
+            if (entries.isEmpty()) {
+                Text(
+                    stringResource(Res.string.space_lending_audit_empty),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+            for (entry in entries) {
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    Text(entry.event.label(), style = MaterialTheme.typography.titleSmall)
+                    val change = listOfNotNull(entry.previousStatus, entry.newStatus).distinct().joinToString(" → ")
+                    val amount = entry.amountCents?.let { "${it / 100}.${(it % 100).toString().padStart(2, '0')} €" }
+                    val details = listOfNotNull(change.ifEmpty { null }, amount).joinToString(" · ")
+                    if (details.isNotEmpty()) Text(details, style = MaterialTheme.typography.bodySmall)
+                    val time = entry.createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).toString().replace('T', ' ')
+                    Text(
+                        "$time · " + stringResource(Res.string.space_lending_audit_by, entry.actor),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PaymentAuditEvent.label(): String = stringResource(
+    when (this) {
+        PaymentAuditEvent.CREATED -> Res.string.payment_audit_event_created
+        PaymentAuditEvent.CREATE_FAILED -> Res.string.payment_audit_event_create_failed
+        PaymentAuditEvent.RESULT_RECEIVED -> Res.string.payment_audit_event_result_received
+        PaymentAuditEvent.STATUS_CHANGED -> Res.string.payment_audit_event_status_changed
+        PaymentAuditEvent.RESULT_IGNORED -> Res.string.payment_audit_event_result_ignored
+        PaymentAuditEvent.UNKNOWN_REFERENCE -> Res.string.payment_audit_event_unknown_reference
+        PaymentAuditEvent.NOTIFICATION_REJECTED -> Res.string.payment_audit_event_notification_rejected
+        PaymentAuditEvent.REFUND_REQUESTED -> Res.string.payment_audit_event_refund_requested
+        PaymentAuditEvent.CANCEL_REQUESTED -> Res.string.payment_audit_event_cancel_requested
+        PaymentAuditEvent.OPERATION_FAILED -> Res.string.payment_audit_event_operation_failed
+        PaymentAuditEvent.LISTENER_FAILED -> Res.string.payment_audit_event_listener_failed
+    }
+)
 
 @Composable
 private fun PaymentProofSection(

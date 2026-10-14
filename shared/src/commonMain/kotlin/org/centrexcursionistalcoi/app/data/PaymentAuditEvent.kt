@@ -1,6 +1,9 @@
-package org.centrexcursionistalcoi.app.payment
+package org.centrexcursionistalcoi.app.data
 
-/** What an entry of the payments audit log (`PaymentAuditLog`) records. */
+import kotlinx.serialization.Serializable
+
+/** What an entry of the payments audit log (`PaymentAuditLog` on the server) records. */
+@Serializable
 enum class PaymentAuditEvent {
     /** A payment was started and recorded as pending. */
     CREATED,

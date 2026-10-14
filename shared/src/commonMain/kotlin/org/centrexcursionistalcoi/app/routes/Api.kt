@@ -52,6 +52,18 @@ object Api {
         /** Redsys reports the result of a payment here (form-encoded, signed). */
         @Resource("redsys/notification")
         class RedsysNotification(val parent: Payments = Payments())
+
+        /**
+         * Admins: the audit log of the payments gateway, oldest first. Filter by [transaction] or by the provider's
+         * [reference] (its key); [limit] caps the entries (the latest ones are kept).
+         */
+        @Resource("audit")
+        class Audit(
+            val parent: Payments = Payments(),
+            val transaction: String? = null,
+            val reference: String? = null,
+            val limit: Int? = null,
+        )
     }
 
     @Resource("/register")
@@ -318,6 +330,10 @@ object Api {
             /** The user pays the lending online: starts a payment and answers where to open to complete it. */
             @Resource("pay")
             class Pay(val parent: Id)
+
+            /** Admins: the audit log of every online payment of the lending, oldest first. */
+            @Resource("payment_audit")
+            class PaymentAudit(val parent: Id)
 
             /** A manager returns the money of a lending that was paid online. */
             @Resource("refund")

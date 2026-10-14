@@ -6,6 +6,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import org.centrexcursionistalcoi.app.data.PaymentAuditEntry
+import org.centrexcursionistalcoi.app.data.PaymentAuditEvent
 import org.centrexcursionistalcoi.app.data.PaymentPayload
 import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.database.Database
@@ -14,6 +16,7 @@ import org.centrexcursionistalcoi.app.json
 import org.centrexcursionistalcoi.app.serializer.PaymentPayloadSerializer
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.slf4j.LoggerFactory
@@ -31,20 +34,6 @@ object PaymentAudit {
     const val ACTOR_PROVIDER = "provider"
 
     fun userActor(sub: String) = "user:$sub"
-
-    data class Entry(
-        val id: Uuid,
-        val createdAt: kotlin.time.Instant,
-        val transactionId: Uuid?,
-        val referenceKey: String?,
-        val provider: String?,
-        val event: PaymentAuditEvent,
-        val actor: String,
-        val previousStatus: PaymentStatus?,
-        val newStatus: PaymentStatus?,
-        val amountCents: Int?,
-        val detail: JsonObject?,
-    )
 
     /**
      * Adds an entry. Joins the transaction it is called from, if any, so the entry of a change is saved or lost with
@@ -96,19 +85,31 @@ object PaymentAudit {
     }
 
     /** Everything recorded about [transactionId], oldest first. */
-    fun forTransaction(transactionId: Uuid): List<Entry> = Database {
+    fun forTransaction(transactionId: Uuid): List<PaymentAuditEntry> = forTransactions(listOf(transactionId))
+
+    /** Everything recorded about any of [transactionIds], oldest first. */
+    fun forTransactions(transactionIds: Collection<Uuid>): List<PaymentAuditEntry> = Database {
         PaymentAuditLog.selectAll()
-            .where { PaymentAuditLog.transactionId eq transactionId }
+            .where { PaymentAuditLog.transactionId inList transactionIds }
             .orderBy(PaymentAuditLog.createdAt to SortOrder.ASC)
-            .map { it.toEntry() }
+            .map { it.toPaymentAuditEntry() }
     }
 
     /** Everything recorded about a provider [referenceKey], even if no transaction exists for it. Oldest first. */
-    fun forReference(referenceKey: String): List<Entry> = Database {
+    fun forReference(referenceKey: String): List<PaymentAuditEntry> = Database {
         PaymentAuditLog.selectAll()
             .where { PaymentAuditLog.referenceKey eq referenceKey }
             .orderBy(PaymentAuditLog.createdAt to SortOrder.ASC)
-            .map { it.toEntry() }
+            .map { it.toPaymentAuditEntry() }
+    }
+
+    /** The latest [limit] entries of the whole log, oldest first. */
+    fun latest(limit: Int): List<PaymentAuditEntry> = Database {
+        PaymentAuditLog.selectAll()
+            .orderBy(PaymentAuditLog.createdAt to SortOrder.DESC)
+            .limit(limit)
+            .map { it.toPaymentAuditEntry() }
+            .reversed()
     }
 
     /** [detail] for what a provider reported: only its sanitized payload. */
@@ -127,7 +128,7 @@ object PaymentAudit {
         for ((key, value) in pairs) if (value != null) put(key, JsonPrimitive(value))
     }
 
-    private fun org.jetbrains.exposed.v1.core.ResultRow.toEntry() = Entry(
+    private fun org.jetbrains.exposed.v1.core.ResultRow.toPaymentAuditEntry() = PaymentAuditEntry(
         id = this[PaymentAuditLog.id].value,
         createdAt = this[PaymentAuditLog.createdAt],
         transactionId = this[PaymentAuditLog.transactionId],

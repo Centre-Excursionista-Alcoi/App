@@ -428,6 +428,10 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   (never update or delete rows) and has no foreign keys, so it outlives transactions; trace with `forTransaction` or
   `forReference`. `PaymentTransactions` writes it, in the same database transaction as the change it records; pass the
   `actor` (`PaymentAudit.userActor(sub)`) to `start`/`refund`/`cancel`. Any new payment code path must record its events.
+  Admins read it at `GET /payments/audit` (`transaction`, `reference` or `limit` filters) and, per lending, at
+  `GET /space_lendings/{id}/payment_audit`, shown in `SpaceLendingDetailsScreen` to admins. `PaymentAuditEntry` and
+  `PaymentAuditEvent` are in `:shared`: a new event needs its `payment_audit_event_*` string. `privacy.md` says the log is
+  kept for legal reasons: update it if what is recorded or for how long changes.
 - **Space lendings are paid online once their keys are back** (`POST /space_lendings/{id}/pay`, owner only; the price is the
   lending's stored `totalPrice`, never recomputed). It answers a `PaymentLaunch` whose `url` is `/pay?id=...` (a web-only
   path): the app can't `POST` a provider's form, so that page (`PaymentLaunches`, in memory) submits it from a browser.

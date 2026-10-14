@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.payment
 
+import org.centrexcursionistalcoi.app.data.PaymentAuditEvent
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 import kotlinx.serialization.json.JsonPrimitive

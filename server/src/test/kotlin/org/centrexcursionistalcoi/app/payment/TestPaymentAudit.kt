@@ -1,5 +1,6 @@
 package org.centrexcursionistalcoi.app.payment
 
+import org.centrexcursionistalcoi.app.data.PaymentAuditEvent
 import io.ktor.client.request.setBody
 import io.ktor.client.request.forms.FormDataContent
 import io.ktor.http.HttpStatusCode
