@@ -35,9 +35,14 @@ abstract class PeriodicWorker(
      *
      * The worker continues to run until [stop] is called or the coroutine is cancelled.
      *
-     * [run] will be called once when this function is invoked.
+     * [run] will be called once when this function is invoked, and then every [period]. With [waitUntilFirstSync], that
+     * first call is made before returning, and the next one is a [period] later (not right away).
      */
     fun start(waitUntilFirstSync: Boolean = false) {
+        if (job != null) {
+            logger.warn("Periodic worker is already running.")
+            return
+        }
         if (waitUntilFirstSync) runBlocking {
             mutex.withLock {
                 logger.debug("Starting initial sync: {}", Clock.System.now())
@@ -46,11 +51,9 @@ abstract class PeriodicWorker(
             }
         }
 
-        if (job != null) {
-            logger.warn("Periodic worker is already running.")
-            return
-        }
         job = scope.launch {
+            // The first run was already made above
+            if (waitUntilFirstSync) delay(period)
             while (isActive) {
                 // Try to acquire lock; if busy, skip this interval
                 if (mutex.tryLock()) {
