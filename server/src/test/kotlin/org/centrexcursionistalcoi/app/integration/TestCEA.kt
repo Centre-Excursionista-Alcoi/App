@@ -8,12 +8,16 @@ import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.integration.CEA.Member
 import org.centrexcursionistalcoi.app.integration.CEA.filterInvalid
 import org.centrexcursionistalcoi.app.security.crypto.AES
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TestCEA {
+    @AfterTest
+    fun cleanup() = Database.clear()
+
     @Test
     fun `test download`() = runTest {
         System.getenv("CEA_USERNAME") ?: return@runTest println("Skipping CEA download test. CEA_USERNAME not set.")
@@ -112,5 +116,34 @@ class TestCEA {
             assertEquals(4u, it.memberNumber)
             assertFalse(it.isDisabled)
         }
+    }
+
+    @Test
+    fun `members with no NIF are stored with none, however the source leaves it`() = runTest {
+        AES.initForTests()
+        Database.initForTests()
+
+        CEA.synchronizeWithDatabase(
+            listOf(
+                Member(1u, "Alta", "Placeholder 1", "--", "a@example.com"),
+                Member(2u, "Alta", "Placeholder 2", "--", "b@example.com"),
+                Member(3u, "Alta", "Blank", "  ", "c@example.com"),
+                Member(4u, "Alta", "Missing", null, "d@example.com"),
+                Member(5u, "Alta", "Has one", "12345678Z", "e@example.com"),
+            )
+        )
+
+        val members = Database { MemberEntity.all().toList().sortedBy { it.id.value } }
+        assertEquals(5, members.size)
+        assertEquals(listOf(null, null, null, null, "12345678Z"), members.map { it.nif })
+    }
+
+    @Test
+    fun `parsing turns a placeholder NIF into none`() {
+        val parsed = CEA.parse(
+            "Núm. soci/a,Estat,Nom i cognoms,NIF/NIE,Correu electrònic\n1,Alta,Un,--,a@example.com\n2,Alta,Dos,,b@example.com\n3,Alta,Tres,12345678Z,c@example.com\n"
+        )
+
+        assertEquals(listOf(null, null, "12345678Z"), parsed.map { it.nif })
     }
 }
