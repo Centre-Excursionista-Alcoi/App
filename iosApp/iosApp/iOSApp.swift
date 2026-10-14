@@ -22,7 +22,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
       KMPNotifier.shared.initialize(
           configuration: NotificationPlatformConfigurationIos(
               showPushNotification: false,
-              askNotificationPermissionOnStart: true,
+              askNotificationPermissionOnStart: !DebugLaunch.skipsNotificationPrompt,
               notificationSoundName: nil
           ),
           extensions: [FirebasePush.shared]

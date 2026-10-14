@@ -32,6 +32,11 @@ final class MainModel {
         })
     }
 
+    /// Debug launches only, see `DebugLaunch`.
+    func syncIfRequestedByDebugLaunch() {
+        if DebugLaunch.syncsAtStart { sync() }
+    }
+
     deinit {
         tasks.forEach { $0.cancel() }
         ViewModelFactory.shared.dispose(viewModel: viewModel)

@@ -13,18 +13,16 @@ struct MainView: View {
     var body: some View {
         @Bindable var shell = shell
 
-        NavigationStack(path: $shell.path) {
-            TabView(selection: $shell.selectedTab) {
-                ForEach(model.tabs, id: \.self) { tab in
-                    Tab(tab.title, systemImage: tab.systemImage, value: tab) {
-                        TabContent(tab: tab, model: model)
-                    }
-                    .badge(tab == .management ? model.managementBadge : 0)
+        TabView(selection: $shell.selectedTab) {
+            ForEach(model.tabs, id: \.self) { tab in
+                Tab(tab.title, systemImage: tab.systemImage, value: tab) {
+                    TabContent(tab: tab, model: model)
                 }
+                .badge(tab == .management ? model.managementBadge : 0)
             }
-            .tabViewStyle(.sidebarAdaptable)
-            .navigationDestination(for: Route.self) { RouteView(route: $0) }
         }
+        .tabViewStyle(.sidebarAdaptable)
+        .onAppear(perform: model.syncIfRequestedByDebugLaunch)
     }
 }
 
@@ -36,11 +34,16 @@ private struct TabContent: View {
     @State private var confirmingLogout = false
 
     var body: some View {
-        NavigationStack {
+        @Bindable var shell = shell
+
+        // Every tab has its own stack, but the screens pushed over them share one path: while one is open the tab
+        // bar is hidden, so the user can't switch tabs under it.
+        NavigationStack(path: $shell.path) {
             content
             .ignoresSafeArea(.container, edges: .bottom)
             .navigationTitle(tab.title)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: Route.self) { RouteView(route: $0) }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     if model.isAdmin {
@@ -88,6 +91,8 @@ extension TabContent {
         switch tab {
         case .home:
             HomeView()
+        case .profile:
+            ProfileView()
         default:
             ComposeTabIsland(
                 tab: tab,
