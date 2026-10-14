@@ -310,6 +310,72 @@ class TestMemoriesRoutes : ApplicationTestBase() {
     }
 
     @Test
+    fun test_get_memory_taggedMemberDoesNotGetTheSubmittersLending() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val submitter = FakeUser2.provideEntity()
+            val taggedMember = FakeUser.provideMemberEntity()
+            val lending = LendingEntity.new {
+                this.userSub = submitter
+                this.from = LocalDate(2025, 10, 8)
+                this.to = LocalDate(2025, 10, 9)
+                this.returned = true
+            }
+            MemoryEntity.new {
+                this.text = "A shared activity"
+                this.submittedBy = submitter
+                this.lending = lending
+                this.members = SizedCollection(listOf(taggedMember))
+                this.from = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+                this.to = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+            }
+        },
+    ) { context ->
+        val memory = context.dibResult!!
+
+        // The memory arrives, but as if it had no lending: the app can't store a lending it was never given
+        client.get(Api.Memories()).apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(ListSerializer(Memory.serializer())) { memories ->
+                val received = memories.single { it.id == memory.id.value }
+                assertEquals(null, received.lending)
+            }
+        }
+        client.get(Api.Memories.Id("${memory.id.value}")).apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(Memory.serializer()) { assertEquals(null, it.lending) }
+        }
+    }
+
+    @Test
+    fun test_get_memory_submitterAndAdminKeepTheLending() = runApplicationTest(
+        shouldLogIn = LoginType.USER,
+        databaseInitBlock = {
+            val user = FakeUser.provideEntity()
+            val lending = LendingEntity.new {
+                this.userSub = user
+                this.from = LocalDate(2025, 10, 8)
+                this.to = LocalDate(2025, 10, 9)
+                this.returned = true
+            }
+            MemoryEntity.new {
+                this.text = "Mine"
+                this.submittedBy = user
+                this.lending = lending
+                this.from = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+                this.to = ZonedDateTime.fromInstant(Clock.System.now(), TimeZone.currentSystemDefault())
+            } to lending
+        },
+    ) { context ->
+        val (memory, lending) = context.dibResult!!
+
+        client.get(Api.Memories.Id("${memory.id.value}")).apply {
+            assertStatusCode(HttpStatusCode.OK)
+            assertBody(Memory.serializer()) { assertEquals(lending.id.value, it.lending) }
+        }
+    }
+
+    @Test
     fun test_get_memory_taggedMemberCanReadButNotModify() = runApplicationTest(
         shouldLogIn = LoginType.USER,
         databaseInitBlock = {

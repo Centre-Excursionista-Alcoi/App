@@ -334,6 +334,11 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   with `receiveRequestWithFiles` (the generic POST/PATCH in `RoutesBase.kt` already do): a multipart body whose
   first part isn't `request` is rejected. Every error path
   must read the rest of a multipart body before responding (`discardRemaining()`), or the connection stalls.
+- **A memory comes without its `lending` for anyone who couldn't see that lending** (`MemoryEntity.toData(session)`,
+  `LendingEntity.isVisibleTo`, the same rule as `lendingsFor`). Participants tagged in someone else's memory, and memory
+  managers, get memories whose lending isn't in their list, and the app's `Memories` table has a foreign key to
+  `Lendings`: sending the reference made the sync fail (`FOREIGN KEY constraint failed`). Any new data that points to
+  something with a narrower audience must be stripped the same way.
 - Client-side gating mirrors this in two places that are easy to forget one of: (1) list/picker screens must
   filter to departments the viewer actually has the relevant role in, not show everything and rely on the
   server to reject; (2) per-item actions (edit/delete on a specific row) must check the viewer's role in
