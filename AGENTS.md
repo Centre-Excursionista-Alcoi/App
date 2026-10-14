@@ -448,6 +448,10 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   HTTP client (and every test client) needs `install(Resources)`: without it, requests throw "Resources plugin is
   not installed". Only non-API routes (`/`, `robots.txt`, `.well-known`, WebDAV, the app-link fallback) and SSE
   (Ktor has no resource-based `sse`) still use string paths.
+- **Expose state with explicit backing fields, not a `_private` + public pair**: `val isWorking: StateFlow<Boolean>` then
+  `field = MutableStateFlow(false)` on the next line (Kotlin 2.4), and assign through the property inside the class
+  (`isWorking.value = true`). Don't write `private val _x = MutableStateFlow(...)` / `val x = _x.asStateFlow()` in new code
+  (see `GlobalAsyncErrorHandler`, `SpaceLendingDetailsViewModel`).
 - **Apostrophes/quotes in `strings.xml` do NOT need Android-resource-style backslash escaping** in this
   Compose Multiplatform resources file — a bare `'` is correct. If you see a literal `\'` rendered on screen
   (rather than a clean apostrophe), that's exactly this mistake. There's already a cleanup script for a
