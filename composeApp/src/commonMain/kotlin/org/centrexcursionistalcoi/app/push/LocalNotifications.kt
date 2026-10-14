@@ -4,6 +4,8 @@ import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.notification_department_kicked_message
 import cea_app.composeapp.generated.resources.notification_department_kicked_title
 import cea_app.composeapp.generated.resources.notification_event_cancelled_message
+import cea_app.composeapp.generated.resources.notification_femecv_credentials_invalid_message
+import cea_app.composeapp.generated.resources.notification_femecv_credentials_invalid_title
 import cea_app.composeapp.generated.resources.notification_event_cancelled_title
 import cea_app.composeapp.generated.resources.notification_join_request_approved_message
 import cea_app.composeapp.generated.resources.notification_join_request_approved_title
@@ -244,6 +246,19 @@ class LocalNotifications(
                         data
                     )
                 }
+            }
+
+            is PushNotification.FemecvCredentialsInvalid -> {
+                if (!notification.checkIsSelf()) {
+                    log.d { "Ignoring FEMECV credentials notification for another user: ${notification.userSub}" }
+                    return
+                }
+
+                showNotification(
+                    Res.string.notification_femecv_credentials_invalid_title,
+                    Res.string.notification_femecv_credentials_invalid_message,
+                    data
+                )
             }
 
             is PushNotification.EntityUpdated -> {

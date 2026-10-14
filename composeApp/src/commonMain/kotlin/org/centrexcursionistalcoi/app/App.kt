@@ -164,8 +164,13 @@ private fun App(
                             val opening = waitingLink ?: afterLoad
                             waitingLink = null
                             log.i { "User is logged in. Navigating to: $opening" }
-                            navigator.navigateClearingStack(Destination.Main())
-                            opening?.let { navigator.navigate(Destination.backStackFor(it)) }
+                            if (opening is Destination.Main) {
+                                // Main is the root of the stack: replace it, instead of putting another over it
+                                navigator.navigateClearingStack(opening)
+                            } else {
+                                navigator.navigateClearingStack(Destination.Main())
+                                opening?.let { navigator.navigate(Destination.backStackFor(it)) }
+                            }
                         },
                         onNotLoggedIn = {
                             log.i { "User is not logged in. Navigating to login screen..." }
@@ -197,6 +202,7 @@ private fun App(
                     MainScreen(
                         showingAdminItemTypeId = showingAdminItemTypeId,
                         showingAdminLendingsScreen = showingAdminLendingsScreen,
+                        showingFemecvAccount = route.showingFemecvAccount,
                         onLendingSignUpRequested = {
                             navigator.navigate(Destination.LendingSignUp)
                         },

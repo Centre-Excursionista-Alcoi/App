@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LocalContentColor
@@ -19,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,6 +59,8 @@ private const val TD1_ASPECT_RATIO = 1.586f
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ColumnScope.ProfilePage(
+    scrollToFemecvAccount: Boolean = false,
+    onFemecvAccountShown: () -> Unit = {},
     model: ProfilePageModel = koinViewModel(),
 ) {
     val profile by model.profile.collectAsState()
@@ -75,6 +79,8 @@ fun ColumnScope.ProfilePage(
         departments = departments,
         onJoinDepartmentRequested = model::requestJoinDepartment,
         onLeaveDepartmentRequested = model::leaveDepartment,
+        scrollToFemecvAccount = scrollToFemecvAccount,
+        onFemecvAccountShown = onFemecvAccountShown,
     )
 }
 
@@ -88,8 +94,20 @@ private fun ColumnScope.ProfilePage(
     departments: List<Department>?,
     onJoinDepartmentRequested: (Department) -> Job,
     onLeaveDepartmentRequested: (Department) -> Job,
+    scrollToFemecvAccount: Boolean,
+    onFemecvAccountShown: () -> Unit,
 ) {
     val activeInsurances = remember(profile) { profile.activeInsurances() }
+
+    // Where the FEMECV account is in the grid: after the cards that only show up sometimes
+    val femecvAccountIndex = 1 + (if (activeInsurances.isEmpty()) 1 else 0) + (if (profile.insurances.isNotEmpty()) 1 else 0)
+    val gridState = rememberLazyGridState()
+    LaunchedEffect(scrollToFemecvAccount, femecvAccountIndex) {
+        if (scrollToFemecvAccount) {
+            gridState.animateScrollToItem(femecvAccountIndex)
+            onFemecvAccountShown()
+        }
+    }
 
     var addingInsurance by remember { mutableStateOf(false) }
     if (addingInsurance) AddInsuranceDialog(
@@ -144,6 +162,7 @@ private fun ColumnScope.ProfilePage(
     }
 
     AdaptiveVerticalGrid(
+        state = gridState,
         contentPadding = PaddingValues(8.dp),
         modifier = Modifier.fillMaxWidth().weight(1f).padding(16.dp)
     ) {

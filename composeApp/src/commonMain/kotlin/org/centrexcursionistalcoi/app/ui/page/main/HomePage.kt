@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -23,6 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import cea_app.composeapp.generated.resources.Res
+import cea_app.composeapp.generated.resources.femecv_credentials_invalid_action
+import cea_app.composeapp.generated.resources.femecv_credentials_invalid_message
+import cea_app.composeapp.generated.resources.femecv_credentials_invalid_title
 import cea_app.composeapp.generated.resources.permission_deny
 import cea_app.composeapp.generated.resources.permission_grant
 import cea_app.composeapp.generated.resources.permission_notification_message
@@ -44,6 +48,7 @@ import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Notifications
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Security
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Settings
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Warning
 import org.centrexcursionistalcoi.app.ui.page.main.home.EventItem
 import org.centrexcursionistalcoi.app.ui.page.main.home.PostItem
 import org.centrexcursionistalcoi.app.ui.platform.calculateWindowSizeClass
@@ -59,6 +64,7 @@ import kotlin.time.Clock
 @Composable
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 fun HomePage(
+    onFemecvAccountRequested: () -> Unit = {},
     model: HomePageModel = koinViewModel()
 ) {
     val windowSizeClass = calculateWindowSizeClass()
@@ -88,6 +94,7 @@ fun HomePage(
         onNotificationPermissionDenyRequest = { model.denyNotificationsPermission() },
 
         profile = profileValue,
+        onFemecvAccountRequested = onFemecvAccountRequested,
 
         posts = posts,
 
@@ -108,6 +115,7 @@ fun HomePage(
     onNotificationPermissionDenyRequest: () -> Unit,
 
     profile: ProfileResponse,
+    onFemecvAccountRequested: () -> Unit = {},
 
     posts: List<ReferencedPost>?,
 
@@ -137,6 +145,30 @@ fun HomePage(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp, top = 12.dp)
                 )
+            }
+        }
+
+        // FEMECV rejects the saved credentials: the licenses aren't updated until they are entered again
+        if (profile.femecvCredentialsInvalid) {
+            item("femecv_credentials_invalid", contentType = "warning", span = { GridItemSpan(maxLineSpan) }) {
+                CardWithIcon(
+                    title = stringResource(Res.string.femecv_credentials_invalid_title),
+                    message = stringResource(Res.string.femecv_credentials_invalid_message),
+                    icon = MaterialSymbols.Warning,
+                    contentDescription = stringResource(Res.string.femecv_credentials_invalid_title),
+                    colors = CardDefaults.outlinedCardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    ),
+                    modifier = Modifier.padding(bottom = 12.dp),
+                ) {
+                    OutlinedButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = onFemecvAccountRequested,
+                    ) {
+                        Text(stringResource(Res.string.femecv_credentials_invalid_action))
+                    }
+                }
             }
         }
 

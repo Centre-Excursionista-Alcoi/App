@@ -115,11 +115,34 @@ fun FEMECVAccountCard(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
     ) {
         if (profile.femecvSyncEnabled) {
-            Text(
-                text = stringResource(Res.string.femecv_sync_connected),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                style = MaterialTheme.typography.bodyLarge,
-            )
+            if (profile.femecvCredentialsInvalid) {
+                // FEMECV rejects the saved credentials: nothing is synced until they are entered again
+                Text(
+                    text = stringResource(Res.string.femecv_credentials_invalid_title),
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+                Text(
+                    text = stringResource(Res.string.femecv_credentials_invalid_message),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Button(
+                    onClick = { showLoginDialog = true },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                ) {
+                    Icon(imageVector = MaterialSymbols.CloudSync, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(Res.string.femecv_credentials_invalid_action))
+                }
+            } else {
+                Text(
+                    text = stringResource(Res.string.femecv_sync_connected),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
             OutlinedButton(
                 onClick = {
                     isDisconnecting = true

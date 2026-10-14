@@ -33,6 +33,8 @@ sealed interface Destination : NavKey {
     @Serializable @SerialName("main") data class Main(
         val showingAdminItemTypeId: Uuid? = null,
         val showingAdminLendingsScreen: Boolean = false,
+        /** Opens the profile, scrolled to the FEMECV account (its credentials are wrong). */
+        val showingFemecvAccount: Boolean = false,
     ) : Destination
     @Serializable @SerialName("settings") data object Settings : Destination
     @Serializable @SerialName("security") data object Security : Destination

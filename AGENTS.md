@@ -449,6 +449,15 @@ adb shell pm clear <pkg>                  # wipe app data for a clean-slate test
   the app, `SpaceLendingDetailsScreen` offers card (and Bizum, if listed) to the owner once the keys are back, opens the
   returned URL with the platform's URI handler, and lets them check the result (the server also updates the lending, which
   syncs). A 503 (`ERROR_PAYMENT_GATEWAY_UNAVAILABLE`) is shown as a message (`PaymentIssue`), never the generic error dialog.
+- **FEMECV credentials FEMECV rejects are flagged, not retried** (`UserReferences.femecvCredentialsInvalidSince`).
+  `FEMECV.login` throws `FEMECVInvalidCredentialsException` (a `FEMECVException`) only for a login error that is about the
+  username or password; anything else (FEMECV down, page changed) stays a plain `FEMECVException` and is retried the next day.
+  `UserReferenceEntity.refreshFEMECVData` then flags the user, updates the profile (`ProfileResponse.femecvCredentialsInvalid`: the
+  app shows a banner on the home page and an "update credentials" card) and, from then on, does nothing for them, so FEMECV isn't
+  hit with a wrong password every day (it could lock the account). The daily sync only reminds them
+  (`FEMECV.remindInvalidCredentialsIfDue`: a `PushNotification.FemecvCredentialsInvalid`, at most once every 7 days).
+  Entering credentials again (`POST /profile/femecvSync`, after a successful login) or disconnecting clears the flag.
+  Tapping the notification opens `Destination.Main(showingFemecvAccount = true)`: the profile, scrolled to the FEMECV card.
 - Auth routes are rate-limited per client IP (`plugins/RateLimits.kt`); limits are lifted when `isTesting`.
 - In server tests, `loginAsFakeUser()`/`loginAs(user)` start a real session for the user (creating it if needed)
   and make the test client send its access token with every request; `logout()` stops that. To test the token

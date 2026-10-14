@@ -10,6 +10,7 @@ import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
 import org.centrexcursionistalcoi.app.data.SpaceLending
 import org.centrexcursionistalcoi.app.database.ProfileRepository
 import org.centrexcursionistalcoi.app.di.DispatcherProvider
+import org.centrexcursionistalcoi.app.network.ProfileRemoteRepository
 import org.centrexcursionistalcoi.app.sync.BackgroundJobCoordinator
 import org.centrexcursionistalcoi.app.sync.SyncDepartmentBackgroundJob
 import org.centrexcursionistalcoi.app.sync.SyncEntityBackgroundJob
@@ -26,6 +27,7 @@ class PushNotifierListener(
     private val fcmTokenManager: FCMTokenManager,
     private val profileRepository: ProfileRepository,
     private val localNotifications: LocalNotifications,
+    private val profileRemoteRepository: ProfileRemoteRepository,
 ) : PushListener {
     private val log = logging()
 
@@ -109,6 +111,13 @@ class PushNotifierListener(
                             SyncEntityBackgroundJob.EXTRA_ENTITY_ID to notification.spaceLendingId.toString(),
                         ),
                     )
+                }
+                is PushNotification.FemecvCredentialsInvalid -> {
+                    log.d { "Received FEMECV credentials notification" }
+                    // The profile says they are wrong: that's what shows the banner and the card
+                    CoroutineScope(dispatcherProvider.io + GlobalAsyncErrorHandler.coroutineExceptionHandler).launch {
+                        profileRemoteRepository.synchronize(ignoreIfModifiedSince = true)
+                    }
                 }
                 is PushNotification.EntityDeleted -> {
                     log.d { "Received entity deleted notification for ${notification.entityClass}#${notification.entityId}" }

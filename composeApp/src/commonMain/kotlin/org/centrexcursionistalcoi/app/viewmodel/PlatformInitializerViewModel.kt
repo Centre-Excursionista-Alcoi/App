@@ -108,6 +108,8 @@ class PlatformInitializerViewModel(
                 forAdmin = { Destination.Admin.LendingManagement(pushNotification.lendingId) },
                 forUser = { Destination.LendingDetails(it.lendingId) },
             )
+            is PushNotification.FemecvCredentialsInvalid ->
+                if (with(localNotifications) { pushNotification.checkIsSelf() }) Destination.Main(showingFemecvAccount = true) else null
             else -> null
         }
     }

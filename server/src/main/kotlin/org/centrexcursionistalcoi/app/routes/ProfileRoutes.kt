@@ -102,6 +102,7 @@ internal fun profileFor(session: UserSession): ProfileResponse {
         insurances = insurances,
         femecvSyncEnabled = reference.femecvUsername != null && reference.femecvPassword != null,
         femecvLastSync = reference.femecvLastSync,
+        femecvCredentialsInvalid = reference.femecvCredentialsInvalidSince != null,
     )
 }
 
@@ -231,6 +232,8 @@ fun Route.profileRoutes() {
         Database {
             userReference.femecvUsername = username
             userReference.femecvPassword = password
+            // They were just checked: whatever was wrong before is not anymore
+            userReference.clearFEMECVCredentialsInvalid()
         }
         userReference.updated()
 
@@ -259,6 +262,7 @@ fun Route.profileRoutes() {
         Database {
             userReference.femecvUsername = null
             userReference.femecvPassword = null
+            userReference.clearFEMECVCredentialsInvalid()
         }
 
         call.respond(HttpStatusCode.NoContent)

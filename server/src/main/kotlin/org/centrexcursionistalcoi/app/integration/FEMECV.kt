@@ -22,8 +22,11 @@ import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.database.entity.UserReferenceEntity
 import org.centrexcursionistalcoi.app.database.table.UserReferences
 import org.centrexcursionistalcoi.app.integration.femecv.FEMECVException
+import org.centrexcursionistalcoi.app.integration.femecv.FEMECVInvalidCredentialsException
 import org.centrexcursionistalcoi.app.integration.femecv.LicenseData
+import org.centrexcursionistalcoi.app.notifications.Push
 import org.centrexcursionistalcoi.app.now
+import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.storage.RedisStoreMap
 import org.centrexcursionistalcoi.app.tracing.SentryHttpClientTracing
 import org.jetbrains.annotations.VisibleForTesting
@@ -44,6 +47,19 @@ object FEMECV : PeriodicWorker(
      * Number of days after which the cached licenses should be refreshed.
      */
     const val REFRESH_EVERY_DAYS = 7L
+
+    /**
+     * Number of days between the reminders sent to a user whose saved credentials FEMECV rejects.
+     */
+    const val CREDENTIALS_REMINDER_EVERY_DAYS = 7L
+
+    /** The text of FEMECV's login error that is about the username or the password (in Spanish or Catalan). */
+    private val credentialsErrorRegex = Regex("usuari|contrase|password", RegexOption.IGNORE_CASE)
+
+    /** Whether the error FEMECV answered a login with says the username or the password are wrong. */
+    @VisibleForTesting
+    internal fun isInvalidCredentialsMessage(message: String?): Boolean =
+        message != null && credentialsErrorRegex.containsMatchIn(message)
 
     @VisibleForTesting
     var engine: HttpClientEngine = Java.create()
@@ -88,6 +104,11 @@ object FEMECV : PeriodicWorker(
             val errorBox = document.selectFirst(".errorBox")
             val errorMessage = errorBox?.text()
 
+            if (isInvalidCredentialsMessage(errorMessage)) {
+                // Expected when someone changes their password: not an error of ours
+                logger.warn("FEMECV rejected the credentials: $errorMessage")
+                throw FEMECVInvalidCredentialsException(errorMessage)
+            }
             logger.error("Could not log in to FEMECV: $errorMessage")
             throw FEMECVException(errorMessage)
         }
@@ -181,7 +202,35 @@ object FEMECV : PeriodicWorker(
         }
     }
 
+    /**
+     * Tells [user] to enter their FEMECV credentials again, unless they were told in the last
+     * [CREDENTIALS_REMINDER_EVERY_DAYS] days.
+     * @return `true` if the notification was sent.
+     */
+    suspend fun remindInvalidCredentialsIfDue(user: UserReferenceEntity): Boolean {
+        val due = Database {
+            val last = user.femecvCredentialsReminderAt
+            (last == null || now() - last >= CREDENTIALS_REMINDER_EVERY_DAYS.days).also {
+                // Saved before sending: if sending fails, trying again every day would be worse than missing one
+                if (it) user.femecvCredentialsReminderAt = now()
+            }
+        }
+        if (!due) return false
+        logger.info("Reminding user ${user.sub.value} that their FEMECV credentials are wrong")
+        Push.sendPushNotification(user, PushNotification.FemecvCredentialsInvalid(user.sub.value), includeAdmins = false)
+        return true
+    }
+
     override suspend fun run() {
+        syncUsers()
+
+        logger.info("Updating last synchronization time...")
+        Database { ConfigEntity[ConfigEntity.LastFEMECVSync] = now() }
+    }
+
+    /** Refreshes the licenses of every user with FEMECV credentials, or reminds those whose credentials are wrong. */
+    @VisibleForTesting
+    internal suspend fun syncUsers() {
         logger.info("Starting periodic FEMECV sync...")
         val users = Database {
             UserReferenceEntity.find {
@@ -192,15 +241,21 @@ object FEMECV : PeriodicWorker(
         logger.debug("Found ${users.count()} users with FEMECV credentials.")
         for (user in users) {
             try {
+                if (Database { user.femecvCredentialsInvalidSince } != null) {
+                    // Not tried again until the user changes them: FEMECV could lock the account
+                    logger.debug("Skipping user ${user.sub.value}: FEMECV rejected their credentials")
+                    remindInvalidCredentialsIfDue(user)
+                    continue
+                }
                 user.refreshFEMECVData()
+            } catch (e: FEMECVInvalidCredentialsException) {
+                // Already saved and told to the user by refreshFEMECVData
+                logger.warn("FEMECV rejected the credentials of user ${user.sub.value}")
             } catch (e: FEMECVException) {
                 logger.error("Error syncing FEMECV data for user ${user.id.value} (${user.sub}): ${e.message}")
             } catch (e: Exception) {
                 logger.error("Unexpected error syncing FEMECV data for user ${user.id.value} (${user.sub}): ${e.message}", e)
             }
         }
-
-        logger.info("Updating last synchronization time...")
-        Database { ConfigEntity[ConfigEntity.LastFEMECVSync] = now() }
     }
 }
