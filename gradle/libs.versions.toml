@@ -44,7 +44,7 @@ kmm-notifier = "2.0.1"
 kmm-permission = "0.15.0"
 koin = "4.2.2"
 koin-compiler-plugin = "1.2.1"
-kotlin = "2.4.21"
+kotlin = "2.4.20"
 kotlin-crypto-hash = "0.8.0"
 kotlin-crypto-random = "0.6.0"
 kotlinx-coroutines = "1.11.0"
@@ -71,6 +71,7 @@ qrose = "1.3.1"
 retrofit = "2.9.0"
 richeditor = "1.2.1"
 sentry = "6.23.0"
+skie = "0.10.15"
 sentry-multiplatform = "0.27.0"
 # The io.sentry.jvm.gradle plugin auto-installs io.sentry:sentry at whatever version it resolves to
 # (currently 8.55.0). Pinned explicitly here so sentry-kotlin-extensions can't drift from it -- a
@@ -235,4 +236,5 @@ kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kotlinx-kover" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 sentryAndroid = { id = "io.sentry.android.gradle", version.ref = "sentry" }
 sentryJvm = { id = "io.sentry.jvm.gradle", version.ref = "sentry" }
+skie = { id = "co.touchlab.skie", version.ref = "skie" }
 sentryMultiplatform = { id = "io.sentry.kotlin.multiplatform.gradle", version.ref = "sentry-multiplatform" }

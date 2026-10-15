@@ -206,6 +206,20 @@ qualifier, the way the real `BackgroundJobWorker` does, rather than by its concr
 assertion for that exact lookup shape, not just the registration shape — a passing test that only re-derives
 how things were registered proves nothing new.
 
+### Native SwiftUI on iOS (in progress)
+
+Native screens live in `iosApp/iosApp/UI/` (the Xcode project picks up new files there by itself; a separate Swift
+package can't import the embedded `ComposeApp` framework). They use the shared ViewModels through **SKIE**
+(Flow/StateFlow become `AsyncSequence`, sealed/enum become Swift enums) and `bridge/ViewModelFactory.kt` (iosMain),
+which resolves each ViewModel from Koin for Swift and has a `dispose` for when its screen goes away. `FlowState` is the
+Swift helper that observes a flow. `-CEANativeSettings` (DEBUG builds) opens the native Settings screen instead of
+the Compose app. Deployment target is iOS 26.
+
+- **SKIE only supports some Kotlin versions** (0.10.15: up to 2.4.20, and the build fails on anything else), so the
+  Kotlin version is pinned to 2.4.20: don't take a Dependabot Kotlin bump until SKIE lists it.
+- Building on the Mac: `SERVER_URL=http://localhost:8080 xcodebuild -workspace iosApp/iosApp.xcworkspace -scheme iosApp
+  -destination "platform=iOS Simulator,name=iPhone 17" build` (a plain build bakes in the production server, see §2).
+
 ## 4. Driving the Android app from the CLI (adb / uiautomator)
 
 There's no `android` CLI wrapper installed in this environment — everything here is plain `adb` +
