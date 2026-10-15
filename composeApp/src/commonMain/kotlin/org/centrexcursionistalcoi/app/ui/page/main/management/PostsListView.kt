@@ -73,6 +73,10 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
 
+// Sizes of the server's columns (Posts table): a longer value is rejected as a malformed request
+private const val POST_TITLE_MAX_LENGTH = 255
+private const val POST_LINK_MAX_LENGTH = 512
+
 @Composable
 fun PostsListView(model: PostsManagementViewModel = koinViewModel()) {
     val profile by model.profile.collectAsState()
@@ -149,8 +153,9 @@ private fun PostsListView(
 
             OutlinedTextField(
                 value = title,
-                onValueChange = { title = it },
+                onValueChange = { title = it.take(POST_TITLE_MAX_LENGTH) },
                 label = { Text(stringResource(Res.string.post_title)) },
+                supportingText = { Text("${title.length}/$POST_TITLE_MAX_LENGTH") },
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
             DropdownField(
@@ -166,7 +171,7 @@ private fun PostsListView(
 
             OutlinedTextField(
                 value = link,
-                onValueChange = { link = it },
+                onValueChange = { link = it.take(POST_LINK_MAX_LENGTH) },
                 label = { Text(stringResource(Res.string.post_link)) },
                 placeholder = { Text("https://...") },
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
