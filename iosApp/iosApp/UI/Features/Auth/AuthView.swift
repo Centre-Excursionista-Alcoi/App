@@ -17,7 +17,12 @@ struct AuthView: View {
                 ProgressView()
             }
         }
-        .task { if model == nil { model = AuthModel(afterLogin: afterLogin) } }
+        .task {
+            if model == nil {
+                model = AuthModel(afterLogin: afterLogin)
+                if let login = DebugLaunch.login { model?.login(email: login.email, password: login.password) }
+            }
+        }
     }
 }
 

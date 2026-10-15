@@ -3873,6 +3873,29 @@
         }
       }
     },
+    "home_empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing new yet"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encara no hi ha res de nou"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no hay novedades"
+          }
+        }
+      }
+    },
     "home_lending": {
       "extractionState": "manual",
       "localizations": {

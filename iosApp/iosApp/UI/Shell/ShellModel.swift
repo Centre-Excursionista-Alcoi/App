@@ -64,10 +64,11 @@ final class ShellModel {
         openAfterLoad = nil
 
         path = []
-        selectedTab = .home
+        selectedTab = DebugLaunch.tab ?? .home
         stage = .main
         startWatchingSession()
         if let opening { show(opening) }
+        if let debugDestination = DebugLaunch.destination { push(debugDestination) }
     }
 
     func notLoggedIn() {

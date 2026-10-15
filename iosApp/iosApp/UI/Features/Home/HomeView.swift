@@ -25,6 +25,11 @@ struct HomeView: View {
                     }
                     .padding(.horizontal)
 
+                    if model.upcomingEvents.isEmpty && model.posts.isEmpty {
+                        ContentUnavailableView("home_empty", systemImage: "tray")
+                            .padding(.top, 80)
+                    }
+
                     if !model.upcomingEvents.isEmpty {
                         section("upcoming_events") {
                             ForEach(model.upcomingEvents, id: \.id) { event in

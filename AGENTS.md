@@ -208,6 +208,8 @@ how things were registered proves nothing new.
 
 ### Native SwiftUI on iOS (in progress)
 
+Status, what's left and how to run it against a local server: **`iosApp/NATIVE_UI.md`**.
+
 Native screens live in `iosApp/iosApp/UI/` (the Xcode project picks up new files there by itself; a separate Swift
 package can't import the embedded `ComposeApp` framework). They use the shared ViewModels through **SKIE**
 (Flow/StateFlow become `AsyncSequence`, sealed/enum become Swift enums) and `bridge/ViewModelFactory.kt` (iosMain),

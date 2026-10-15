@@ -11,6 +11,7 @@ import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.centrexcursionistalcoi.app.viewmodel.LogoutViewModel
 import org.centrexcursionistalcoi.app.viewmodel.MainScreenViewModel
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
+import org.centrexcursionistalcoi.app.viewmodel.ProfilePageModel
 import org.centrexcursionistalcoi.app.viewmodel.SecurityViewModel
 import org.centrexcursionistalcoi.app.viewmodel.SessionExpiryViewModel
 import org.centrexcursionistalcoi.app.viewmodel.SettingsViewModel
@@ -38,6 +39,8 @@ object ViewModelFactory {
     fun loadingViewModel(): LoadingViewModel = KoinPlatform.getKoin().get()
 
     fun homePageModel(): HomePageModel = KoinPlatform.getKoin().get()
+
+    fun profilePageModel(): ProfilePageModel = KoinPlatform.getKoin().get()
 
     fun securityViewModel(): SecurityViewModel = KoinPlatform.getKoin().get()
 
