@@ -37,12 +37,7 @@ private struct TabContent: View {
 
     var body: some View {
         NavigationStack {
-            ComposeTabIsland(
-                tab: tab,
-                scrollToFemecvAccount: shell.scrollToFemecvAccount && tab == .profile,
-                onNavigate: shell.push,
-                onTabRequested: { shell.selectedTab = $0 }
-            )
+            content
             .ignoresSafeArea(.container, edges: .bottom)
             .navigationTitle(tab.title)
             .navigationBarTitleDisplayMode(.inline)
@@ -83,6 +78,23 @@ private struct TabContent: View {
             Button("cancel", role: .cancel) {}
         } message: {
             Text("logout_confirmation_message")
+        }
+    }
+}
+
+extension TabContent {
+    @ViewBuilder
+    fileprivate var content: some View {
+        switch tab {
+        case .home:
+            HomeView()
+        default:
+            ComposeTabIsland(
+                tab: tab,
+                scrollToFemecvAccount: shell.scrollToFemecvAccount && tab == .profile,
+                onNavigate: shell.push,
+                onTabRequested: { shell.selectedTab = $0 }
+            )
         }
     }
 }
