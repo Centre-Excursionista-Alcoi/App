@@ -56,6 +56,7 @@
     <string name="logout_confirmation_message" translatable="false">Segur que vols tancar la sessió?</string>
     <string name="copied_to_clipboard" translatable="false">Copiat al porta-retalls</string>
     <string name="status_loading" translatable="false">Carregant...</string>
+    <string name="retry">Torna-ho a provar</string>
     <string name="loading_screen_error" translatable="false">Error de càrrega</string>
     <string name="error_unknown" translatable="false">Ha hagut un error desconegut. Tipus: %1$s</string>
     <string name="auth_callback_error_title" translatable="false">No s'ha pogut processar l'inici de sessió</string>

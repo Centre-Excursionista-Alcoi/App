@@ -22,26 +22,26 @@ fun rememberNavigator(startDestination: Destination): Navigator {
  * The app only ever has one linear back stack (no bottom-nav-style top-level routes with their own retained
  * stacks), so this is intentionally simpler than a multi-stack navigator.
  */
-class Navigator(val backStack: NavBackStack<NavKey>) {
+open class Navigator(val backStack: NavBackStack<NavKey>) {
     val current: Destination get() = backStack.last() as Destination
 
-    fun navigate(destination: Destination) {
+    open fun navigate(destination: Destination) {
         backStack.add(destination)
     }
 
     /** Pushes the whole synthetic back stack for a deep link, see [Destination.backStackFor]. */
-    fun navigate(destinations: List<Destination>) {
+    open fun navigate(destinations: List<Destination>) {
         backStack.addAll(destinations)
     }
 
     /** Replaces the entire back stack with just [destination]. */
-    fun navigateClearingStack(destination: Destination) {
+    open fun navigateClearingStack(destination: Destination) {
         backStack.clear()
         backStack.add(destination)
     }
 
     /** Pops the stack back to (but keeping) the nearest [popUpTo] entry, then pushes [destination]. */
-    fun navigatePoppingUpTo(destination: Destination, popUpTo: KClass<out Destination>) {
+    open fun navigatePoppingUpTo(destination: Destination, popUpTo: KClass<out Destination>) {
         val index = backStack.indexOfLast { popUpTo.isInstance(it) }
         if (index >= 0) {
             while (backStack.size > index + 1) backStack.removeAt(backStack.size - 1)
@@ -49,5 +49,5 @@ class Navigator(val backStack: NavBackStack<NavKey>) {
         backStack.add(destination)
     }
 
-    fun goBack(): Boolean = backStack.removeLastOrNull() != null
+    open fun goBack(): Boolean = backStack.removeLastOrNull() != null
 }
