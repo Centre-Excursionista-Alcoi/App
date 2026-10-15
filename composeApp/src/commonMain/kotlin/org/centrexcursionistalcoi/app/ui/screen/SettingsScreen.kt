@@ -94,7 +94,7 @@ import org.koin.core.parameter.parametersOf
 
 data class Language(val code: String, val displayName: String, val flag: DrawableResource)
 
-private val availableLanguages = listOf(
+val availableLanguages = listOf(
     Language("en", "English", Res.drawable.flag_en),
     Language("ca", "Català", Res.drawable.flag_ca),
     Language("es", "Castellano", Res.drawable.flag_es),

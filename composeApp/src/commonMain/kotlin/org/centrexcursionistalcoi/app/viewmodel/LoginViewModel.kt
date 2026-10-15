@@ -7,7 +7,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.centrexcursionistalcoi.app.GlobalAsyncErrorHandler
@@ -55,9 +54,6 @@ class LoginViewModel(
     fun forgetExistingAccount() = viewModelScope.launch(dispatcherProvider.io + GlobalAsyncErrorHandler.coroutineExceptionHandler) {
         authBackend.forgetLocalAccount()
     }
-
-    /** [error], in terms of what the user is told. */
-    val authError: StateFlow<AuthError?> = error.map { it?.toAuthError() }.stateInViewModel()
 
     /** Whether the user can sign in with a passkey, or a password saved in the platform's password manager. */
     val canUseSavedCredentials: Boolean get() = passkeys.isSupported

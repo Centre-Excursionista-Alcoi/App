@@ -31,7 +31,7 @@ extension ContentView {
         #if DEBUG
         // `-CEANativeSettings` shows the native Settings screen alone, `-CEAComposeUI` the old all-Compose app.
         if ProcessInfo.processInfo.arguments.contains("-CEANativeSettings") {
-            NavigationStack { SettingsView() }
+            NavigationStack { SettingsView(onDeleteAccount: {}, onSecurity: {}) }
         } else if ProcessInfo.processInfo.arguments.contains("-CEAComposeUI") {
             ComposeView().ignoresSafeArea()
         } else {
