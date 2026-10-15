@@ -27,7 +27,8 @@ import org.centrexcursionistalcoi.app.database.entity.SpaceKeyTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceLendingEntity
 import org.centrexcursionistalcoi.app.database.entity.UserEntity
 
-// v7: space lendings record how a manager received their payment, if they did (see MIGRATION_6_7).
+// v8: spaces have photos, specs (seats, beds, energy, climate control) and a location (see MIGRATION_7_8).
+// v7: space lendings record how a manager received their payment, if they did (see MIGRATION_6_7, MIGRATION_7_8).
 // v6: the keys of the spaces became an inventory: key types (SpaceKeyTypes), and the keys themselves (SpaceKeys)
 // no longer belong to a space. Lendings ask for keys by type (see MIGRATION_5_6).
 // v5: added the Spaces, SpaceKeys and SpaceLendings tables (see MIGRATION_4_5).
@@ -35,7 +36,7 @@ import org.centrexcursionistalcoi.app.database.entity.UserEntity
 // on DepartmentEntity, synced along with everything else about a department (see Departments.extraColumns
 // server-side). See DatabaseMigrations.kt's MIGRATION_3_4 -- bumping this again must come with its own
 // Migration(4, 5) there too, not rely on the destructive fallback.
-const val DATABASE_VERSION = 7
+const val DATABASE_VERSION = 8
 const val DATABASE_FILE_NAME = "cea_app.db"
 
 @Database(

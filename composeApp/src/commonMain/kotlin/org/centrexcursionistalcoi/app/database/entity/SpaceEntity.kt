@@ -3,7 +3,10 @@ package org.centrexcursionistalcoi.app.database.entity
 import androidx.room3.Entity
 import androidx.room3.PrimaryKey
 import org.centrexcursionistalcoi.app.data.CategoryPrice
+import org.centrexcursionistalcoi.app.data.FileWithContext
 import org.centrexcursionistalcoi.app.data.Space
+import org.centrexcursionistalcoi.app.data.SpaceClimateControl
+import org.centrexcursionistalcoi.app.data.SpaceEnergySource
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -20,6 +23,15 @@ data class SpaceEntity(
     val closedSince: Instant?,
     val closedUntil: Instant?,
     val closedReason: String?,
+    val photos: List<FileWithContext>,
+    val seats: Int?,
+    val beds: Int?,
+    val energySources: List<SpaceEnergySource>,
+    val climateControl: List<SpaceClimateControl>,
+    val address: String?,
+    val latitude: Double?,
+    val longitude: Double?,
+    val altitude: Double?,
 ) {
     fun toSpace() = Space(
         id = id,
@@ -32,12 +44,21 @@ data class SpaceEntity(
         closedSince = closedSince,
         closedUntil = closedUntil,
         closedReason = closedReason,
+        photos = photos,
+        seats = seats,
+        beds = beds,
+        energySources = energySources,
+        climateControl = climateControl,
+        address = address,
+        latitude = latitude,
+        longitude = longitude,
+        altitude = altitude,
     )
 
     companion object {
         fun Space.toEntity() = SpaceEntity(
             id = id,
-                name = name,
+            name = name,
             description = description,
             conditionsOfUse = conditionsOfUse,
             requiresKeys = requiresKeys,
@@ -46,6 +67,15 @@ data class SpaceEntity(
             closedSince = closedSince,
             closedUntil = closedUntil,
             closedReason = closedReason,
+            photos = photos,
+            seats = seats,
+            beds = beds,
+            energySources = energySources,
+            climateControl = climateControl,
+            address = address,
+            latitude = latitude,
+            longitude = longitude,
+            altitude = altitude,
         )
     }
 }

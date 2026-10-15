@@ -8,10 +8,12 @@ import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.SPACES_MANAGER_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.SpaceOccupancy
 import org.centrexcursionistalcoi.app.database.Database
+import org.centrexcursionistalcoi.app.database.entity.FileEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceKeyEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceKeyTypeEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceLendingEntity
+import org.centrexcursionistalcoi.app.database.table.SpaceImages
 import org.centrexcursionistalcoi.app.database.table.SpaceKeys
 import org.centrexcursionistalcoi.app.database.table.SpaceLendingKeyRequests
 import org.centrexcursionistalcoi.app.database.table.SpaceLendingKeys
@@ -30,11 +32,13 @@ import org.centrexcursionistalcoi.app.security.isSpaceLendingsManager
 import org.centrexcursionistalcoi.app.security.isSpacesManager
 import org.centrexcursionistalcoi.app.today
 import org.centrexcursionistalcoi.app.utils.toUuidOrNull
+import org.centrexcursionistalcoi.app.utils.validateSpaceDetails
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.jdbc.EmptySizedIterable
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
 fun Route.spacesRoutes() {
@@ -49,6 +53,8 @@ fun Route.spacesRoutes() {
         updater = UpdateSpaceRequest.serializer(),
         creator = { request ->
             require(request.name.isNotBlank()) { "name cannot be blank" }
+            validateSpaceDetails(request.seats, request.beds, request.latitude, request.longitude, request.altitude)
+            val photos = Database { request.photos.map { FileEntity.newFrom(it) } }
             Database {
                 SpaceEntity.new {
                     this.name = request.name
@@ -56,6 +62,21 @@ fun Route.spacesRoutes() {
                     this.conditionsOfUse = request.conditionsOfUse?.takeIf { it.isNotEmpty() }
                     this.requiresKeys = request.requiresKeys
                     this.prices = request.prices
+                    this.seats = request.seats
+                    this.beds = request.beds
+                    this.energySources = request.energySources.distinct()
+                    this.climateControl = request.climateControl.distinct()
+                    this.address = request.address?.trim()?.takeIf { it.isNotEmpty() }
+                    this.latitude = request.latitude
+                    this.longitude = request.longitude
+                    this.altitude = request.altitude
+                }.also { space ->
+                    for (photo in photos) {
+                        SpaceImages.insert {
+                            it[this.space] = space.id
+                            it[file] = photo.id
+                        }
+                    }
                 }
             }
         },

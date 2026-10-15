@@ -91,3 +91,18 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
         connection.execSQL("ALTER TABLE `SpaceLendings` ADD COLUMN `manualPaymentMethod` TEXT")
     }
 }
+
+/** v8 added the photos, specs and location of the spaces. The lists are JSON, empty by default. */
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE `Spaces` ADD COLUMN `photos` TEXT NOT NULL DEFAULT '[]'")
+        connection.execSQL("ALTER TABLE `Spaces` ADD COLUMN `seats` INTEGER")
+        connection.execSQL("ALTER TABLE `Spaces` ADD COLUMN `beds` INTEGER")
+        connection.execSQL("ALTER TABLE `Spaces` ADD COLUMN `energySources` TEXT NOT NULL DEFAULT '[]'")
+        connection.execSQL("ALTER TABLE `Spaces` ADD COLUMN `climateControl` TEXT NOT NULL DEFAULT '[]'")
+        connection.execSQL("ALTER TABLE `Spaces` ADD COLUMN `address` TEXT")
+        connection.execSQL("ALTER TABLE `Spaces` ADD COLUMN `latitude` REAL")
+        connection.execSQL("ALTER TABLE `Spaces` ADD COLUMN `longitude` REAL")
+        connection.execSQL("ALTER TABLE `Spaces` ADD COLUMN `altitude` REAL")
+    }
+}

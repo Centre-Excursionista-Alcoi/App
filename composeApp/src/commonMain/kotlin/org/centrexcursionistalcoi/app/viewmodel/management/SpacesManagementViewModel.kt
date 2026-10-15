@@ -1,7 +1,10 @@
 package org.centrexcursionistalcoi.app.viewmodel.management
 
 import androidx.lifecycle.ViewModel
-import org.centrexcursionistalcoi.app.data.CategoryPrice
+import org.centrexcursionistalcoi.app.data.FileWithContext
+import org.centrexcursionistalcoi.app.data.SpaceDetail
+import org.centrexcursionistalcoi.app.data.fileWithContext
+import org.centrexcursionistalcoi.app.request.CreateSpaceRequest
 import org.centrexcursionistalcoi.app.database.SpaceKeyTypesRepository
 import org.centrexcursionistalcoi.app.database.SpaceKeysRepository
 import org.centrexcursionistalcoi.app.database.SpaceLendingsRepository
@@ -34,35 +37,55 @@ class SpacesManagementViewModel(
     val keyTypes = spaceKeyTypesRepository.selectAllAsFlow().stateInViewModel()
     val keys = spaceKeysRepository.selectAllAsFlow().stateInViewModel()
 
-    fun createSpace(
-        name: String,
-        description: String,
-        conditionsOfUse: String?,
-        requiresKeys: Boolean,
-        prices: List<CategoryPrice>,
-    ) = launch {
-        spacesRemoteRepository.create(name, description, conditionsOfUse, requiresKeys, prices)
+    fun createSpace(draft: SpaceDraft) = launch {
+        spacesRemoteRepository.create(
+            CreateSpaceRequest(
+                name = draft.name,
+                description = draft.description,
+                conditionsOfUse = draft.conditionsOfUse.takeIf { it.isNotBlank() },
+                requiresKeys = draft.requiresKeys,
+                prices = draft.prices,
+                photos = draft.newPhotos.map { it.fileWithContext() },
+                seats = draft.seats,
+                beds = draft.beds,
+                energySources = draft.energySources,
+                climateControl = draft.climateControl,
+                address = draft.address.takeIf { it.isNotBlank() },
+                latitude = draft.latitude,
+                longitude = draft.longitude,
+                altitude = draft.altitude,
+            ),
+        )
     }
 
     /**
-     * Empty [conditionsOfUse] removes them.
+     * Whatever is empty in [draft] is removed from the space.
      */
-    fun updateSpace(
-        id: Uuid,
-        name: String,
-        description: String,
-        conditionsOfUse: String,
-        requiresKeys: Boolean,
-        prices: List<CategoryPrice>,
-    ) = launch {
+    fun updateSpace(id: Uuid, draft: SpaceDraft) = launch {
+        val photos = draft.removedPhotos.map { FileWithContext(id = it) } + draft.newPhotos.map { it.fileWithContext() }
         spacesRemoteRepository.update(
             id,
             UpdateSpaceRequest(
-                name = name,
-                description = description,
-                conditionsOfUse = conditionsOfUse,
-                requiresKeys = requiresKeys,
-                prices = prices,
+                name = draft.name,
+                description = draft.description,
+                conditionsOfUse = draft.conditionsOfUse,
+                requiresKeys = draft.requiresKeys,
+                prices = draft.prices,
+                photos = photos.takeIf { it.isNotEmpty() },
+                seats = draft.seats,
+                beds = draft.beds,
+                energySources = draft.energySources,
+                climateControl = draft.climateControl,
+                address = draft.address,
+                latitude = draft.latitude,
+                longitude = draft.longitude,
+                altitude = draft.altitude,
+                clear = buildSet {
+                    if (draft.seats == null) add(SpaceDetail.SEATS)
+                    if (draft.beds == null) add(SpaceDetail.BEDS)
+                    if (draft.altitude == null) add(SpaceDetail.ALTITUDE)
+                    if (draft.latitude == null || draft.longitude == null) add(SpaceDetail.COORDINATES)
+                },
             ),
         )
     }
