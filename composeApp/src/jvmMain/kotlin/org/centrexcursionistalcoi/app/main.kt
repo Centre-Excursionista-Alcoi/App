@@ -18,6 +18,7 @@ import com.diamondedge.logging.logging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.io.files.Path
+import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
 import org.centrexcursionistalcoi.app.di.initKoin
 import org.centrexcursionistalcoi.app.log.FileLogger
 import org.centrexcursionistalcoi.app.log.initializeSentry
@@ -45,6 +46,10 @@ fun main() {
     initializeSentry()
 
     checkForUpdates()
+
+    // Localina creates its locale state lazily. If the first access came from the background thread that restores the
+    // saved language, the state would be created after the composition took its snapshot, and reading it would crash.
+    LocaleUpdater.hashCode()
 
     application {
         Window(
