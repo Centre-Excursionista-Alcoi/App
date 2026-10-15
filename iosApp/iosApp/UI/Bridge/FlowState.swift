@@ -32,3 +32,19 @@ final class FlowState<Value> {
         task?.cancel()
     }
 }
+
+/// Runs [apply] for every value a Kotlin `Flow` emits, until the returned task is cancelled (models do that in
+/// `deinit`).
+@MainActor
+func collect<Flow: AsyncSequence>(
+    _ flow: Flow,
+    _ apply: @escaping @MainActor (Flow.Element) -> Void
+) -> Task<Void, Never> {
+    Task {
+        do {
+            for try await element in flow { apply(element) }
+        } catch {
+            // A Kotlin flow that fails has already reported it through the ViewModel's error state.
+        }
+    }
+}

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.cancel
 import org.centrexcursionistalcoi.app.viewmodel.LoadingViewModel
+import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.centrexcursionistalcoi.app.viewmodel.LogoutViewModel
 import org.centrexcursionistalcoi.app.viewmodel.MainScreenViewModel
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
@@ -31,6 +32,8 @@ object ViewModelFactory {
         KoinPlatform.getKoin().get { parametersOf(null, null) }
 
     fun loadingViewModel(): LoadingViewModel = KoinPlatform.getKoin().get()
+
+    fun loginViewModel(): LoginViewModel = KoinPlatform.getKoin().get()
 
     fun mainScreenViewModel(): MainScreenViewModel = KoinPlatform.getKoin().get()
 
