@@ -56,7 +56,7 @@ class TestFileRequestData {
                     channel.writeFully(chunk, 0, count)
                     remaining -= count
                 }
-            }.channel as ByteReadChannel
+            }.channel
         }
         val headers = Headers.build {
             append(HttpHeaders.ContentDisposition, ContentDisposition.File.withParameter(ContentDisposition.Parameters.FileName, name).toString())

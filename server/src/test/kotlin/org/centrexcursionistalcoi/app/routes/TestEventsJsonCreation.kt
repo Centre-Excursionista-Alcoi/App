@@ -178,7 +178,7 @@ class TestEventsJsonCreation : ApplicationTestBase() {
         },
     ) { context ->
         val qualification = context.dibResult!!
-        val department = Database { qualification.department!! }
+        val department = Database { qualification.department }
 
         val location = client.postJson(
             CreateEventRequest(

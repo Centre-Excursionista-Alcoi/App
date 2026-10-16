@@ -28,6 +28,7 @@ import io.ktor.server.routing.RoutingContext
 import kotlinx.coroutines.sync.Mutex
 
 import kotlinx.datetime.LocalDate
+import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.SPACE_LENDINGS_MANAGER_GROUP_NAME
@@ -205,6 +206,7 @@ private suspend fun RoutingContext.validateStay(
  * Emails the user a confirmation of their new lending, in their language [locale], and the people who manage space
  * lendings (and admins) a notice of it, each in theirs. Both with a link to open it in the app.
  */
+@OptIn(ExperimentalXmlUtilApi::class)
 private fun sendNewSpaceLendingEmails(lending: SpaceLendingEntity, user: UserReferenceEntity, locale: Locale) = Email.launch {
     val id = lending.id.value
     val args = Database {

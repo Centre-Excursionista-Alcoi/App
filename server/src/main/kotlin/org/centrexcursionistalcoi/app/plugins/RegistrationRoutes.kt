@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.plugins
 import org.centrexcursionistalcoi.app.translation.localeOrNull
 import com.webauthn4j.verifier.exception.VerificationException
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.receive
 import io.ktor.server.request.receiveNullable
 import io.ktor.server.resources.post
 import io.ktor.server.response.respond
@@ -88,7 +89,7 @@ private fun pendingPasskeyRegistrationKey(challenge: String) = "passkey_registra
 @OptIn(ExperimentalXmlUtilApi::class)
 fun Route.registrationRoutes() {
     post<Api.Register.Verification> {
-        val request = runCatching { call.receiveNullable<RegistrationCodeRequest>() }.getOrNull()
+        val request = runCatching { call.receive<RegistrationCodeRequest?>() }.getOrNull()
             ?: return@post respondError(Error.MissingArgument("email"))
         val email = request.email.trim().uppercase()
 
@@ -120,7 +121,7 @@ fun Route.registrationRoutes() {
     // The options to create the passkey of a new account. The code is checked, but not used up: it's needed again
     // to register the passkey.
     post<Api.Register.Passkey.Options> {
-        val request = runCatching { call.receiveNullable<PasskeyRegistrationOptionsRequest>() }.getOrNull()
+        val request = runCatching { call.receive<PasskeyRegistrationOptionsRequest?>() }.getOrNull()
             ?: return@post respondError(Error.MissingArgument("email"))
         val email = request.email.trim().uppercase()
 
@@ -160,7 +161,7 @@ fun Route.registrationRoutes() {
 
     // Registers the new account with the passkey created for the options above, and logs it in.
     post<Api.Register.Passkey> {
-        val request = runCatching { call.receiveNullable<PasskeyRegistrationRequest>() }.getOrNull()
+        val request = runCatching { call.receive<PasskeyRegistrationRequest?>() }.getOrNull()
             ?: return@post respondError(Error.MissingArgument("registrationResponseJson"))
         val email = request.email.trim().uppercase()
 

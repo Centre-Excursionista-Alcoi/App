@@ -14,6 +14,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
+import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.AppLinks
 import org.centrexcursionistalcoi.app.data.DepartmentRole
@@ -144,6 +145,7 @@ internal fun memoriesFor(session: UserSession): List<MemoryEntity> {
     }
 }
 
+@OptIn(ExperimentalXmlUtilApi::class)
 fun Route.memoriesRoutes() {
     SyncSections.register(
         SyncSection(

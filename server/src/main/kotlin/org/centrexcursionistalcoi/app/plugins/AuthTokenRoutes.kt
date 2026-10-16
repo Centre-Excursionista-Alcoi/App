@@ -4,6 +4,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.plugins.ratelimit.rateLimit
+import io.ktor.server.request.receive
 import io.ktor.server.request.receiveNullable
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.resources.post
@@ -56,7 +57,7 @@ fun Route.authTokenRoutes() {
         }
 
         post<Api.Auth.WebAuthnVerify> {
-            val request = call.receiveNullable<RestoreKeyVerificationRequest>()
+            val request = call.receive<RestoreKeyVerificationRequest?>()
                 ?: return@post respondError(Error.MissingArgument("authenticationResponseJson"))
             when (val result = verifyAssertion(request.authenticationResponseJson)) {
                 is AssertionVerification.Failure ->
@@ -83,7 +84,7 @@ fun Route.authTokenRoutes() {
 
     rateLimit(RateLimits.TOKEN_REFRESH) {
         post<Api.Auth.Refresh> {
-            val request = call.receiveNullable<RefreshTokenRequest>()
+            val request = call.receive<RefreshTokenRequest?>()
                 ?: return@post respondError(Error.MissingArgument("refresh_token"))
             when (val result = Database { AuthTokens.refresh(request.refreshToken) }) {
                 is RefreshResult.Success -> respondTokens(result.tokens)
@@ -98,7 +99,7 @@ fun Route.authTokenRoutes() {
         // any. Always succeeds, so it can't be used to tell whether a token is valid.
         post<Api.Auth.Logout> {
             // Optional: a client may log out with just its access token.
-            val request = runCatching { call.receiveNullable<RefreshTokenRequest>() }.getOrNull()
+            val request = runCatching { call.receive<RefreshTokenRequest?>() }.getOrNull()
             val accessTokenSessionId = call.getAccessTokenSessionId()
             Database {
                 request?.let { AuthTokens.revokeSessionOf(it.refreshToken, AuthSessionRevocationReason.LOGOUT) }

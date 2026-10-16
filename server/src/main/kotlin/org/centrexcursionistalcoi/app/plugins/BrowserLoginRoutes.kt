@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.plugins
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.plugins.ratelimit.rateLimit
+import io.ktor.server.request.receive
 import io.ktor.server.request.receiveNullable
 import io.ktor.server.resources.post
 import io.ktor.server.response.respond
@@ -149,7 +150,7 @@ fun Route.browserLoginRoutes() {
 
     rateLimit(RateLimits.AUTHENTICATION) {
         post<Api.Auth.Browser> {
-            val request = call.receiveNullable<BrowserLoginStartRequest>()
+            val request = call.receive<BrowserLoginStartRequest?>()
                 ?: return@post respondError(Error.MissingArgument("device_name"))
             val deviceName = request.deviceName.trim().take(64).ifBlank { "Desktop" }
 
@@ -168,7 +169,7 @@ fun Route.browserLoginRoutes() {
         post<Api.Auth.Browser.Complete> { resource ->
             val pending = BrowserLogins.findPending(resource.id)
                 ?: return@post respondError(Error.EntityNotFound("BrowserLogin", resource.id))
-            val request = call.receiveNullable<RestoreKeyVerificationRequest>()
+            val request = call.receive<RestoreKeyVerificationRequest?>()
                 ?: return@post respondError(Error.MissingArgument("authenticationResponseJson"))
 
             when (val result = verifyAssertion(request.authenticationResponseJson)) {

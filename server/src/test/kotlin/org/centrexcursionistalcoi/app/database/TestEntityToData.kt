@@ -1,9 +1,6 @@
 package org.centrexcursionistalcoi.app.database
 
 import io.ktor.http.ContentType
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.time.Clock
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -12,8 +9,8 @@ import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.ADMIN_GROUP_NAME
 import org.centrexcursionistalcoi.app.data.Category
 import org.centrexcursionistalcoi.app.data.CategoryPrice
-import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.Department
+import org.centrexcursionistalcoi.app.data.DepartmentRole
 import org.centrexcursionistalcoi.app.data.Entity
 import org.centrexcursionistalcoi.app.data.Event
 import org.centrexcursionistalcoi.app.data.InventoryItem
@@ -41,12 +38,12 @@ import org.centrexcursionistalcoi.app.database.entity.ReceivedItemEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceKeyEntity
 import org.centrexcursionistalcoi.app.database.entity.SpaceKeyTypeEntity
-import org.centrexcursionistalcoi.app.database.table.SpaceKeyTypeSpaces
 import org.centrexcursionistalcoi.app.database.entity.SpaceLendingEntity
 import org.centrexcursionistalcoi.app.database.table.EventMembers
 import org.centrexcursionistalcoi.app.database.table.LendingItems
 import org.centrexcursionistalcoi.app.database.table.MemoriesFiles
 import org.centrexcursionistalcoi.app.database.table.PostFiles
+import org.centrexcursionistalcoi.app.database.table.SpaceKeyTypeSpaces
 import org.centrexcursionistalcoi.app.database.table.UserQualifications
 import org.centrexcursionistalcoi.app.database.utils.encodeList
 import org.centrexcursionistalcoi.app.json
@@ -57,7 +54,9 @@ import org.centrexcursionistalcoi.app.test.FakeUser2
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.insert
-import kotlin.uuid.Uuid
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.time.Clock
 
 /**
  * What the server answers for an entity is its shared data class (`toData`): for every kind of entity and for several
@@ -75,11 +74,11 @@ class TestEntityToData {
         null,
     )
 
-    private fun <ID : Any, E : org.jetbrains.exposed.v1.dao.Entity<ID>, D : Entity<*>> assertRoundTrip(
+    private fun <ID : Any, E, D : Entity<*>> assertRoundTrip(
         name: String,
         entityClass: EntityClass<ID, E>,
         serializer: KSerializer<D>,
-    ) where E : EntityDataConverter<D, *> {
+    ) where E : org.jetbrains.exposed.v1.dao.Entity<ID>, E : EntityDataConverter<D, *> {
         for (session in sessions) {
             val encoded = Database {
                 val entities = entityClass.all().toList()

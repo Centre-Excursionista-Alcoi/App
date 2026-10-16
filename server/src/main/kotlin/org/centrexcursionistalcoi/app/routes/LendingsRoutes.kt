@@ -74,6 +74,7 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDate
+import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
 
 /**
  * Mutex to ensure that lendings are created one at a time to avoid conflicts.
@@ -196,6 +197,7 @@ private fun lendingsVisibleTo(session: UserSession): List<LendingEntity> {
     return lendings
 }
 
+@OptIn(ExperimentalXmlUtilApi::class)
 fun Route.lendingsRoutes() {
     SyncSections.register(
         SyncSection(

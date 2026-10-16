@@ -142,7 +142,7 @@ class TestPasskeyRoutes : ApplicationTestBase() {
         client.post(Api.Register.Passkey()) {
             contentType(ContentType.Application.Json)
             setBody(PasskeyRegistrationRequest(FakeUser.EMAIL, code, authenticator.registrationResponseJson(challenge, iosOrigin, true), "iPhone"))
-        }.assertBody(TokenResponse.serializer()) { assertEquals(FakeUser.EMAIL.uppercase(), it.accountEmail?.uppercase()) }
+        }.assertBody(TokenResponse.serializer()) { assertEquals(FakeUser.EMAIL.uppercase(), it.accountEmail.uppercase()) }
 
         val user = assertNotNull(Database { UserReferenceEntity.findByEmail(FakeUser.EMAIL.uppercase()) })
         assertFalse(Database { user.hasPassword })

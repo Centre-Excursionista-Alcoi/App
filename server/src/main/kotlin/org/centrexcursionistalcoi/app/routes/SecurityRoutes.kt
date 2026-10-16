@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.routes
 import com.webauthn4j.verifier.exception.VerificationException
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.plugins.ratelimit.rateLimit
+import io.ktor.server.request.receive
 import io.ktor.server.request.receiveNullable
 import io.ktor.server.resources.delete
 import io.ktor.server.resources.get
@@ -135,7 +136,7 @@ fun Route.securityRoutes() {
 
     post<Api.Profile.Passkeys> {
         val session = getUserSessionOrFail() ?: return@post
-        val request = runCatching { call.receiveNullable<AddPasskeyRequest>() }.getOrNull()
+        val request = runCatching { call.receive<AddPasskeyRequest?>() }.getOrNull()
             ?: return@post respondError(Error.MissingArgument("registrationResponseJson"))
 
         val challenge = RedisStoreMap.default.get(passkeyChallengeKey(session.sub))
@@ -169,7 +170,7 @@ fun Route.securityRoutes() {
     rateLimit(RateLimits.AUTHENTICATION) {
         delete<Api.Profile.Passkeys.Id> { passkey ->
             val session = getUserSessionOrFail() ?: return@delete
-            val request = runCatching { call.receiveNullable<ReauthenticatedRequest>() }.getOrNull()
+            val request = runCatching { call.receive<ReauthenticatedRequest?>() }.getOrNull()
             assertReauthenticated(session, request?.reauthentication) ?: return@delete
 
             val error = Database {
@@ -191,7 +192,7 @@ fun Route.securityRoutes() {
         // Sets a password, or changes it.
         put<Api.Profile.Password> {
             val session = getUserSessionOrFail() ?: return@put
-            val request = runCatching { call.receiveNullable<SetPasswordRequest>() }.getOrNull()
+            val request = runCatching { call.receive<SetPasswordRequest?>() }.getOrNull()
                 ?: return@put respondError(Error.MissingArgument("newPassword"))
             assertReauthenticated(session, request.reauthentication) ?: return@put
 
@@ -212,7 +213,7 @@ fun Route.securityRoutes() {
         // Removes the password, so the account signs in with passkeys only.
         delete<Api.Profile.Password> {
             val session = getUserSessionOrFail() ?: return@delete
-            val request = runCatching { call.receiveNullable<ReauthenticatedRequest>() }.getOrNull()
+            val request = runCatching { call.receive<ReauthenticatedRequest?>() }.getOrNull()
             assertReauthenticated(session, request?.reauthentication) ?: return@delete
 
             val error = Database {
