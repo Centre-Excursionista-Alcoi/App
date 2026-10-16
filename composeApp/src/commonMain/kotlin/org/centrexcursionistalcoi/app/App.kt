@@ -34,9 +34,6 @@ import org.centrexcursionistalcoi.app.nav.rememberNavigator
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
 import org.centrexcursionistalcoi.app.push.PushNotification
 import org.centrexcursionistalcoi.app.ui.dialog.ErrorDialog
-import org.centrexcursionistalcoi.app.ui.screen.spaces.SpaceDetailsScreen
-import org.centrexcursionistalcoi.app.ui.screen.spaces.SpaceLendingCreationScreen
-import org.centrexcursionistalcoi.app.ui.screen.spaces.SpaceLendingDetailsScreen
 import org.centrexcursionistalcoi.app.ui.dialog.UpdateAvailableDialog
 import org.centrexcursionistalcoi.app.ui.dialog.UpdateProgressDialog
 import org.centrexcursionistalcoi.app.ui.dialog.UpdateRestartRequiredDialog
@@ -53,6 +50,9 @@ import org.centrexcursionistalcoi.app.ui.screen.MainScreen
 import org.centrexcursionistalcoi.app.ui.screen.SecurityScreen
 import org.centrexcursionistalcoi.app.ui.screen.SettingsScreen
 import org.centrexcursionistalcoi.app.ui.screen.admin.LendingManagementScreen
+import org.centrexcursionistalcoi.app.ui.screen.spaces.SpaceDetailsScreen
+import org.centrexcursionistalcoi.app.ui.screen.spaces.SpaceLendingCreationScreen
+import org.centrexcursionistalcoi.app.ui.screen.spaces.SpaceLendingDetailsScreen
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
 import org.centrexcursionistalcoi.app.viewmodel.SessionExpiryViewModel

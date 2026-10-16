@@ -118,6 +118,7 @@ calf-share = { module = "com.mohamedrejeb.calf:calf-share", version.ref = "calf"
 calf-ui = { module = "com.mohamedrejeb.calf:calf-ui", version.ref = "calf" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
+androidx-compose-uiTooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "composeMultiplatform" }
 compose-components-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }

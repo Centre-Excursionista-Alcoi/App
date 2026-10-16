@@ -41,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cea_app.composeapp.generated.resources.Res
 import cea_app.composeapp.generated.resources.insurance_view_document
@@ -73,9 +74,11 @@ import cea_app.composeapp.generated.resources.memory_saved
 import cea_app.composeapp.generated.resources.save
 import cea_app.composeapp.generated.resources.share
 import com.mohamedrejeb.calf.core.ExperimentalCalfApi
+import com.mohamedrejeb.calf.share.ShareLauncher
 import com.mohamedrejeb.calf.share.rememberShareLauncher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import org.centrexcursionistalcoi.app.data.InventoryItem
@@ -509,46 +512,75 @@ fun MemoryViewButtons(
     snackbarHostState: SnackbarHostState? = null,
     fpm: FileProviderModel = koinViewModel(),
 ) {
-    val shareLauncher = rememberShareLauncher { /* ignore result */ }
-    val scope = rememberCoroutineScope()
     if (memory.pdf == null) return
 
+    MemoryViewButtonsContent(
+        snackbarHostState = snackbarHostState,
+        isOpeningFileSupported = fpm.isOpeningFileSupported,
+        onShare = { shareLauncher -> fpm.shareFile(shareLauncher) { memory.fetchDocumentFilePath() } },
+        onSave = { fpm.saveFile(memory, suggestedName = memory.id.toString()).await() },
+        onOpen = { fpm.openFile { memory.fetchDocumentFilePath() } },
+    )
+}
+
+/**
+ * Stateless version of [MemoryViewButtons], with no ViewModel dependency.
+ * @param onSave Saves the file, returns whether it was actually saved (`null` on error).
+ */
+@Composable
+@OptIn(ExperimentalCalfApi::class)
+private fun MemoryViewButtonsContent(
+    snackbarHostState: SnackbarHostState?,
+    isOpeningFileSupported: Boolean,
+    onShare: (ShareLauncher) -> Unit,
+    onSave: suspend () -> Boolean?,
+    onOpen: () -> Unit,
+) {
+    val shareLauncher = rememberShareLauncher { /* ignore result */ }
+    val scope = rememberCoroutineScope()
+
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
-        IconButton(
-            onClick = {
-                fpm.shareFile(shareLauncher) { memory.fetchDocumentFilePath() }
-            },
-        ) {
+        IconButton(onClick = { onShare(shareLauncher) }) {
             Icon(MaterialSymbols.Share, stringResource(Res.string.share))
         }
         IconButton(
             onClick = {
                 scope.launch {
-                    val saved = fpm.saveFile(memory, suggestedName = memory.id.toString()).await()
-                    if (saved != true) return@launch
+                    if (onSave() != true) return@launch
 
                     val result = snackbarHostState?.showSnackbar(
                         message = getString(Res.string.memory_saved),
-                        actionLabel = if (fpm.isOpeningFileSupported) getString(Res.string.memory_open_file) else null
+                        actionLabel = if (isOpeningFileSupported) getString(Res.string.memory_open_file) else null
                     )
-                    if (result == SnackbarResult.ActionPerformed) {
-                        fpm.openFile { memory.fetchDocumentFilePath() }
-                    }
+                    if (result == SnackbarResult.ActionPerformed) onOpen()
                 }
             },
         ) {
             Icon(MaterialSymbols.Save, stringResource(Res.string.save))
         }
-        if (fpm.isOpeningFileSupported) {
+        if (isOpeningFileSupported) {
             OutlinedButton(
-                onClick = {
-                    fpm.openFile { memory.fetchDocumentFilePath() }
-                },
+                onClick = onOpen,
                 modifier = Modifier.weight(1f).padding(start = 8.dp)
             ) {
                 Text(stringResource(Res.string.insurance_view_document))
             }
         }
+    }
+}
+
+@Preview
+@Composable
+@OptIn(ExperimentalCalfApi::class)
+private fun MemoryViewButtons_Preview() {
+    MaterialTheme {
+        MemoryViewButtonsContent(
+            snackbarHostState = null,
+            isOpeningFileSupported = true,
+            onShare = {},
+            onSave = { true },
+            onOpen = {},
+        )
     }
 }
 
@@ -580,3 +612,51 @@ private val previewUserData = UserData(
     insurances = emptyList(),
     isDisabled = false,
 )
+
+private fun previewLending(
+    confirmed: Boolean = true,
+    taken: Boolean = false,
+    returned: Boolean = false,
+) = ReferencedLending(
+    id = "5d1f0c52-93a7-4a3c-b0a5-6f1f5c7e2a10".toUuid(),
+    user = previewUserData,
+    timestamp = Clock.System.now(),
+    confirmed = confirmed,
+    taken = taken,
+    givenBy = null,
+    givenAt = null,
+    returned = returned,
+    receivedItems = emptyList(),
+    memorySubmitted = false,
+    memorySubmittedAt = null,
+    memory = null,
+    memoryReviewed = false,
+    from = LocalDate(2025, 10, 11),
+    to = LocalDate(2025, 10, 15),
+    notes = "Weekend trip to the Pyrenees",
+    items = listOf(previewItem),
+)
+
+@Preview
+@Composable
+private fun LendingDetailsScreen_Requested_Preview() {
+    MaterialTheme {
+        LendingDetailsScreen(
+            lending = previewLending(confirmed = false),
+            onCancelRequest = { Job() },
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun LendingDetailsScreen_Confirmed_Preview() {
+    MaterialTheme {
+        LendingDetailsScreen(
+            lending = previewLending(),
+            onCancelRequest = { Job() },
+            onBack = {},
+        )
+    }
+}

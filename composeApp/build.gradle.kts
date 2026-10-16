@@ -269,6 +269,9 @@ kotlin {
                 implementation(libs.koin.android)
                 implementation(libs.koin.androidx.workmanager)
 
+                // Android Studio previews
+                implementation(libs.androidx.compose.uiTooling)
+
                 // Credentials Manager
                 implementation(libs.androidx.credentials)
                 implementation(libs.androidx.credentials.playServicesAuth)
