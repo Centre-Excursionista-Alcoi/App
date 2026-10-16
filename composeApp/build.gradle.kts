@@ -312,6 +312,10 @@ kotlin {
 }
 
 dependencies {
+    // Android Studio's @Preview rendering needs ComposeViewAdapter at runtime. This configuration is only used by the
+    // IDE's preview renderer, so it doesn't end up in the APK.
+    add("androidRuntimeClasspath", libs.compose.components.uiTooling)
+
     listOf(
         libs.androidx.room3.compiler,
     ).forEach { dependency ->

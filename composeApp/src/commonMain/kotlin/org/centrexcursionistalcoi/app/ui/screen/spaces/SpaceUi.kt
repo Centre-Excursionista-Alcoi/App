@@ -1,6 +1,7 @@
 package org.centrexcursionistalcoi.app.ui.screen.spaces
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
 import cea_app.composeapp.generated.resources.*
 import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Category
@@ -9,6 +10,18 @@ import org.centrexcursionistalcoi.app.data.PriceUnit
 import org.centrexcursionistalcoi.app.data.SpaceClimateControl
 import org.centrexcursionistalcoi.app.data.SpaceEnergySource
 import org.centrexcursionistalcoi.app.data.SpaceLending
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ClimateMiniSplit
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Fireplace
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Hvac
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ModeFan
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.SolarPower
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.WindPower
+import org.centrexcursionistalcoi.app.ui.icons.mdi.FuelCell
+import org.centrexcursionistalcoi.app.ui.icons.mdi.GeneratorStationary
+import org.centrexcursionistalcoi.app.ui.icons.mdi.HydroPower
+import org.centrexcursionistalcoi.app.ui.icons.mdi.MDI
+import org.centrexcursionistalcoi.app.ui.icons.mdi.TransmissionTower
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToLong
 
@@ -94,6 +107,15 @@ fun SpaceEnergySource.label(): String = stringResource(
     }
 )
 
+fun SpaceEnergySource.icon(): ImageVector = when(this) {
+    SpaceEnergySource.GRID -> MDI.TransmissionTower
+    SpaceEnergySource.SOLAR -> MaterialSymbols.SolarPower
+    SpaceEnergySource.WIND -> MaterialSymbols.WindPower
+    SpaceEnergySource.HYDRO -> MDI.HydroPower
+    SpaceEnergySource.GAS_GENERATOR, SpaceEnergySource.DIESEL_GENERATOR -> MDI.GeneratorStationary
+    SpaceEnergySource.BATTERIES -> MDI.FuelCell
+}
+
 @Composable
 fun SpaceClimateControl.label(): String = stringResource(
     when (this) {
@@ -107,3 +129,14 @@ fun SpaceClimateControl.label(): String = stringResource(
         SpaceClimateControl.FAN -> Res.string.climate_fan
     }
 )
+
+fun SpaceClimateControl.icon(): ImageVector = when (this) {
+    SpaceClimateControl.GAS_STOVE -> MaterialSymbols.Fireplace
+    SpaceClimateControl.WOOD_STOVE -> MaterialSymbols.Fireplace
+    SpaceClimateControl.PELLET_STOVE -> MaterialSymbols.Fireplace
+    SpaceClimateControl.FIREPLACE -> MaterialSymbols.Fireplace
+    SpaceClimateControl.ELECTRIC_HEATER -> MaterialSymbols.Hvac
+    SpaceClimateControl.CENTRAL_HEATING -> MaterialSymbols.Hvac
+    SpaceClimateControl.AIR_CONDITIONING -> MaterialSymbols.ClimateMiniSplit
+    SpaceClimateControl.FAN -> MaterialSymbols.ModeFan
+}
