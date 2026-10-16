@@ -2,6 +2,8 @@ package org.centrexcursionistalcoi.app.database.table
 
 import kotlinx.serialization.builtins.ListSerializer
 import org.centrexcursionistalcoi.app.data.CategoryPrice
+import org.centrexcursionistalcoi.app.data.SpaceClimateControl
+import org.centrexcursionistalcoi.app.data.SpaceEnergySource
 import org.centrexcursionistalcoi.app.database.DatabaseNowExpression
 import org.centrexcursionistalcoi.app.json
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
@@ -25,4 +27,14 @@ object Spaces : UuidTable("spaces") {
     val closedReason = text("closedReason").nullable()
 
     val prices = jsonb("prices", json, ListSerializer(CategoryPrice.serializer()))
+
+    val seats = integer("seats").nullable()
+    val beds = integer("beds").nullable()
+    val energySources = jsonb("energySources", json, ListSerializer(SpaceEnergySource.serializer())).default(emptyList())
+    val climateControl = jsonb("climateControl", json, ListSerializer(SpaceClimateControl.serializer())).default(emptyList())
+
+    val address = text("address").nullable()
+    val latitude = double("latitude").nullable()
+    val longitude = double("longitude").nullable()
+    val altitude = double("altitude").nullable()
 }

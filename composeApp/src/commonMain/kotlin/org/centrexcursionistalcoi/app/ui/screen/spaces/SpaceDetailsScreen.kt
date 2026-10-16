@@ -1,6 +1,16 @@
 package org.centrexcursionistalcoi.app.ui.screen.spaces
 
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import org.centrexcursionistalcoi.app.data.Space
+import org.centrexcursionistalcoi.app.data.rememberImageFiles
+import org.centrexcursionistalcoi.app.ui.reusable.AsyncByteImage
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,6 +65,10 @@ fun SpaceDetailsScreen(
             item("description") {
                 Text(space.description, modifier = Modifier.padding(vertical = 8.dp))
             }
+            if (space.photos.isNotEmpty()) {
+                item("photos") { SpacePhotos(space) }
+            }
+            item("specs") { SpaceSpecs(space) }
             if (space.isClosed) {
                 item("closed") {
                     Text(
@@ -128,3 +142,66 @@ fun SpaceDetailsScreen(
         }
     }
 }
+
+/** The photos of the inside of the space, side by side. Tapping one maximizes it. */
+@Composable
+private fun SpacePhotos(space: Space) {
+    val images = space.rememberImageFiles()
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+    ) {
+        items(space.images, key = { "photo_$it" }) { id ->
+            AsyncByteImage(
+                bytes = images[id],
+                contentDescription = space.name,
+                contentScale = ContentScale.Crop,
+                canBeMaximized = true,
+                modifier = Modifier.height(180.dp).width(240.dp).clip(RoundedCornerShape(12.dp)),
+            )
+        }
+    }
+}
+
+/** Capacity, energy, climate control and location of the space. Shows only what is set. */
+@Composable
+private fun SpaceSpecs(space: Space) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        val hasCapacity = space.seats != null || space.beds != null
+        if (hasCapacity) {
+            Text(stringResource(Res.string.spaces_capacity), style = MaterialTheme.typography.titleMedium)
+            space.seats?.let { Text(stringResource(Res.string.spaces_seats_line, it)) }
+            space.beds?.let { Text(stringResource(Res.string.spaces_beds_line, it)) }
+        }
+        if (space.energySources.isNotEmpty()) {
+            Text(
+                stringResource(Res.string.spaces_energy),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = if (hasCapacity) 8.dp else 0.dp),
+            )
+            Text(space.energySources.map { it.label() }.joinToString(", "))
+        }
+        if (space.climateControl.isNotEmpty()) {
+            Text(
+                stringResource(Res.string.spaces_climate),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            Text(space.climateControl.map { it.label() }.joinToString(", "))
+        }
+        val latitude = space.latitude
+        val longitude = space.longitude
+        if (space.address != null || latitude != null || space.altitude != null) {
+            Text(
+                stringResource(Res.string.spaces_location),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            space.address?.let { Text(it) }
+            if (latitude != null && longitude != null) Text(stringResource(Res.string.spaces_coordinates_line, latitude, longitude))
+            space.altitude?.let { Text(stringResource(Res.string.spaces_altitude_line, formatNumber(it))) }
+        }
+    }
+}
+
+private fun formatNumber(value: Double): String = if (value % 1.0 == 0.0) value.toLong().toString() else value.toString()

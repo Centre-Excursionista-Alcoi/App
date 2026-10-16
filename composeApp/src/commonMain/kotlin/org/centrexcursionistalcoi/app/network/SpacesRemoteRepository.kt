@@ -1,6 +1,5 @@
 package org.centrexcursionistalcoi.app.network
 
-import org.centrexcursionistalcoi.app.data.CategoryPrice
 import org.centrexcursionistalcoi.app.data.Space
 import org.centrexcursionistalcoi.app.database.SpacesRepository
 import org.centrexcursionistalcoi.app.process.ProgressNotifier
@@ -23,18 +22,10 @@ class SpacesRemoteRepository(
     remoteToLocalIdConverter = { it },
 ) {
     suspend fun create(
-        name: String,
-        description: String,
-        conditionsOfUse: String?,
-        requiresKeys: Boolean,
-        prices: List<CategoryPrice>,
+        request: CreateSpaceRequest,
         progressNotifier: ProgressNotifier? = null,
     ) {
-        createJson(
-            CreateSpaceRequest(name, description, conditionsOfUse, requiresKeys, prices),
-            CreateSpaceRequest.serializer(),
-            progressNotifier,
-        )
+        createJson(request, CreateSpaceRequest.serializer(), progressNotifier)
     }
 
     suspend fun update(

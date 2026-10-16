@@ -22,44 +22,32 @@ import kotlin.test.assertTrue
  */
 class TestDatabaseMigrations {
     private fun SQLiteConnection.tableNames(): Set<String> {
-        val statement = prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
-        val names = mutableSetOf<String>()
-        try {
-            while (statement.step()) names += statement.getText(0)
-        } finally {
-            statement.close()
+        return buildSet {
+            prepare("SELECT name FROM sqlite_master WHERE type = 'table'").use { statement ->
+                while (statement.step()) add(statement.getText(0))
+            }
         }
-        return names
     }
 
     private fun SQLiteConnection.columnNames(table: String): Set<String> {
-        val statement = prepare("PRAGMA table_info($table)")
-        val names = mutableSetOf<String>()
-        try {
-            while (statement.step()) names += statement.getText(1)
-        } finally {
-            statement.close()
+        return buildSet {
+            prepare("PRAGMA table_info($table)").use { statement ->
+                while (statement.step()) add(statement.getText(1))
+            }
         }
-        return names
     }
 
     private fun SQLiteConnection.userVersion(): Long {
-        val statement = prepare("PRAGMA user_version")
-        try {
+        return prepare("PRAGMA user_version").use { statement ->
             statement.step()
-            return statement.getLong(0)
-        } finally {
-            statement.close()
+            statement.getLong(0)
         }
     }
 
     private fun SQLiteConnection.textColumn(table: String, column: String, whereIdEquals: String): String? {
-        val statement = prepare("SELECT `$column` FROM `$table` WHERE `id` = '$whereIdEquals'")
-        try {
+        return prepare("SELECT `$column` FROM `$table` WHERE `id` = '$whereIdEquals'").use { statement ->
             if (!statement.step()) return null
-            return if (statement.isNull(0)) null else statement.getText(0)
-        } finally {
-            statement.close()
+            if (statement.isNull(0)) null else statement.getText(0)
         }
     }
 

@@ -15,6 +15,8 @@ import org.centrexcursionistalcoi.app.data.Qualification
 import org.centrexcursionistalcoi.app.data.QualificationGrant
 import org.centrexcursionistalcoi.app.data.ManualPaymentMethod
 import org.centrexcursionistalcoi.app.data.PaymentStatus
+import org.centrexcursionistalcoi.app.data.SpaceClimateControl
+import org.centrexcursionistalcoi.app.data.SpaceEnergySource
 import org.centrexcursionistalcoi.app.data.SpaceKeyTypeSpace
 import org.centrexcursionistalcoi.app.data.SpaceLendingKey
 import org.centrexcursionistalcoi.app.data.Sports
@@ -164,6 +166,22 @@ class RoomConverters {
     @ColumnTypeConverter
     fun stringToSpaceLendingKeyList(value: String?): List<SpaceLendingKey>? =
         value?.let { json.decodeFromString(ListSerializer(SpaceLendingKey.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun spaceEnergySourceListToString(value: List<SpaceEnergySource>?): String? =
+        value?.let { json.encodeToString(ListSerializer(SpaceEnergySource.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun stringToSpaceEnergySourceList(value: String?): List<SpaceEnergySource>? =
+        value?.let { json.decodeFromString(ListSerializer(SpaceEnergySource.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun spaceClimateControlListToString(value: List<SpaceClimateControl>?): String? =
+        value?.let { json.encodeToString(ListSerializer(SpaceClimateControl.serializer()), it) }
+
+    @ColumnTypeConverter
+    fun stringToSpaceClimateControlList(value: String?): List<SpaceClimateControl>? =
+        value?.let { json.decodeFromString(ListSerializer(SpaceClimateControl.serializer()), it) }
 
     @ColumnTypeConverter
     fun spaceKeyTypeSpaceListToString(value: List<SpaceKeyTypeSpace>?): String? =

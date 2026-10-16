@@ -35,6 +35,7 @@ import org.centrexcursionistalcoi.app.database.table.Posts
 import org.centrexcursionistalcoi.app.database.table.Qualifications
 import org.centrexcursionistalcoi.app.database.table.ReceivedItems
 import org.centrexcursionistalcoi.app.database.table.RecoverPasswordRequests
+import org.centrexcursionistalcoi.app.database.table.SpaceImages
 import org.centrexcursionistalcoi.app.database.table.SpaceKeyTypeSpaces
 import org.centrexcursionistalcoi.app.database.table.SpaceKeyTypes
 import org.centrexcursionistalcoi.app.database.table.SpaceKeys
@@ -103,6 +104,7 @@ object Database {
         EventQualificationRequirements,
         DocumentVerifications,
         Spaces,
+        SpaceImages,
         SpaceLendings,
         SpaceLendingFiles,
         SpaceKeyTypes,

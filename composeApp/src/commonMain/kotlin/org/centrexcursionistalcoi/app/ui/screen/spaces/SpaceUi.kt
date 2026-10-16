@@ -6,6 +6,8 @@ import kotlinx.datetime.LocalDate
 import org.centrexcursionistalcoi.app.data.Category
 import org.centrexcursionistalcoi.app.data.PaymentStatus
 import org.centrexcursionistalcoi.app.data.PriceUnit
+import org.centrexcursionistalcoi.app.data.SpaceClimateControl
+import org.centrexcursionistalcoi.app.data.SpaceEnergySource
 import org.centrexcursionistalcoi.app.data.SpaceLending
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToLong
@@ -78,3 +80,30 @@ fun formatPrice(price: Double): String {
 }
 
 fun LocalDate.formatted(): String = toString()
+
+@Composable
+fun SpaceEnergySource.label(): String = stringResource(
+    when (this) {
+        SpaceEnergySource.GRID -> Res.string.energy_grid
+        SpaceEnergySource.SOLAR -> Res.string.energy_solar
+        SpaceEnergySource.WIND -> Res.string.energy_wind
+        SpaceEnergySource.HYDRO -> Res.string.energy_hydro
+        SpaceEnergySource.DIESEL_GENERATOR -> Res.string.energy_diesel_generator
+        SpaceEnergySource.GAS_GENERATOR -> Res.string.energy_gas_generator
+        SpaceEnergySource.BATTERIES -> Res.string.energy_batteries
+    }
+)
+
+@Composable
+fun SpaceClimateControl.label(): String = stringResource(
+    when (this) {
+        SpaceClimateControl.GAS_STOVE -> Res.string.climate_gas_stove
+        SpaceClimateControl.WOOD_STOVE -> Res.string.climate_wood_stove
+        SpaceClimateControl.PELLET_STOVE -> Res.string.climate_pellet_stove
+        SpaceClimateControl.FIREPLACE -> Res.string.climate_fireplace
+        SpaceClimateControl.ELECTRIC_HEATER -> Res.string.climate_electric_heater
+        SpaceClimateControl.CENTRAL_HEATING -> Res.string.climate_central_heating
+        SpaceClimateControl.AIR_CONDITIONING -> Res.string.climate_air_conditioning
+        SpaceClimateControl.FAN -> Res.string.climate_fan
+    }
+)

@@ -2,7 +2,20 @@ package org.centrexcursionistalcoi.app.ui.page.main.management
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import org.centrexcursionistalcoi.app.data.SpaceClimateControl
+import org.centrexcursionistalcoi.app.data.SpaceEnergySource
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.Close
+import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.MaterialSymbols
+import org.centrexcursionistalcoi.app.ui.reusable.form.FormFilesPicker
+import org.centrexcursionistalcoi.app.viewmodel.management.SpaceDraft
+import kotlin.uuid.Uuid
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -106,9 +119,9 @@ fun SpacesListView(model: SpacesManagementViewModel = koinViewModel()) {
         SpaceEditorDialog(
             space = null,
             onDismiss = { creating = false },
-            onSave = { name, description, conditions, requiresKeys, prices ->
+            onSave = { draft ->
                 creating = false
-                model.createSpace(name, description, conditions.takeIf { it.isNotBlank() }, requiresKeys, prices)
+                model.createSpace(draft)
             },
         )
     }
@@ -116,9 +129,9 @@ fun SpacesListView(model: SpacesManagementViewModel = koinViewModel()) {
         SpaceEditorDialog(
             space = space,
             onDismiss = { editing = null },
-            onSave = { name, description, conditions, requiresKeys, prices ->
+            onSave = { draft ->
                 editing = null
-                model.updateSpace(space.id, name, description, conditions, requiresKeys, prices)
+                model.updateSpace(space.id, draft)
             },
         )
     }
@@ -148,11 +161,12 @@ fun SpacesListView(model: SpacesManagementViewModel = koinViewModel()) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SpaceEditorDialog(
     space: Space?,
     onDismiss: () -> Unit,
-    onSave: (name: String, description: String, conditions: String, requiresKeys: Boolean, prices: List<CategoryPrice>) -> Unit,
+    onSave: (SpaceDraft) -> Unit,
 ) {
     var name by remember { mutableStateOf(space?.name.orEmpty()) }
     var description by remember { mutableStateOf(space?.description.orEmpty()) }
@@ -169,6 +183,31 @@ private fun SpaceEditorDialog(
             space?.prices?.find { it.category == category }?.unit ?: PriceUnit.PER_NIGHT
         })
     }
+
+    var seats by remember { mutableStateOf(space?.seats?.toString().orEmpty()) }
+    var beds by remember { mutableStateOf(space?.beds?.toString().orEmpty()) }
+    var energySources by remember { mutableStateOf(space?.energySources.orEmpty()) }
+    var climateControl by remember { mutableStateOf(space?.climateControl.orEmpty()) }
+    var address by remember { mutableStateOf(space?.address.orEmpty()) }
+    var latitude by remember { mutableStateOf(space?.latitude?.toString().orEmpty()) }
+    var longitude by remember { mutableStateOf(space?.longitude?.toString().orEmpty()) }
+    var altitude by remember { mutableStateOf(space?.altitude?.toString().orEmpty()) }
+    var newPhotos by remember { mutableStateOf<List<PlatformFile>>(emptyList()) }
+    var removedPhotos by remember { mutableStateOf<List<Uuid>>(emptyList()) }
+
+    fun String.toNumber() = trim().replace(',', '.').toDoubleOrNull()
+    val seatsValue = seats.trim().toIntOrNull()?.takeIf { it >= 0 }
+    val bedsValue = beds.trim().toIntOrNull()?.takeIf { it >= 0 }
+    val latitudeValue = latitude.toNumber()
+    val longitudeValue = longitude.toNumber()
+    val altitudeValue = altitude.toNumber()
+    // Each optional number is either empty or valid; the coordinates come in pairs
+    val numbersValid = (seats.isBlank() || seatsValue != null) &&
+        (beds.isBlank() || bedsValue != null) &&
+        (altitude.isBlank() || altitudeValue != null) &&
+        (latitude.isBlank() == longitude.isBlank()) &&
+        (latitude.isBlank() || (latitudeValue != null && latitudeValue in -90.0..90.0)) &&
+        (longitude.isBlank() || (longitudeValue != null && longitudeValue in -180.0..180.0))
 
     val prices = Category.entries.mapNotNull { category ->
         priceTexts.getValue(category).replace(',', '.').toDoubleOrNull()?.let { CategoryPrice(category, it, units.getValue(category)) }
@@ -204,6 +243,113 @@ private fun SpaceEditorDialog(
                     Checkbox(checked = requiresKeys, onCheckedChange = { requiresKeys = it })
                     Text(stringResource(Res.string.management_spaces_requires_keys))
                 }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+                    OutlinedTextField(
+                        value = seats,
+                        onValueChange = { seats = it },
+                        label = { Text(stringResource(Res.string.management_spaces_seats)) },
+                        isError = seats.isNotBlank() && seatsValue == null,
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedTextField(
+                        value = beds,
+                        onValueChange = { beds = it },
+                        label = { Text(stringResource(Res.string.management_spaces_beds)) },
+                        isError = beds.isNotBlank() && bedsValue == null,
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                Text(
+                    stringResource(Res.string.management_spaces_energy),
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SpaceEnergySource.entries.forEach { source ->
+                        FilterChip(
+                            selected = source in energySources,
+                            onClick = { energySources = if (source in energySources) energySources - source else energySources + source },
+                            label = { Text(source.label()) },
+                        )
+                    }
+                }
+                Text(
+                    stringResource(Res.string.management_spaces_climate),
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SpaceClimateControl.entries.forEach { device ->
+                        FilterChip(
+                            selected = device in climateControl,
+                            onClick = { climateControl = if (device in climateControl) climateControl - device else climateControl + device },
+                            label = { Text(device.label()) },
+                        )
+                    }
+                }
+                OutlinedTextField(
+                    value = address,
+                    onValueChange = { address = it },
+                    label = { Text(stringResource(Res.string.management_spaces_address)) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+                    OutlinedTextField(
+                        value = latitude,
+                        onValueChange = { latitude = it },
+                        label = { Text(stringResource(Res.string.management_spaces_latitude)) },
+                        isError = latitude.isNotBlank() && (latitudeValue == null || latitudeValue !in -90.0..90.0),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedTextField(
+                        value = longitude,
+                        onValueChange = { longitude = it },
+                        label = { Text(stringResource(Res.string.management_spaces_longitude)) },
+                        isError = longitude.isNotBlank() && (longitudeValue == null || longitudeValue !in -180.0..180.0),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                if (latitude.isBlank() != longitude.isBlank()) {
+                    Text(
+                        stringResource(Res.string.management_spaces_coordinates_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                OutlinedTextField(
+                    value = altitude,
+                    onValueChange = { altitude = it },
+                    label = { Text(stringResource(Res.string.management_spaces_altitude)) },
+                    isError = altitude.isNotBlank() && altitudeValue == null,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
+                val keptPhotos = space?.photos.orEmpty().filter { it.id !in removedPhotos }
+                keptPhotos.forEachIndexed { index, photo ->
+                    InputChip(
+                        selected = false,
+                        onClick = { photo.id?.let { removedPhotos = removedPhotos + it } },
+                        label = { Text(photo.name ?: "#${index + 1}") },
+                        trailingIcon = { Icon(MaterialSymbols.Close, stringResource(Res.string.remove)) },
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+                FormFilesPicker(
+                    files = newPhotos,
+                    onFilesChange = { newPhotos = it },
+                    label = stringResource(Res.string.management_spaces_photos),
+                    pickerType = FileKitType.Image,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
                 Text(
                     stringResource(Res.string.spaces_prices),
                     style = MaterialTheme.typography.titleSmall,
@@ -233,8 +379,28 @@ private fun SpaceEditorDialog(
         },
         confirmButton = {
             TextButton(
-                enabled = name.isNotBlank() && description.isNotBlank(),
-                onClick = { onSave(name.trim(), description.trim(), conditions.trim(), requiresKeys, prices) },
+                enabled = name.isNotBlank() && description.isNotBlank() && numbersValid,
+                onClick = {
+                    onSave(
+                        SpaceDraft(
+                            name = name.trim(),
+                            description = description.trim(),
+                            conditionsOfUse = conditions.trim(),
+                            requiresKeys = requiresKeys,
+                            prices = prices,
+                            seats = seatsValue,
+                            beds = bedsValue,
+                            energySources = energySources,
+                            climateControl = climateControl,
+                            address = address.trim(),
+                            latitude = latitudeValue,
+                            longitude = longitudeValue,
+                            altitude = altitudeValue,
+                            newPhotos = newPhotos,
+                            removedPhotos = removedPhotos,
+                        )
+                    )
+                },
             ) { Text(stringResource(Res.string.management_spaces_save)) }
         },
         dismissButton = {
