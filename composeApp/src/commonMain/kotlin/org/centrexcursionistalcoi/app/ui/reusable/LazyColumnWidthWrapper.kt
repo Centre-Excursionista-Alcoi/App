@@ -1,7 +1,9 @@
 package org.centrexcursionistalcoi.app.ui.reusable
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -9,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 
 /**
@@ -24,11 +27,12 @@ fun LazyColumnWidthWrapper(
     modifier: Modifier = Modifier,
     maxWidth: Dp = 600.dp,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+    contentPadding: PaddingValues = PaddingValues.Zero,
     content: LazyListScope.() -> Unit
 ) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         LazyColumn(
-            modifier = Modifier.widthIn(max = maxWidth).fillMaxWidth(),
+            modifier = Modifier.widthIn(max = maxWidth).fillMaxWidth().padding(contentPadding),
             horizontalAlignment = horizontalAlignment,
         ) {
             content()
