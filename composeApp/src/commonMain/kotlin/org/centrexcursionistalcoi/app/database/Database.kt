@@ -98,7 +98,7 @@ fun getRoomDatabase(
         .setQueryCoroutineContext(dispatcher)
         // Real, data-preserving migrations for the version jumps we can trust the on-disk schema for -- see
         // DatabaseMigrations.kt's file-level KDoc for why v1 -> v2 is deliberately not among them.
-        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
         // Catch-all for any other transition (from v1, or anything unforeseen): the local database is a
         // disposable cache resynced from the server (see SyncAllDataBackgroundJob), so as a last resort it's
         // safe to just wipe and let the next sync repopulate it, rather than risk a migration we can't trust.
