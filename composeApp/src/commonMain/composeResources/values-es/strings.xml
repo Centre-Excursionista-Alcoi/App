@@ -64,6 +64,7 @@
     <string name="logout_confirmation_message">Seguro que quieres cerrar tu sesión?</string>
     <string name="copied_to_clipboard">Copiado al portapapeles</string>
     <string name="status_loading">Cargando...</string>
+    <string name="retry">Reintentar</string>
     <string name="loading_screen_error">Carga fallida</string>
     <string name="error_unknown">Ha habido un error desconocido. Tipo: %1$s</string>
     <string name="error_delete_references">Este elemento está referenciado por otra entidad, no se puede eliminar.</string>
