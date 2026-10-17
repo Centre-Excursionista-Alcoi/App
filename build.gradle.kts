@@ -19,6 +19,7 @@ plugins {
     alias(libs.plugins.sentryAndroid) apply false
     alias(libs.plugins.sentryJvm) apply false
     alias(libs.plugins.sentryMultiplatform) apply false
+    alias(libs.plugins.skie) apply false
 }
 
 // The wasmJs target's yarn.lock (kotlin-js-store/wasm/yarn.lock) transitively pulls in `ws`, which had a

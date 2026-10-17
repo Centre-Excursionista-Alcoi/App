@@ -18,6 +18,7 @@ plugins {
     alias(libs.plugins.koinCompilerPlugin)
     alias(libs.plugins.ksp)
     alias(libs.plugins.sentryMultiplatform)
+    alias(libs.plugins.skie)
 }
 
 fun readProperties(fileName: String, root: File = projectDir): Properties? {
