@@ -14,6 +14,8 @@ enum class AuthErrorKind {
     ALREADY_REGISTERED,
     PASSWORD_NOT_SAFE,
     PASSWORD_NOT_SET,
+    REAUTHENTICATION_FAILED,
+    LAST_LOGIN_METHOD,
     BROWSER_EXPIRED,
     PASSKEY,
     UNKNOWN,
@@ -33,6 +35,8 @@ fun Throwable.toAuthError(): AuthError = when {
             Error.ERROR_USER_ALREADY_REGISTERED -> AuthErrorKind.ALREADY_REGISTERED
             Error.ERROR_PASSWORD_NOT_SAFE_ENOUGH -> AuthErrorKind.PASSWORD_NOT_SAFE
             Error.ERROR_PASSWORD_NOT_SET -> AuthErrorKind.PASSWORD_NOT_SET
+            Error.ERROR_REAUTHENTICATION_FAILED -> AuthErrorKind.REAUTHENTICATION_FAILED
+            Error.ERROR_LAST_LOGIN_METHOD -> AuthErrorKind.LAST_LOGIN_METHOD
             else -> AuthErrorKind.UNKNOWN
         },
         detail = message,

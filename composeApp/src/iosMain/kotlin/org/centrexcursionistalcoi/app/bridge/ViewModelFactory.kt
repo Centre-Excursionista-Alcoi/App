@@ -3,11 +3,14 @@ package org.centrexcursionistalcoi.app.bridge
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.cancel
+import org.centrexcursionistalcoi.app.push.PlatformSSEConfiguration
+import org.centrexcursionistalcoi.app.push.SSENotificationsListener
 import org.centrexcursionistalcoi.app.viewmodel.LoadingViewModel
 import org.centrexcursionistalcoi.app.viewmodel.LoginViewModel
 import org.centrexcursionistalcoi.app.viewmodel.LogoutViewModel
 import org.centrexcursionistalcoi.app.viewmodel.MainScreenViewModel
 import org.centrexcursionistalcoi.app.viewmodel.PlatformInitializerViewModel
+import org.centrexcursionistalcoi.app.viewmodel.SecurityViewModel
 import org.centrexcursionistalcoi.app.viewmodel.SessionExpiryViewModel
 import org.centrexcursionistalcoi.app.viewmodel.SettingsViewModel
 import org.koin.core.parameter.parametersOf
@@ -32,6 +35,16 @@ object ViewModelFactory {
         KoinPlatform.getKoin().get { parametersOf(null, null) }
 
     fun loadingViewModel(): LoadingViewModel = KoinPlatform.getKoin().get()
+
+    fun securityViewModel(): SecurityViewModel = KoinPlatform.getKoin().get()
+
+    /** Whether the app listens for live updates from the server, see [startListeningForNotifications]. */
+    val isLiveUpdatesEnabled: Boolean get() = PlatformSSEConfiguration.enableSSE
+
+    /** Connects to the server's live updates again, e.g. after they failed. */
+    fun startListeningForNotifications() {
+        KoinPlatform.getKoin().get<SSENotificationsListener>().startListening()
+    }
 
     fun loginViewModel(): LoginViewModel = KoinPlatform.getKoin().get()
 
