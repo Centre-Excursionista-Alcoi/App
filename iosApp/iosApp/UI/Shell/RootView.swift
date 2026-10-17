@@ -13,13 +13,8 @@ struct RootView: View {
             case .loading:
                 LoadingView(onLoggedIn: shell.loggedIn, onNotLoggedIn: shell.notLoggedIn)
             case .login(let changedPassword):
-                ComposeDestinationIsland(
-                    destination: DestinationLogin(changedPassword: changedPassword),
-                    onSessionChange: shell.sessionChanged,
-                    onClose: {}
-                )
-                .ignoresSafeArea()
-                .id(changedPassword)
+                AuthView(changedPassword: changedPassword, afterLogin: shell.startLoading)
+                    .id(changedPassword)
             case .main:
                 MainView()
             case .logout:
