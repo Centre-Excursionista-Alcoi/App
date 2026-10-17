@@ -483,6 +483,7 @@
     <string name="nfc_write_help">Escriu l'identificador en una etiqueta NFC</string>
     <string name="nfc_store">Desar NFC</string>
     <string name="nfc_store_help">Llig el número de sèrie d'una etiqueta NFC, i el desa a la base de dades</string>
+    <string name="home_empty">Encara no hi ha res de nou</string>
     <string name="upcoming_events">Pròxims Esdeveniments</string>
     <string name="posts">Anuncis</string>
     <string name="nav_lending">Préstec</string>

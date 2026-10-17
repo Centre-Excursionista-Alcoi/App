@@ -7,6 +7,7 @@
     <string name="welcome_masc">Welcome back %1$s</string>
     <string name="welcome_fem">Welcome back %1$s</string>
     <string name="welcome_neut">Welcome back %1$s</string>
+    <string name="home_empty">Nothing new yet</string>
     <string name="upcoming_events">Upcoming Events</string>
     <string name="posts">Posts</string>
 

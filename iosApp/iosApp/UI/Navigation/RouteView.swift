@@ -7,6 +7,10 @@ struct RouteView: View {
     let route: Route
 
     var body: some View {
+        screen.toolbarVisibility(.hidden, for: .tabBar)
+    }
+
+    @ViewBuilder private var screen: some View {
         switch onEnum(of: route.destination) {
         case .settings:
             SettingsView(onDeleteAccount: shell.startLoading, onSecurity: { shell.push(DestinationSecurity.shared) })

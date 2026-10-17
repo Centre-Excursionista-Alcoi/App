@@ -461,6 +461,7 @@
     <string name="event_start">Comienzo</string>
     <string name="event_end">Fin</string>
     <string name="event_add_to_calendar">Añadir al Calendario</string>
+    <string name="home_empty">Todavía no hay novedades</string>
     <string name="upcoming_events">Próximos Eventos</string>
     <string name="posts">Anuncios</string>
     <string name="nav_lending">Préstamo</string>
