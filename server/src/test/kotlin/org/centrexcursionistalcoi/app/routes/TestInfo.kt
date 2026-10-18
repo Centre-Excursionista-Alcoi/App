@@ -7,6 +7,7 @@ import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import org.centrexcursionistalcoi.app.ApplicationTestBase
 import org.centrexcursionistalcoi.app.data.ServerInfo
+import org.centrexcursionistalcoi.app.database.Database
 import org.centrexcursionistalcoi.app.database.entity.ConfigEntity
 import org.centrexcursionistalcoi.app.serialization.bodyAsJson
 import kotlin.test.Test
@@ -18,8 +19,8 @@ class TestInfo : ApplicationTestBase() {
     @Test
     fun `test info endpoint`() = runApplicationTest {
         try {
-            mockkObject(ConfigEntity.DatabaseVersion)
-            every { ConfigEntity.DatabaseVersion.get() } returns 123
+            mockkObject(Database)
+            every { Database.version } returns 123
             mockkObject(ConfigEntity.LastCEASync)
             every { ConfigEntity.LastCEASync.get() } returns Instant.fromEpochSeconds(1763531703)
             mockkObject(ConfigEntity.LastFEMECVSync)
