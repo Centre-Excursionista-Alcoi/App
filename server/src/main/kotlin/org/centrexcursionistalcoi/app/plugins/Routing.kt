@@ -118,14 +118,13 @@ fun Application.configureRouting() {
         appLinkFallbackRoutes()
 
         get<Api.Info> {
-            val databaseVersion = ConfigEntity.DatabaseVersion.get() ?: 0
             val lastCEASync = ConfigEntity.LastCEASync.get()?.toEpochMilliseconds() ?: 0L
             val lastFEMECVSync = ConfigEntity.LastFEMECVSync.get()?.toEpochMilliseconds() ?: 0L
 
             call.respond(ServerInfo(
                 version = ServerInfo.Version(
                     version = version,
-                    databaseVersion = databaseVersion,
+                    databaseVersion = Database.version,
                     code = versionCode,
                 ),
                 lastCEASync = lastCEASync,
