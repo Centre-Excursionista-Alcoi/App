@@ -118,6 +118,12 @@ object Database {
     ).let { sortTablesByReferences(it) }
     private var database: JdbcDatabase? = null
 
+    /**
+     * The current version of the database.
+     */
+    var version: Int = 0
+        private set
+
     /** Database initialized without any extra actions. */
     const val INIT_RESULT_OK = 0B00
     /** At least one migration was executed. */
@@ -197,10 +203,13 @@ object Database {
             }
         }
 
-        val version = Database { ConfigEntity[ConfigEntity.DatabaseVersion] }
+        val version = Database { ConfigEntity[ConfigEntity.DatabaseVersion] }.also {
+            version = it ?: 0
+        }
         if (version == null) {
             logger.info("Setting database version to $VERSION")
             Database {
+                Database.version = VERSION
                 ConfigEntity[ConfigEntity.DatabaseVersion] = VERSION
             }
         } else if (version > VERSION) {
@@ -212,8 +221,10 @@ object Database {
                 while (migration != null) {
                     logger.info("Migrating database from version ${migration.from} to ${migration.to}")
                     Database {
-                        migration!!.migrate()
-                        ConfigEntity[ConfigEntity.DatabaseVersion] = migration!!.to
+                        val step = migration!!
+                        step.migrate()
+                        Database.version = step.to
+                        ConfigEntity[ConfigEntity.DatabaseVersion] = step.to
                     }
                     migration = DatabaseMigration.next(migration.to)
                 }
