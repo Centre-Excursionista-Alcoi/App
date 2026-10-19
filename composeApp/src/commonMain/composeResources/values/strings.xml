@@ -644,6 +644,8 @@
     <string name="months_october">October</string>
     <string name="months_november">November</string>
     <string name="months_december">December</string>
+    <string name="calendar_previous_month">Previous month</string>
+    <string name="calendar_next_month">Next month</string>
 
     <string name="time_picker_title">Pick a Time</string>
     <string name="date_time_picker_date_tab">Date</string>
