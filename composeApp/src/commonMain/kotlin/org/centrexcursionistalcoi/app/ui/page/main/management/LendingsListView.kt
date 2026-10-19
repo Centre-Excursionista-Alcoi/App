@@ -48,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import cea_app.composeapp.generated.resources.Res
@@ -95,6 +96,8 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import kotlinx.datetime.YearMonth
 import org.centrexcursionistalcoi.app.data.Lending
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItem
+import org.centrexcursionistalcoi.app.data.ReferencedInventoryItemType
 import org.centrexcursionistalcoi.app.data.ReferencedLending
 import org.centrexcursionistalcoi.app.data.UserData
 import org.centrexcursionistalcoi.app.ui.icons.materialsymbols.ChevronRight
@@ -107,8 +110,10 @@ import org.centrexcursionistalcoi.app.ui.reusable.buttons.DeleteButton
 import org.centrexcursionistalcoi.app.ui.reusable.buttons.TooltipIconButton
 import org.centrexcursionistalcoi.app.ui.screen.admin.lendingManagementScreenContent
 import org.centrexcursionistalcoi.app.viewmodel.management.LendingsManagementViewModel
+import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 @Composable
@@ -136,7 +141,6 @@ fun LendingsListView(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LendingsListView(
     snackbarHostState: SnackbarHostState,
@@ -698,5 +702,78 @@ private fun DrawScope.drawBounds(
                 )
             }
         }
+    }
+}
+
+private val previewUser = UserData(
+    sub = "preview-user",
+    memberNumber = 1234u,
+    fullName = "Maria Garcia",
+    email = "maria@example.com",
+    groups = emptyList(),
+    departments = emptyList(),
+    lendingUser = null,
+    insurances = emptyList(),
+    isDisabled = false,
+)
+
+private val previewItemType = ReferencedInventoryItemType(
+    id = Uuid.parse("3b69c54e-3465-4a1d-a194-29dc64058e4a"),
+    displayName = "Climbing rope",
+    description = null,
+    categories = null,
+    weight = null,
+    department = null,
+    image = null,
+)
+
+private val previewItem = ReferencedInventoryItem(
+    id = Uuid.parse("8c9ccff9-ec17-4918-9327-08f7de3576d3"),
+    variation = null,
+    type = previewItemType,
+    nfcId = null,
+    manufacturerTraceabilityCode = null,
+)
+
+private fun previewLending(id: String, from: LocalDate, to: LocalDate, confirmed: Boolean, taken: Boolean = false) = ReferencedLending(
+    id = Uuid.parse(id),
+    user = previewUser,
+    timestamp = Instant.parse("2025-10-01T10:00:00Z"),
+    confirmed = confirmed,
+    taken = taken,
+    givenBy = null,
+    givenAt = null,
+    returned = false,
+    receivedItems = emptyList(),
+    memorySubmitted = false,
+    memorySubmittedAt = null,
+    memory = null,
+    memoryReviewed = false,
+    from = from,
+    to = to,
+    notes = null,
+    items = listOf(previewItem),
+)
+
+@Preview
+@Composable
+private fun LendingsListView_Preview() {
+    AppTheme {
+        LendingsListView(
+            snackbarHostState = SnackbarHostState(),
+            lendings = listOf(
+                previewLending("0d8d6a1e-7a3b-4f7e-9d0e-2f1c4b6a8e01", LocalDate(2025, 10, 11), LocalDate(2025, 10, 15), confirmed = false),
+                previewLending("0d8d6a1e-7a3b-4f7e-9d0e-2f1c4b6a8e02", LocalDate(2025, 10, 14), LocalDate(2025, 10, 19), confirmed = true),
+                previewLending("0d8d6a1e-7a3b-4f7e-9d0e-2f1c4b6a8e03", LocalDate(2025, 10, 20), LocalDate(2025, 10, 22), confirmed = true, taken = true),
+            ),
+            users = listOf(previewUser),
+            toggleCompletedLendings = false,
+            onToggleCompletedLendings = {},
+            onConfirmLendingRequest = { Job() },
+            onSkipMemoryRequest = { Job() },
+            onGiveRequested = {},
+            onReceiveRequested = {},
+            onDeleteRequested = { _, _ -> Job() },
+        )
     }
 }
