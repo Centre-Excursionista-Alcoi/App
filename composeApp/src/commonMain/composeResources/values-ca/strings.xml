@@ -346,6 +346,10 @@
     <string name="months_december">Desembre</string>
     <string name="calendar_previous_month">Mes anterior</string>
     <string name="calendar_next_month">Mes següent</string>
+    <string name="lendings_kind_all">Tots</string>
+    <string name="lendings_kind_items">Material</string>
+    <string name="lendings_kind_spaces">Espais</string>
+    <string name="lendings_kind_space">Espai</string>
     <string name="settings_push_connection_message_disconnected">No s'estan rebent notificacions push. Les dades s'hauran de sincronitzar manualment. Reiniciar l'app pot solucionar-ho.</string>
     <string name="sort_by_signed_lendings_first">Registrat per a préstecs primer</string>
     <string name="sort_by_signed_lendings_last">Registrat per a préstecs últim</string>
@@ -679,7 +683,6 @@
     <string name="security_error_reauthentication">No s'ha pogut confirmar que eres tu. Per favor, torna-ho a intentar.</string>
     <string name="security_error_last_login_method">No pots eliminar la teua única manera d'accedir. Afegeix una passkey o contrasenya primer.</string>
     <string name="space_lending_missing_dates">Tria les dates.</string>
-    <string name="management_space_lendings_empty">No hi ha cap préstec d'espai.</string>
     <string name="spaces_price_free">Debades</string>
     <string name="payment_status_refunded">Retornat</string>
     <string name="payment_status_cancelled">Cancel·lat</string>
@@ -736,7 +739,6 @@
     <string name="space_lending_pickup_hint">Una vegada es donen les claus, no es pot modificar el préstec.</string>
     <string name="category_member">Socis</string>
     <string name="space_lending_payment_hint">Paga per transferència bancària i adjunta la confirmació.</string>
-    <string name="management_space_lendings">Préstec d'espais</string>
     <string name="space_lending_save_short">Desa</string>
     <string name="space_lending_dismiss">Cancel·la</string>
     <string name="spaces_closed_reason">Tancat: %1$s</string>
