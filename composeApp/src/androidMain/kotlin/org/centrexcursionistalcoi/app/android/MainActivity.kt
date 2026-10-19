@@ -15,9 +15,13 @@ import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.init
 import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 import org.centrexcursionistalcoi.app.MainApp
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates
 import org.centrexcursionistalcoi.app.push.PushNotification
+import org.centrexcursionistalcoi.app.settings.SettingsStore
+import org.centrexcursionistalcoi.app.settings.applySavedLanguage
+import org.koin.mp.KoinPlatform
 import tech.kotlinlang.permission.PermissionInitiation
 
 class MainActivity : NfcIntentHandlerActivity() {
@@ -42,7 +46,9 @@ class MainActivity : NfcIntentHandlerActivity() {
 
         // Localina creates its locale state lazily. If the first access came from the background thread that restores the
         // saved language, the state would be created after the composition took its snapshot, and reading it would crash.
+        // The saved language is applied now, before composing: changing it afterwards rebuilds the whole UI.
         LocaleUpdater.hashCode()
+        runBlocking { KoinPlatform.getKoin().get<SettingsStore>().applySavedLanguage() }
 
         setContent {
             MainApp(url, pushNotification)

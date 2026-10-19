@@ -17,13 +17,17 @@ import com.diamondedge.logging.KmLogging
 import com.diamondedge.logging.logging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.runBlocking
 import kotlinx.io.files.Path
 import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
 import org.centrexcursionistalcoi.app.di.initKoin
 import org.centrexcursionistalcoi.app.log.FileLogger
 import org.centrexcursionistalcoi.app.log.initializeSentry
 import org.centrexcursionistalcoi.app.platform.PlatformAppUpdates.checkForUpdates
+import org.centrexcursionistalcoi.app.settings.SettingsStore
+import org.centrexcursionistalcoi.app.settings.applySavedLanguage
 import org.jetbrains.compose.resources.painterResource
+import org.koin.mp.KoinPlatform
 
 private val log = logging()
 
@@ -49,7 +53,9 @@ fun main() {
 
     // Localina creates its locale state lazily. If the first access came from the background thread that restores the
     // saved language, the state would be created after the composition took its snapshot, and reading it would crash.
+    // The saved language is applied now, before composing: changing it afterwards rebuilds the whole UI.
     LocaleUpdater.hashCode()
+    runBlocking { KoinPlatform.getKoin().get<SettingsStore>().applySavedLanguage() }
 
     application {
         Window(
