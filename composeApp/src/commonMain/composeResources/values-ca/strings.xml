@@ -344,6 +344,8 @@
     <string name="months_october">Octubre</string>
     <string name="months_november">Novembre</string>
     <string name="months_december">Desembre</string>
+    <string name="calendar_previous_month">Mes anterior</string>
+    <string name="calendar_next_month">Mes següent</string>
     <string name="settings_push_connection_message_disconnected">No s'estan rebent notificacions push. Les dades s'hauran de sincronitzar manualment. Reiniciar l'app pot solucionar-ho.</string>
     <string name="sort_by_signed_lendings_first">Registrat per a préstecs primer</string>
     <string name="sort_by_signed_lendings_last">Registrat per a préstecs últim</string>
