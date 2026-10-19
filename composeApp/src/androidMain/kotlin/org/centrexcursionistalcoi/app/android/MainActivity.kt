@@ -11,6 +11,7 @@ import androidx.browser.customtabs.CustomTabsIntent
 import com.diamondedge.logging.logging
 import com.mmk.kmpnotifier.KMPNotifier
 import com.mmk.kmpnotifier.extensions.onCreateOrOnNewIntent
+import io.github.sudarshanmhasrup.localina.api.LocaleUpdater
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.init
 import io.ktor.http.*
@@ -38,6 +39,10 @@ class MainActivity : NfcIntentHandlerActivity() {
 
         val pushNotification = getPushNotificationFromIntent()
         val url = getUrlFromIntent()
+
+        // Localina creates its locale state lazily. If the first access came from the background thread that restores the
+        // saved language, the state would be created after the composition took its snapshot, and reading it would crash.
+        LocaleUpdater.hashCode()
 
         setContent {
             MainApp(url, pushNotification)
