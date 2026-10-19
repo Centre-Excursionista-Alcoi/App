@@ -68,6 +68,16 @@ class TestSpaceDetailsRoutes : ApplicationTestBase() {
     }
 
     @Test
+    fun test_several_photos_are_all_stored() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
+        val photos = (1..5).map { FileWithContext(bytes = byteArrayOf(it.toByte(), 2, 3), name = "p$it.jpg", contentType = ContentType.Image.JPEG) }
+        val created = client.post("/spaces") {
+            setBody(requestWithFilesBody(CreateSpaceRequest(name = "Refugi", description = "A shelter", photos = photos), CreateSpaceRequest.serializer()))
+        }
+        created.assertStatusCode(HttpStatusCode.Created)
+        assertEquals(5, fetch(created.headers["Location"]!!).getValue("photos").jsonArray.size)
+    }
+
+    @Test
     fun test_details_can_be_changed_cleared_and_photos_removed() = runApplicationTest(shouldLogIn = LoginType.ADMIN) {
         val created = client.post("/spaces") {
             setBody(
