@@ -82,12 +82,12 @@ import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
 
 const val MANAGEMENT_PAGE_LENDINGS = 0
-const val MANAGEMENT_PAGE_MEMORIES = 1
-const val MANAGEMENT_PAGE_DEPARTMENTS = 2
-const val MANAGEMENT_PAGE_USERS = 3
-const val MANAGEMENT_PAGE_POSTS = 4
-const val MANAGEMENT_PAGE_EVENTS = 5
-const val MANAGEMENT_PAGE_INVENTORY = 6
+const val MANAGEMENT_PAGE_MEMORIES = 2
+const val MANAGEMENT_PAGE_DEPARTMENTS = 3
+const val MANAGEMENT_PAGE_USERS = 4
+const val MANAGEMENT_PAGE_POSTS = 5
+const val MANAGEMENT_PAGE_EVENTS = 6
+const val MANAGEMENT_PAGE_INVENTORY = 7
 
 private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
     private val key: String,
@@ -264,6 +264,7 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
         ): List<ManagementPage<*, *>> {
             return listOfNotNull(
                 Lendings.takeIf { Lendings.shouldShow(profile, lendings, departments) },
+                SpaceLendings.takeIf { SpaceLendings.shouldShow(profile, null, departments) },
                 Memories.takeIf { Memories.shouldShow(profile, null, departments) },
                 Departments.takeIf { Departments.shouldShow(profile, departments, departments) },
                 Users.takeIf { Users.shouldShow(profile, null, departments) },
@@ -271,7 +272,6 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
                 Events.takeIf { Events.shouldShow(profile, null, departments) },
                 Inventory.takeIf { Inventory.shouldShow(profile, null, departments) },
                 Spaces.takeIf { Spaces.shouldShow(profile, null, departments) },
-                SpaceLendings.takeIf { SpaceLendings.shouldShow(profile, null, departments) },
             )
         }
 
