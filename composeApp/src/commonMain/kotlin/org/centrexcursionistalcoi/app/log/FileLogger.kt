@@ -2,6 +2,12 @@ package org.centrexcursionistalcoi.app.log
 
 import com.diamondedge.logging.Logger
 import io.ktor.utils.io.core.*
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
@@ -9,40 +15,73 @@ import org.centrexcursionistalcoi.app.BuildKonfig
 import org.centrexcursionistalcoi.app.utils.toLocalDateTime
 import kotlin.time.Clock
 
-class FileLogger(private val filePath: Path) : Logger {
+/**
+ * Appends the logs to [filePath], from a background coroutine so that logging never blocks the caller.
+ *
+ * The file is kept below [maxFileBytes]: when a write would exceed it, the file is moved to `<filePath>.1` (replacing
+ * the previous one), so at most two files exist. Each message is cut at [maxMessageChars], since a single huge entry
+ * (e.g. a request with a photo) would otherwise fill the file.
+ */
+class FileLogger(
+    private val filePath: Path,
+    private val maxFileBytes: Long = MAX_FILE_BYTES,
+    private val maxMessageChars: Int = MAX_MESSAGE_CHARS,
+) : Logger {
     private enum class Level(val char: Char) {
         VERBOSE('V'), DEBUG('D'), INFO('I'), WARN('W'), ERROR('E')
     }
 
-    /**
-     * Reads the log file content and returns it as a list of lines.
-     */
-    private fun readLogContent(): List<String> {
-        return try {
-            SystemFileSystem.source(filePath).buffered().use { source ->
-                source.readText().lines()
-            }
-        } catch (_: Exception) {
-            emptyList()
-        }
+    private sealed interface Entry {
+        class Text(val text: String) : Entry
+        class Flush(val done: CompletableDeferred<Unit>) : Entry
     }
 
+    private val queue = Channel<Entry>(Channel.UNLIMITED)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    private val rotatedPath = Path("$filePath.1")
+
+    private var currentSize: Long = sizeOf(filePath)
+
     /**
-     * Writes the lines given into the log file.
+     * Waits until everything logged until now is written. Meant for tests and for before exiting.
      */
-    private fun writeLogContent(lines: List<String>) {
-        SystemFileSystem.sink(filePath, false).buffered().use { sink ->
-            sink.writeText(lines.joinToString("\n") + "\n")
+    suspend fun flush() {
+        val done = CompletableDeferred<Unit>()
+        queue.send(Entry.Flush(done))
+        done.await()
+    }
+
+    private fun sizeOf(path: Path): Long = try {
+        SystemFileSystem.metadataOrNull(path)?.size ?: 0L
+    } catch (_: Exception) {
+        0L
+    }
+
+    private fun write(text: String) {
+        try {
+            val bytes = text.encodeToByteArray()
+            if (currentSize > 0 && currentSize + bytes.size > maxFileBytes) {
+                if (SystemFileSystem.exists(rotatedPath)) SystemFileSystem.delete(rotatedPath)
+                SystemFileSystem.atomicMove(filePath, rotatedPath)
+                currentSize = 0
+            }
+            SystemFileSystem.sink(filePath, append = true).buffered().use { it.write(bytes) }
+            currentSize += bytes.size
+        } catch (_: Exception) {
+            // Logging must never crash the app
         }
     }
 
     private fun log(level: Level, tag: String, msg: String, t: Throwable?) {
         val timestamp = Clock.System.now().toLocalDateTime().toString()
-        val newLine = "${level.char}/$tag $timestamp: $msg${t?.let { "\n${it.stackTraceToString()}" } ?: ""}"
-
-        val existingLines = readLogContent()
-        val allLines = (existingLines + newLine).filter { it.isNotBlank() }.takeLast(MAX_LINES)
-        writeLogContent(allLines)
+        val body = "$msg${t?.let { "\n${it.stackTraceToString()}" } ?: ""}"
+        val truncated = if (body.length > maxMessageChars) {
+            "${body.take(maxMessageChars)}… [truncated, ${body.length} characters]"
+        } else {
+            body
+        }
+        queue.trySend(Entry.Text("${level.char}/$tag $timestamp: $truncated\n"))
     }
 
     override fun verbose(tag: String, msg: String) {
@@ -76,20 +115,30 @@ class FileLogger(private val filePath: Path) : Logger {
     override fun isLoggingError(): Boolean = true
 
     init {
-        val startupLines = listOf(
-            "",
-            "--- App started at ${Clock.System.now().toLocalDateTime()} ---",
-            "    Version: ${BuildKonfig.VERSION_NAME}/${BuildKonfig.VERSION_CODE}",
-            "    Is Debug: ${BuildKonfig.DEBUG}",
-            "----------------------------------------------------"
-        )
+        scope.launch {
+            for (entry in queue) {
+                when (entry) {
+                    is Entry.Text -> write(entry.text)
+                    is Entry.Flush -> entry.done.complete(Unit)
+                }
+            }
+        }
 
-        val existingLines = readLogContent()
-        val allLines = (existingLines + startupLines).filter { it.isNotBlank() }.takeLast(MAX_LINES)
-        writeLogContent(allLines)
+        queue.trySend(
+            Entry.Text(
+                "\n--- App started at ${Clock.System.now().toLocalDateTime()} ---\n" +
+                    "    Version: ${BuildKonfig.VERSION_NAME}/${BuildKonfig.VERSION_CODE}\n" +
+                    "    Is Debug: ${BuildKonfig.DEBUG}\n" +
+                    "----------------------------------------------------\n"
+            )
+        )
     }
 
     companion object {
-        private const val MAX_LINES = 10000
+        /** The size at which the file is rotated. */
+        const val MAX_FILE_BYTES = 5L * 1024 * 1024
+
+        /** The length at which a message is cut. */
+        const val MAX_MESSAGE_CHARS = 8 * 1024
     }
 }
