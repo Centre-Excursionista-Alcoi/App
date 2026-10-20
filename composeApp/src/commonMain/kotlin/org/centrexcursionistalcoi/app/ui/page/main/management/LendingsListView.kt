@@ -137,11 +137,8 @@ import org.centrexcursionistalcoi.app.ui.screen.spaces.label
 import org.centrexcursionistalcoi.app.ui.screen.spaces.stage
 import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.centrexcursionistalcoi.app.viewmodel.management.LendingsManagementViewModel
-import org.centrexcursionistalcoi.app.ui.theme.AppTheme
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.time.Instant
-import kotlin.uuid.Uuid
 
 /**
  * Every lending the viewer manages, of equipment ([showItems]) and of spaces ([showSpaces]), in a calendar and a list.
@@ -968,79 +965,6 @@ private fun LendingsCalendar_Preview() {
             ),
             tooltip = { it.kind.name },
             onClick = {},
-        )
-    }
-}
-
-private val previewUser = UserData(
-    sub = "preview-user",
-    memberNumber = 1234u,
-    fullName = "Maria Garcia",
-    email = "maria@example.com",
-    groups = emptyList(),
-    departments = emptyList(),
-    lendingUser = null,
-    insurances = emptyList(),
-    isDisabled = false,
-)
-
-private val previewItemType = ReferencedInventoryItemType(
-    id = Uuid.parse("3b69c54e-3465-4a1d-a194-29dc64058e4a"),
-    displayName = "Climbing rope",
-    description = null,
-    categories = null,
-    weight = null,
-    department = null,
-    image = null,
-)
-
-private val previewItem = ReferencedInventoryItem(
-    id = Uuid.parse("8c9ccff9-ec17-4918-9327-08f7de3576d3"),
-    variation = null,
-    type = previewItemType,
-    nfcId = null,
-    manufacturerTraceabilityCode = null,
-)
-
-private fun previewLending(id: String, from: LocalDate, to: LocalDate, confirmed: Boolean, taken: Boolean = false) = ReferencedLending(
-    id = Uuid.parse(id),
-    user = previewUser,
-    timestamp = Instant.parse("2025-10-01T10:00:00Z"),
-    confirmed = confirmed,
-    taken = taken,
-    givenBy = null,
-    givenAt = null,
-    returned = false,
-    receivedItems = emptyList(),
-    memorySubmitted = false,
-    memorySubmittedAt = null,
-    memory = null,
-    memoryReviewed = false,
-    from = from,
-    to = to,
-    notes = null,
-    items = listOf(previewItem),
-)
-
-@Preview
-@Composable
-private fun LendingsListView_Preview() {
-    AppTheme {
-        LendingsListView(
-            snackbarHostState = SnackbarHostState(),
-            lendings = listOf(
-                previewLending("0d8d6a1e-7a3b-4f7e-9d0e-2f1c4b6a8e01", LocalDate(2025, 10, 11), LocalDate(2025, 10, 15), confirmed = false),
-                previewLending("0d8d6a1e-7a3b-4f7e-9d0e-2f1c4b6a8e02", LocalDate(2025, 10, 14), LocalDate(2025, 10, 19), confirmed = true),
-                previewLending("0d8d6a1e-7a3b-4f7e-9d0e-2f1c4b6a8e03", LocalDate(2025, 10, 20), LocalDate(2025, 10, 22), confirmed = true, taken = true),
-            ),
-            users = listOf(previewUser),
-            toggleCompletedLendings = false,
-            onToggleCompletedLendings = {},
-            onConfirmLendingRequest = { Job() },
-            onSkipMemoryRequest = { Job() },
-            onGiveRequested = {},
-            onReceiveRequested = {},
-            onDeleteRequested = { _, _ -> Job() },
         )
     }
 }
