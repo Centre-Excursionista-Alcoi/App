@@ -28,7 +28,7 @@ calendar ="2.10.1"
 calf = "0.14.0"
 coil = "3.6.3"
 # Check latest at https://github.com/JetBrains/compose-multiplatform/releases
-composeMultiplatform = "1.12.1"
+composeMultiplatform = "1.12.2"
 compose-material3 = "1.12.0-alpha03"
 compose-windowSizeClass = "1.9.0"
 exposed = "1.6.0"
