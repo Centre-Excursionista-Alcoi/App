@@ -644,6 +644,12 @@
     <string name="months_october">October</string>
     <string name="months_november">November</string>
     <string name="months_december">December</string>
+    <string name="calendar_previous_month">Previous month</string>
+    <string name="calendar_next_month">Next month</string>
+    <string name="lendings_kind_all">All</string>
+    <string name="lendings_kind_items">Equipment</string>
+    <string name="lendings_kind_spaces">Spaces</string>
+    <string name="lendings_kind_space">Space</string>
 
     <string name="time_picker_title">Pick a Time</string>
     <string name="date_time_picker_date_tab">Date</string>
@@ -817,7 +823,6 @@
     <string name="space_lending_returned_on">Returned on %1$s</string>
     <string name="space_lending_error_loading">The lending could not be found.</string>
     <string name="management_spaces">Spaces</string>
-    <string name="management_space_lendings">Space lendings</string>
     <string name="management_spaces_add">Add space</string>
     <string name="management_spaces_edit">Edit space</string>
     <string name="management_spaces_name">Name</string>
@@ -846,7 +851,6 @@
     <string name="management_spaces_key_max">Maximum per lending</string>
     <string name="management_spaces_save">Save</string>
     <string name="management_spaces_cancel">Cancel</string>
-    <string name="management_space_lendings_empty">There are no space lendings.</string>
     <string name="space_lending_pay_online">Pay online</string>
     <string name="space_lending_pay_online_hint">Pay %1$s with your card or Bizum. You will complete the payment in your browser.</string>
     <string name="space_lending_pay_card">Pay with card</string>

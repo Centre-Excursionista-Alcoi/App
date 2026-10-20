@@ -22,7 +22,6 @@ import cea_app.composeapp.generated.resources.management_inventory
 import cea_app.composeapp.generated.resources.management_lendings
 import cea_app.composeapp.generated.resources.management_memories
 import cea_app.composeapp.generated.resources.management_posts
-import cea_app.composeapp.generated.resources.management_space_lendings
 import cea_app.composeapp.generated.resources.management_spaces
 import cea_app.composeapp.generated.resources.management_users
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,7 +68,6 @@ import org.centrexcursionistalcoi.app.ui.page.main.management.InventoryItemTypes
 import org.centrexcursionistalcoi.app.ui.page.main.management.LendingsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.MemoriesManagementListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.PostsListView
-import org.centrexcursionistalcoi.app.ui.page.main.management.SpaceLendingsListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.SpacesListView
 import org.centrexcursionistalcoi.app.ui.page.main.management.UsersListView
 import org.centrexcursionistalcoi.app.ui.reusable.AdaptiveTabRow
@@ -77,17 +75,18 @@ import org.centrexcursionistalcoi.app.ui.reusable.LoadingBox
 import org.centrexcursionistalcoi.app.ui.reusable.TabData
 import org.centrexcursionistalcoi.app.ui.utils.departmentsCountBadge
 import org.centrexcursionistalcoi.app.ui.utils.lendingsCountBadge
+import org.centrexcursionistalcoi.app.ui.utils.spaceLendingsCountBadge
 import org.centrexcursionistalcoi.app.viewmodel.ManagementPageScreenModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.uuid.Uuid
 
 const val MANAGEMENT_PAGE_LENDINGS = 0
-const val MANAGEMENT_PAGE_MEMORIES = 2
-const val MANAGEMENT_PAGE_DEPARTMENTS = 3
-const val MANAGEMENT_PAGE_USERS = 4
-const val MANAGEMENT_PAGE_POSTS = 5
-const val MANAGEMENT_PAGE_EVENTS = 6
-const val MANAGEMENT_PAGE_INVENTORY = 7
+const val MANAGEMENT_PAGE_MEMORIES = 1
+const val MANAGEMENT_PAGE_DEPARTMENTS = 2
+const val MANAGEMENT_PAGE_USERS = 3
+const val MANAGEMENT_PAGE_POSTS = 4
+const val MANAGEMENT_PAGE_EVENTS = 5
+const val MANAGEMENT_PAGE_INVENTORY = 6
 
 private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
     private val key: String,
@@ -104,8 +103,19 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
             )
         }
     ) {
-        override fun shouldShow(profile: ProfileResponse, items: List<ReferencedLending>?, departments: List<Department>?): Boolean {
+        /** Whether the viewer manages lendings of equipment. */
+        fun canManageItems(profile: ProfileResponse, departments: List<Department>?): Boolean {
             return profile.isAdmin || departments.orEmpty().hasAnyDepartmentRole(profile, DepartmentRole.LENDING_MANAGER)
+        }
+
+        /** Whether the viewer manages lendings of spaces. */
+        fun canManageSpaces(profile: ProfileResponse): Boolean {
+            return profile.hasFeature(FeatureFlag.SPACES) && profile.isSpaceLendingsManager
+        }
+
+        // Equipment and space lendings share the tab: it's for whoever manages either
+        override fun shouldShow(profile: ProfileResponse, items: List<ReferencedLending>?, departments: List<Department>?): Boolean {
+            return canManageItems(profile, departments) || canManageSpaces(profile)
         }
     }
 
@@ -226,22 +236,6 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
         }
     }
 
-    object SpaceLendings : ManagementPage<Uuid, SpaceLending>(
-        key = "space_lendings",
-        tabData = {
-            TabData.fromResources(
-                Res.string.management_space_lendings,
-                MaterialSymbols.CheckCircle,
-                MaterialSymbols.CheckCircleFilled,
-                it
-            )
-        }
-    ) {
-        override fun shouldShow(profile: ProfileResponse, items: List<SpaceLending>?, departments: List<Department>?): Boolean {
-            return profile.hasFeature(FeatureFlag.SPACES) && profile.isSpaceLendingsManager
-        }
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is ManagementPage<*, *>) return false
@@ -264,7 +258,6 @@ private sealed class ManagementPage<IdType: Any, EntityType: Entity<IdType>>(
         ): List<ManagementPage<*, *>> {
             return listOfNotNull(
                 Lendings.takeIf { Lendings.shouldShow(profile, lendings, departments) },
-                SpaceLendings.takeIf { SpaceLendings.shouldShow(profile, null, departments) },
                 Memories.takeIf { Memories.shouldShow(profile, null, departments) },
                 Departments.takeIf { Departments.shouldShow(profile, departments, departments) },
                 Users.takeIf { Users.shouldShow(profile, null, departments) },
@@ -298,6 +291,7 @@ fun ManagementPage(
 ) {
     val profile by screenModel.profile.collectAsState()
     val lendings by screenModel.lendings.collectAsState()
+    val spaceLendings by screenModel.spaceLendings.collectAsState()
     val departments by screenModel.departments.collectAsState()
 
     if (profile == null) {
@@ -310,6 +304,7 @@ fun ManagementPage(
         selectedItem = selectedItem,
         profile = profile!!,
         lendings = lendings,
+        spaceLendings = spaceLendings,
         departments = departments,
         onGiveRequested = onGiveRequested,
         onReceiveRequested = onReceiveRequested,
@@ -326,6 +321,7 @@ private fun ManagementPageContent(
 
     profile: ProfileResponse,
     lendings: List<ReferencedLending>?,
+    spaceLendings: List<SpaceLending>?,
     departments: List<Department>?,
 
     onGiveRequested: (ReferencedLending) -> Unit,
@@ -358,7 +354,10 @@ private fun ManagementPageContent(
             tabs = pages.map { page ->
                 val countBadge = when (page) {
                     ManagementPage.Departments -> departments.departmentsCountBadge()
-                    ManagementPage.Lendings -> lendings.lendingsCountBadge()
+                    ManagementPage.Lendings -> {
+                        val count = (lendings.lendingsCountBadge() ?: 0) + (spaceLendings.spaceLendingsCountBadge() ?: 0)
+                        count.takeIf { it > 0 }
+                    }
                     else -> null
                 }
                 page.tabData(countBadge?.takeIf { it > 0 }?.toString())
@@ -375,7 +374,14 @@ private fun ManagementPageContent(
     ) { index ->
         val page = pages.forIndex(index)
         when (page) {
-            ManagementPage.Lendings -> LendingsListView(snackbarHostState, onGiveRequested, onReceiveRequested)
+            ManagementPage.Lendings -> LendingsListView(
+                snackbarHostState = snackbarHostState,
+                showItems = ManagementPage.Lendings.canManageItems(profile, departments),
+                showSpaces = ManagementPage.Lendings.canManageSpaces(profile),
+                onGiveRequested = onGiveRequested,
+                onReceiveRequested = onReceiveRequested,
+                onSpaceLendingClick = onSpaceLendingClick,
+            )
 
             ManagementPage.Memories -> MemoriesManagementListView(snackbarHostState)
 
@@ -391,7 +397,6 @@ private fun ManagementPageContent(
 
             ManagementPage.Spaces -> SpacesListView()
 
-            ManagementPage.SpaceLendings -> SpaceLendingsListView(onSpaceLendingClick)
         }
     }
 }

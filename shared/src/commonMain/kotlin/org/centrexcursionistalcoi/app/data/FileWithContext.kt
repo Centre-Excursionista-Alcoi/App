@@ -77,4 +77,10 @@ data class FileWithContext(
         result = 31 * result + (part?.hashCode() ?: 0)
         return result
     }
+
+    /**
+     * Doesn't include [bytes]: a data class prints them one by one, so logging a request with a photo wrote megabytes.
+     */
+    override fun toString(): String =
+        "FileWithContext(name=$name, contentType=$contentType, bytes=${bytes.size} B, lastModified=$lastModified, id=$id, part=$part, size=$size)"
 }

@@ -365,6 +365,12 @@
     <string name="months_october">Octubre</string>
     <string name="months_november">Noviembre</string>
     <string name="months_december">Diciembre</string>
+    <string name="calendar_previous_month">Mes anterior</string>
+    <string name="calendar_next_month">Mes siguiente</string>
+    <string name="lendings_kind_all">Todos</string>
+    <string name="lendings_kind_items">Material</string>
+    <string name="lendings_kind_spaces">Espacios</string>
+    <string name="lendings_kind_space">Espacio</string>
     <string name="post_by">Por %1$s</string>
     <string name="home_posts">Anuncios</string>
     <string name="days_of_week_monday">Lunes</string>
