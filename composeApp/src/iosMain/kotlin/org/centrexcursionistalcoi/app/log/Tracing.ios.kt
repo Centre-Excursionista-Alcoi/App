@@ -3,6 +3,7 @@ package org.centrexcursionistalcoi.app.log
 import cocoapods.Sentry.SentrySDK
 import cocoapods.Sentry.SentrySpanProtocol
 import cocoapods.Sentry.SentrySpanStatus
+import cocoapods.Sentry.startTransactionWithName
 import kotlinx.cinterop.ExperimentalForeignApi
 
 @OptIn(ExperimentalForeignApi::class)
