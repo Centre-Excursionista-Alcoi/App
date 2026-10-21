@@ -119,7 +119,7 @@ class TestDatabaseWrites {
             insurances = emptyList(),
             isDisabled = false,
         )
-        db.userDao().insert(user)
+        db.userDao().upsert(user)
         val receivedItem = ReceivedItemEntity(Uuid.random(), lending.id, item.id, null, user.sub, epoch)
         db.receivedItemDao().insert(receivedItem)
 
