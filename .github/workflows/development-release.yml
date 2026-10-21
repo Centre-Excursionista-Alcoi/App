@@ -635,7 +635,7 @@ jobs:
             --include-sources \
             --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} \
             --org ${{ secrets.SENTRY_ORG }} \
-            --project ${{ secrets.SENTRY_PROJECT }} \
+            --project app-ios \
             "$DSYM_PATH"
 
       # https://docs.sentry.io/platforms/apple/guides/ios/size-analysis/ -- master-branch size history only (see

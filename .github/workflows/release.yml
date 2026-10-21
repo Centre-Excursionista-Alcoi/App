@@ -682,7 +682,7 @@ jobs:
             --include-sources \
             --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} \
             --org ${{ secrets.SENTRY_ORG }} \
-            --project ${{ secrets.SENTRY_PROJECT }} \
+            --project app-ios \
             "$DSYM_PATH"
 
       # This runner is self-hosted and persists between jobs, unlike GitHub-hosted runners.
