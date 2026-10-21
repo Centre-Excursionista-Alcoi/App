@@ -38,8 +38,6 @@
 		};
 		FA497EF7EBC8688F84BC3228 /* Configuration */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = Configuration;
 			sourceTree = "<group>";
 		};
@@ -468,14 +466,14 @@
 			package = 9BD8FC2E2EB4184200AAFE0F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseMessaging;
 		};
-		FB498C9FC4997907692896FF /* KotlinMultiplatformLinkedPackage */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = KotlinMultiplatformLinkedPackage;
-		};
 		A1B2C3D4E5F607182930A1B3 /* Sentry */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A1B2C3D4E5F607182930A1B2 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
 			productName = Sentry;
+		};
+		FB498C9FC4997907692896FF /* KotlinMultiplatformLinkedPackage */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KotlinMultiplatformLinkedPackage;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
