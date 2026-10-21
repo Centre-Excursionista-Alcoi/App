@@ -28,7 +28,7 @@ class UsersRepository(db: AppDatabase) : Repository<UserData, String> {
 
     override suspend fun selectAll() = dao.selectAll().map { it.toUser() }
 
-    override suspend fun insert(item: UserData) = dao.insert(
+    override suspend fun insert(item: UserData) = dao.upsert(
         item.toEntity()
     )
 
