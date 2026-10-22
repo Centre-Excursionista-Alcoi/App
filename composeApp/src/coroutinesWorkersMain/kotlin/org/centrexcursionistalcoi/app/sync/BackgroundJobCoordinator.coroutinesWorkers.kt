@@ -131,23 +131,26 @@ actual class BackgroundJobCoordinator(
         id: Uuid,
         uniqueName: String?
     ) {
-        try {
-            emitState(id, uniqueName, BackgroundJobState.RUNNING)
-            val logic = get<Logic>(named(name))
-            with(logic) {
-                BackgroundSyncContext(
-                    progressNotifier = ProgressNotifier { progress ->
-                        emitProgressById(id, progress)
-                    }
-                ).run(input)
+        // A job with the same uniqueName still running keeps this one ENQUEUED until it finishes
+        UniqueJobLocks.serialized(uniqueName) {
+            try {
+                emitState(id, uniqueName, BackgroundJobState.RUNNING)
+                val logic = get<Logic>(named(name))
+                with(logic) {
+                    BackgroundSyncContext(
+                        progressNotifier = ProgressNotifier { progress ->
+                            emitProgressById(id, progress)
+                        }
+                    ).run(input)
+                }
+                emitState(id, uniqueName, BackgroundJobState.SUCCEEDED)
+            } catch (e: Throwable) {
+                coordinatorLog.e(e) { "Job failed." }
+                // Callers only ever see BackgroundJobState.FAILED (see ObservableBackgroundJob.await()),
+                // so without this the real cause is only ever visible in the local device log.
+                Sentry.captureException(e)
+                emitState(id, uniqueName, BackgroundJobState.FAILED)
             }
-            emitState(id, uniqueName, BackgroundJobState.SUCCEEDED)
-        } catch (e: Throwable) {
-            coordinatorLog.e(e) { "Job failed." }
-            // Callers only ever see BackgroundJobState.FAILED (see ObservableBackgroundJob.await()),
-            // so without this the real cause is only ever visible in the local device log.
-            Sentry.captureException(e)
-            emitState(id, uniqueName, BackgroundJobState.FAILED)
         }
     }
 
