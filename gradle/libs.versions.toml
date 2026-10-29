@@ -58,7 +58,7 @@ ksoup = "0.2.6"
 ksp = "2.3.12"
 ktor = "3.6.0"
 localina = "1.0.0-beta2"
-logback = "1.6.5"
+logback = "1.6.6"
 # No not upgrade without testing: crashes
 #noinspection NewerVersionAvailable
 markdown-renderer = "0.46.0"
