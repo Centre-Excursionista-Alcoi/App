@@ -56,7 +56,7 @@ kotlinx-kover = "0.9.11"
 kscan = "0.10.0"
 ksoup = "0.2.6"
 ksp = "2.3.12"
-ktor = "3.6.0"
+ktor = "3.6.1"
 localina = "1.0.0-beta2"
 logback = "1.6.6"
 # No not upgrade without testing: crashes
