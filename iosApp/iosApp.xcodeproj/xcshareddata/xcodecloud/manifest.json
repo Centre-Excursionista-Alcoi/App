@@ -1,0 +1,9 @@
+{
+  "id" : "ca9c75ec-7036-47e5-b2b9-321f139fe07b",
+  "targets" : [
+    {
+      "id" : "EF3F7D23-FA29-4130-ABA6-F84B963382FA",
+      "name" : "CEA-App"
+    }
+  ]
+}
