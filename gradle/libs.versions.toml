@@ -62,7 +62,7 @@ logback = "1.6.6"
 # No not upgrade without testing: crashes
 #noinspection NewerVersionAvailable
 markdown-renderer = "0.46.0"
-mockk = "1.14.11"
+mockk = "1.14.12"
 pdfbox = "3.0.8"
 postgresql = "42.7.14"
 qrose = "1.3.1"
