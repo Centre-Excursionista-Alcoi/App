@@ -1,0 +1,57 @@
+name: AGP reminder
+
+# Kotlin and AGP versions are linked, and Dependabot doesn't update AGP (see .github/dependabot.yml).
+# When a PR changes the Kotlin version without touching AGP, comment asking to check it.
+#
+# Uses pull_request_target so the token can write comments on Dependabot PRs. It never checks out or runs
+# PR code: the version catalog is read through the API.
+on:
+  pull_request_target:
+    paths:
+      - 'gradle/libs.versions.toml'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  agp-reminder:
+    name: Remind to update AGP
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      PR: ${{ github.event.pull_request.number }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Compare versions
+        id: versions
+        run: |
+          catalog() {
+            gh api -H "Accept: application/vnd.github.raw" \
+              "repos/$REPO/contents/gradle/libs.versions.toml?ref=$1"
+          }
+          version() { sed -n "s/^$2 = \"\(.*\)\"/\1/p" <<<"$1" | head -n1; }
+          base=$(catalog "$BASE_SHA")
+          head=$(catalog "$HEAD_SHA")
+          echo "kotlin_changed=$([ "$(version "$base" kotlin)" != "$(version "$head" kotlin)" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "agp_changed=$([ "$(version "$base" agp)" != "$(version "$head" agp)" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "kotlin=$(version "$head" kotlin)" >> "$GITHUB_OUTPUT"
+          echo "agp=$(version "$head" agp)" >> "$GITHUB_OUTPUT"
+
+      - name: Comment
+        if: steps.versions.outputs.kotlin_changed == 'true' && steps.versions.outputs.agp_changed == 'false'
+        run: |
+          marker='<!-- agp-reminder -->'
+          existing=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+            --jq "[.[] | select(.body | contains(\"$marker\"))] | length" | paste -sd+ | bc)
+          if [ "${existing:-0}" -gt 0 ]; then
+            echo "Already commented"; exit 0
+          fi
+          gh pr comment "$PR" --repo "$REPO" --body "$marker
+          ### ⚠️ Check the Android Gradle Plugin version
+
+          This PR updates Kotlin to \`${{ steps.versions.outputs.kotlin }}\`, but AGP is still \`${{ steps.versions.outputs.agp }}\`. AGP's version is tied to the Kotlin Multiplatform version, and Dependabot doesn't update it here, so please check whether it needs updating too (\`agp\` in \`gradle/libs.versions.toml\`).
+
+          See the [Kotlin Multiplatform compatibility guide](https://kotlinlang.org/docs/multiplatform/multiplatform-compatibility-guide.html)."
