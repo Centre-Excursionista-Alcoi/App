@@ -13,13 +13,22 @@ let package = Package(
     )
   ],
   dependencies: [
-    .package(path: "subpackages/io_github_mirzemehdi_kmpnotifier_push_firebase_2_0_1")
+    .package(
+      url: "https://github.com/getsentry/sentry-cocoa.git",
+      exact: "9.30.2"
+    ),
+    .package(path: "subpackages/io_github_mirzemehdi_kmpnotifier_push_firebase_2_0_2")
   ],
   targets: [
     .target(
       name: "KotlinMultiplatformLinkedPackage",
       dependencies: [
-        .product(name: "io_github_mirzemehdi_kmpnotifier_push_firebase_2_0_1", package: "io_github_mirzemehdi_kmpnotifier_push_firebase_2_0_1")
+        .product(
+          name: "Sentry",
+          package: "sentry-cocoa",
+          condition: .when(platforms: [.iOS])
+        ),
+        .product(name: "io_github_mirzemehdi_kmpnotifier_push_firebase_2_0_2", package: "io_github_mirzemehdi_kmpnotifier_push_firebase_2_0_2")
       ]
     )
   ]
