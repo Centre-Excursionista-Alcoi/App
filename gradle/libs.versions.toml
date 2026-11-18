@@ -215,8 +215,36 @@ xmlutil-serialization = { module = "io.github.pdvrieze.xmlutil:serialization", v
 zoomable = { module = "net.engawapg.lib:zoomable", version.ref = "zoomable" }
 
 [bundles]
+androidx-credentials = ["androidx-credentials", "androidx-credentials-playServicesAuth"]
+androidx-lifecycle = ["androidx-lifecycle-viewmodelCompose", "androidx-lifecycle-runtimeCompose"]
+# Instrumented (androidDeviceTest) test infrastructure, without junit itself
+androidx-test = ["androidx-test-runner", "androidx-test-rules", "androidx-test-core", "androidx-test-ext-junit"]
 androidx-work = ["androidx-work-gcm", "androidx-work-runtime"]
+calf = ["calf-ui", "calf-cupertinoIcons", "calf-share"]
+compose = [
+    "compose-runtime", "compose-foundation", "compose-material3", "compose-windowSizeClass", "compose-ui",
+    "compose-components-resources", "compose-components-uiToolingPreview",
+]
+exposed = [
+    "exposed-core", "exposed-crypt", "exposed-dao", "exposed-kotlin-datetime", "exposed-json", "exposed-jdbc",
+    "exposed-migration-core", "exposed-migration-jdbc",
+]
+filekit = ["filekit-coil", "filekit-dialogs-compose"]
+kmm-notifier = ["kmm-notifier-core", "kmm-notifier-firebase"]
+koin = ["koin-core", "koin-compose", "koin-compose-viewmodel", "koin-ktor"]
+koin-android = ["koin-android", "koin-androidx-workmanager"]
+kotlin-crypto = ["kotlin-crypto-random", "kotlin-crypto-sha2"]
+# What every Ktor client has in common. Engines, and encoding/resources/java, are added by each module
+ktor-client = ["ktor-client-auth", "ktor-client-contentNegotiation", "ktor-client-core", "ktor-client-logging"]
+ktor-server = [
+    "ktor-server-auth", "ktor-server-auth-jwt", "ktor-server-compression", "ktor-server-contentNegotiation",
+    "ktor-server-core", "ktor-server-forwardedHeader", "ktor-server-netty", "ktor-server-rateLimit",
+    "ktor-server-resources", "ktor-server-sessions", "ktor-server-sse", "ktor-server-statusPages",
+]
+ksoup = ["ksoup-core", "ksoup-network"]
 markdownRenderer = ["markdownRenderer-core", "markdownRenderer-m3", "markdownRenderer-coil3"]
+qrose = ["qrose-twod", "qrose-oned"]
+sentry-jvm = ["sentry-jvm", "sentry-kotlinExtensions", "sentry-asyncProfiler"]
 testcontainers = ["testcontainers-junit-jupiter", "testcontainers-postgresql"]
 
 [plugins]
