@@ -16,6 +16,12 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
+    ignore:
+      # AGP versions are tied to the Kotlin Multiplatform version, so they're bumped by hand together with Kotlin:
+      # https://kotlinlang.org/docs/multiplatform/multiplatform-compatibility-guide.html
+      - dependency-name: "com.android.application"
+      - dependency-name: "com.android.kotlin.multiplatform.library"
+      - dependency-name: "com.android.tools.build:gradle"
     groups:
       # Dependencies used in shared module OR in both server and app
       shared-dependencies:
