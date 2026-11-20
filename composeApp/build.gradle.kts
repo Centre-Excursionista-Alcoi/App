@@ -110,16 +110,9 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.compose.runtime)
-            implementation(libs.compose.foundation)
-            implementation(libs.compose.material3)
-            implementation(libs.compose.windowSizeClass)
-            implementation(libs.compose.ui)
-            implementation(libs.compose.components.resources)
-            implementation(libs.compose.components.uiToolingPreview)
+            implementation(libs.bundles.compose)
 
-            implementation(libs.androidx.lifecycle.viewmodelCompose)
-            implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.bundles.androidx.lifecycle)
 
             // Compose Navigation
             implementation(libs.androidx.navigation3.ui)
@@ -134,19 +127,14 @@ kotlin {
             implementation(libs.calendar)
 
             // Native UI Components
-            api(libs.calf.ui)
-            implementation(libs.calf.cupertinoIcons)
-            implementation(libs.calf.share)
+            api(libs.bundles.calf)
 
             // Ktor serialization
             implementation(libs.ktor.serialization.kotlinxJson)
 
             // Ktor client
-            implementation(libs.ktor.client.auth)
-            implementation(libs.ktor.client.contentNegotiation)
-            implementation(libs.ktor.client.core)
+            implementation(libs.bundles.ktor.client)
             implementation(libs.ktor.client.encoding)
-            implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.resources)
 
             // Settings
@@ -158,14 +146,12 @@ kotlin {
             implementation(libs.kotlinx.serializationJson)
 
             // File picker dialogs
-            implementation(libs.filekit.coil)
-            implementation(libs.filekit.dialogs.compose)
+            implementation(libs.bundles.filekit)
 
             implementation(libs.coil.compose)
 
             // QR Code Generation
-            implementation(libs.qrose.oned)
-            implementation(libs.qrose.twod)
+            implementation(libs.bundles.qrose)
 
             // QR Code Scanner
             implementation(libs.kscan)
@@ -185,18 +171,14 @@ kotlin {
             // export() only flattens the ObjC/Swift naming (e.g. "KMPNotifier" instead of a module-qualified
             // "ComposeAppKmpnotifier_coreKMPNotifier") for dependencies exported directly -- it must be declared
             // and exported here too, or Swift call sites referencing bare "KMPNotifier" won't compile.
-            api(libs.kmm.notifier.core)
-            api(libs.kmm.notifier.firebase)
+            api(libs.bundles.kmm.notifier)
 
             // Room 3
             implementation(libs.androidx.room3.runtime)
             implementation(libs.androidx.sqlite.bundled)
 
             // Koin dependency injection
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose)
-            implementation(libs.koin.compose.viewmodel)
-            implementation(libs.koin.ktor)
+            implementation(libs.bundles.koin)
             api(libs.koin.annotations)
 
             api(projects.shared)
@@ -266,22 +248,17 @@ kotlin {
                 implementation(libs.androidx.room3.sqliteWrapper)
 
                 // Koin Extensions for Android
-                implementation(libs.koin.android)
-                implementation(libs.koin.androidx.workmanager)
+                implementation(libs.bundles.koin.android)
 
                 // Credentials Manager
-                implementation(libs.androidx.credentials)
-                implementation(libs.androidx.credentials.playServicesAuth)
+                implementation(libs.bundles.androidx.credentials)
             }
         }
 
         getByName("androidDeviceTest") {
             dependencies {
                 implementation(libs.junit)
-                implementation(libs.androidx.test.runner)
-                implementation(libs.androidx.test.rules)
-                implementation(libs.androidx.test.core)
-                implementation(libs.androidx.test.ext.junit)
+                implementation(libs.bundles.androidx.test)
             }
         }
 

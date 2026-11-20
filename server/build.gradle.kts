@@ -65,10 +65,9 @@ dependencies {
     // Sentry error tracking, tracing and profiling. Pinned explicitly (see the sentry-jvmSdk
     // comment in gradle/libs.versions.toml) so this can't drift from what io.sentry.jvm.gradle
     // auto-installs.
-    implementation(libs.sentry.jvm)
-    implementation(libs.sentry.kotlinExtensions)
-    // Required for profiling on the JVM: without it, the profiling options in main() do nothing
-    implementation(libs.sentry.asyncProfiler)
+    // Includes sentry-async-profiler, required for profiling on the JVM: without it, the profiling options in
+    // main() do nothing
+    implementation(libs.bundles.sentry.jvm)
 
     // CSV serialization
     implementation(libs.kotlinx.serializationCsv)
@@ -80,35 +79,14 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinxJson)
 
     // Ktor client
-    implementation(libs.ktor.client.auth)
-    implementation(libs.ktor.client.contentNegotiation)
-    implementation(libs.ktor.client.core)
+    implementation(libs.bundles.ktor.client)
     implementation(libs.ktor.client.java)
-    implementation(libs.ktor.client.logging)
 
     // Ktor server
-    implementation(libs.ktor.server.auth)
-    implementation(libs.ktor.server.auth.jwt)
-    implementation(libs.ktor.server.compression)
-    implementation(libs.ktor.server.contentNegotiation)
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.forwardedHeader)
-    implementation(libs.ktor.server.netty)
-    implementation(libs.ktor.server.rateLimit)
-    implementation(libs.ktor.server.resources)
-    implementation(libs.ktor.server.sessions)
-    implementation(libs.ktor.server.sse)
-    implementation(libs.ktor.server.statusPages)
+    implementation(libs.bundles.ktor.server)
 
     // Database
-    implementation(libs.exposed.core)
-    implementation(libs.exposed.crypt)
-    implementation(libs.exposed.dao)
-    implementation(libs.exposed.kotlin.datetime)
-    implementation(libs.exposed.json)
-    implementation(libs.exposed.jdbc)
-    implementation(libs.exposed.migration.core)
-    implementation(libs.exposed.migration.jdbc)
+    implementation(libs.bundles.exposed)
     testImplementation(libs.h2)
     implementation(libs.postgresql)
     implementation(libs.sqlite)
@@ -130,8 +108,7 @@ dependencies {
     implementation(libs.aws.urlConnectionClient)
 
     // XML Parsing
-    implementation(libs.ksoup.core)
-    implementation(libs.ksoup.network)
+    implementation(libs.bundles.ksoup)
 
     // PDF generation
     implementation(libs.pdfbox)
